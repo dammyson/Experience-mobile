@@ -66,6 +66,18 @@ yarn-error.log
 # Claude Code
 .claude/
 
+# Environment variables (never commit secrets)
+.env
+.env.*
+.env.local
+.env.*.local
+
+# Ruby bundler local config
+.bundle/
+
+# npm lock (using npm but not committing lock file)
+package-lock.json
+
 # testing
 /coverage
 
