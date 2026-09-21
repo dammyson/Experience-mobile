@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"const r = require\\(''./node_modules/react-native-reanimated/package.json''\\); console.log\\(JSON.stringify\\(r.peerDependencies, null, 2\\)\\)\")",
+      "Bash(rm -rf ~/Library/Developer/Xcode/DerivedData)",
+      "Bash(rm -rf ~/Library/Caches/com.apple.dt.Xcode)",
+      "Bash(xcrun simctl:*)",
+      "mcp__figma__get_figma_data",
+      "Bash(python3 -c \":*)",
+      "mcp__figma__download_figma_images",
+      "Bash(FILE=\"/Users/aceachugo/.claude/projects/-Users-aceachugo-codebase-ocelot-arena-mobile/8baae753-3c24-471a-ba38-3df4d034f317/tool-results/mcp-figma-get_figma_data-1789952841375.txt\")",
+      "Read(//Users/aceachugo/codebase/ocelot/arena-mobile/**)"
+    ]
+  }
+}
