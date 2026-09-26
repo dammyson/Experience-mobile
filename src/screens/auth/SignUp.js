@@ -17,8 +17,6 @@ import {theme} from '../../theme/colors';
 import {textStyles} from '../../theme/typography';
 import {spacing, radius} from '../../theme/spacing';
 
-const {height} = Dimensions.get('window');
-
 const SignUp = () => {
   const navigation = useNavigation();
 

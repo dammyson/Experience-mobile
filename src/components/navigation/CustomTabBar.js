@@ -1,6 +1,7 @@
 import React from 'react';
-import {View, Text, TouchableOpacity, Image, StyleSheet, Platform} from 'react-native';
-import {LiquidGlassView, isLiquidGlassSupported} from '@callstack/liquid-glass';
+import {View, Text, TouchableOpacity, Image, StyleSheet} from 'react-native';
+import {LiquidGlassView} from '@callstack/liquid-glass';
+import {canUseGlass} from '../../utilities/platform';
 import {theme} from '../../theme/colors';
 import HomeIcon from '../icons/HomeIcon';
 import ActivityIcon from '../icons/ActivityIcon';
@@ -38,7 +39,7 @@ const TabItem = ({tab, isFocused, onPress}) => {
 };
 
 const CustomTabBar = ({state, navigation}) => {
-  const useGlass = Platform.OS === 'ios' && isLiquidGlassSupported;
+  const useGlass = canUseGlass;
 
   const tabItems = (
     <View style={styles.tabRow}>
