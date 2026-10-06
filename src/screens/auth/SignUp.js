@@ -11,52 +11,46 @@ import {
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import ScreenBackground from '../../components/layout/ScreenBackground';
-import {AppInput, PasswordInput} from '../../components/ui';
-import BackIcon from '../../components/icons/BackIcon';
+import {AppInput} from '../../components/ui';
+import {BackIcon} from '../../components/icons';
 import {theme} from '../../theme/colors';
-import {textStyles} from '../../theme/typography';
-import {spacing, radius} from '../../theme/spacing';
+import {spacing} from '../../theme/spacing';
 
 const SignUp = () => {
   const navigation = useNavigation();
 
   const [form, setForm] = useState({
-    firstName: '',
-    lastName: '',
+    fullName: '',
+    phoneNumber: '',
     email: '',
-    phone: '',
-    password: '',
-    confirmPassword: '',
+    pin: '',
   });
   const [error, setError] = useState('');
 
   const set = field => value => setForm(prev => ({...prev, [field]: value}));
 
-  const handleSignUp = () => {
-    const {firstName, lastName, email, phone, password, confirmPassword} = form;
-    if (!firstName || !lastName || !email || !phone || !password || !confirmPassword) {
+  const handleNext = () => {
+    const {fullName, phoneNumber, email, pin} = form;
+    if (!fullName || !phoneNumber || !email || !pin) {
       setError('Please fill in all fields');
       return;
     }
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters');
+    if (pin.length !== 6) {
+      setError('PIN must be 6 digits');
       return;
     }
     setError('');
-    // TODO: dispatch signup action
+    // Navigate to Identity Verification
+    navigation.navigate('IdentityVerification', {
+      userData: form,
+    });
   };
 
   const isValid =
-    form.firstName &&
-    form.lastName &&
+    form.fullName &&
+    form.phoneNumber &&
     form.email &&
-    form.phone &&
-    form.password &&
-    form.confirmPassword;
+    form.pin.length === 6;
 
   return (
     <ScreenBackground>
@@ -74,92 +68,67 @@ const SignUp = () => {
             <TouchableOpacity
               onPress={() => navigation.goBack()}
               style={styles.backBtn}
-              hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}>
-              <BackIcon />
+              activeOpacity={0.7}>
+              <BackIcon size={24} />
             </TouchableOpacity>
+            <Text style={styles.headerTitle}>Sign Up Account</Text>
+            <View style={styles.headerSpacer} />
           </View>
 
-          {/* Logo */}
-          <View style={styles.logoBlock}>
-            <Text style={styles.logoText}>Arena</Text>
-            <Text style={styles.tagline}>Unified Loyalty Network</Text>
+          {/* Form */}
+          <View style={styles.form}>
+            <AppInput
+              label="Full Name"
+              value={form.fullName}
+              onChangeText={set('fullName')}
+              placeholder="Enter Full Name"
+              autoCapitalize="words"
+            />
+
+            <AppInput
+              label="Phone Number"
+              value={form.phoneNumber}
+              onChangeText={set('phoneNumber')}
+              placeholder="Enter Phone Number"
+              keyboardType="phone-pad"
+              maxLength={15}
+            />
+
+            <AppInput
+              label="Email"
+              value={form.email}
+              onChangeText={set('email')}
+              placeholder="Enter Email Adress"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+
+            <AppInput
+              label="Create PIN"
+              value={form.pin}
+              onChangeText={set('pin')}
+              placeholder="Enter 6 digit PIN"
+              keyboardType="number-pad"
+              maxLength={6}
+              secureTextEntry
+            />
           </View>
-
-          <Text style={styles.screenTitle}>Create Account</Text>
-
-          {/* Name row */}
-          <View style={styles.row}>
-            <View style={styles.half}>
-              <AppInput
-                label="First Name"
-                value={form.firstName}
-                onChangeText={set('firstName')}
-                placeholder="First name"
-                autoCapitalize="words"
-              />
-            </View>
-            <View style={styles.half}>
-              <AppInput
-                label="Last Name"
-                value={form.lastName}
-                onChangeText={set('lastName')}
-                placeholder="Last name"
-                autoCapitalize="words"
-              />
-            </View>
-          </View>
-
-          <AppInput
-            label="Email"
-            value={form.email}
-            onChangeText={set('email')}
-            placeholder="Enter your email"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-
-          <AppInput
-            label="Phone Number"
-            value={form.phone}
-            onChangeText={set('phone')}
-            placeholder="Enter your phone number"
-            keyboardType="phone-pad"
-            maxLength={15}
-          />
-
-          <PasswordInput
-            label="Password"
-            value={form.password}
-            onChangeText={set('password')}
-            placeholder="Create a password"
-          />
-
-          <PasswordInput
-            label="Confirm Password"
-            value={form.confirmPassword}
-            onChangeText={set('confirmPassword')}
-            placeholder="Confirm your password"
-          />
 
           {!!error && <Text style={styles.errorText}>{error}</Text>}
 
+        </ScrollView>
+
+        {/* Bottom Button */}
+        <View style={styles.bottomContainer}>
           <TouchableOpacity
             style={[styles.ctaButton, !isValid && styles.ctaDisabled]}
-            onPress={handleSignUp}
+            onPress={handleNext}
             disabled={!isValid}
             activeOpacity={0.85}>
-            <Text style={styles.ctaText}>Create Account</Text>
+            <Text style={styles.ctaText}>Next: Identity Verification</Text>
           </TouchableOpacity>
-
-          <View style={styles.loginRow}>
-            <Text style={styles.loginPrompt}>Already have an account? </Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-              <Text style={styles.loginLink}>Sign In</Text>
-            </TouchableOpacity>
-          </View>
-
-        </ScrollView>
+        </View>
       </KeyboardAvoidingView>
     </ScreenBackground>
   );
@@ -170,76 +139,62 @@ const styles = StyleSheet.create({
   scroll: {
     flexGrow: 1,
     paddingHorizontal: spacing.base,
-    paddingBottom: spacing.xl,
-    gap: spacing.xl,
+    paddingBottom: 100,
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingTop: 60,
+    paddingBottom: 32,
   },
   backBtn: {
-    width: 32,
-    height: 32,
+    width: 40,
+    height: 40,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  logoBlock: {
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-  },
-  logoText: {
-    fontFamily: 'PlusJakartaSans-ExtraBold',
-    fontSize: 36,
-    color: theme.TEXT_WHITE,
-    letterSpacing: 2,
-  },
-  tagline: {
-    fontFamily: 'Inter-Regular',
-    fontSize: 14,
-    color: theme.TEXT_TERTIARY,
-    marginTop: 4,
-    letterSpacing: 1,
-  },
-  screenTitle: {
-    ...textStyles.displaySm,
+  headerTitle: {
+    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontSize: 18,
     color: theme.TEXT_PRIMARY,
   },
-  row: {
-    flexDirection: 'row',
-    gap: spacing.md,
+  headerSpacer: {
+    width: 40,
   },
-  half: {
-    flex: 1,
+  form: {
+    gap: 20,
   },
   errorText: {
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'PlusJakartaSans-Medium',
     fontSize: 14,
     color: theme.ERROR_COLOR,
     textAlign: 'center',
+    marginTop: 16,
+  },
+  bottomContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: spacing.base,
+    paddingVertical: 16,
+    paddingBottom: 40,
+    backgroundColor: theme.BACKGROUND_COLOR,
   },
   ctaButton: {
-    backgroundColor: theme.PRIMARY_GLASS,
-    borderRadius: radius.xl,
-    paddingVertical: 12,
+    backgroundColor: '#6715EA',
+    borderRadius: 28,
+    paddingVertical: 16,
     alignItems: 'center',
   },
   ctaDisabled: {
     opacity: 0.5,
   },
   ctaText: {
-    ...textStyles.textLgBold,
+    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontSize: 16,
     color: theme.WHITE,
-  },
-  loginRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
-  loginPrompt: {
-    ...textStyles.textLg,
-    color: theme.TEXT_TERTIARY,
-  },
-  loginLink: {
-    ...textStyles.textLgBold,
-    color: theme.PRIMARY_COLOR,
   },
 });
 

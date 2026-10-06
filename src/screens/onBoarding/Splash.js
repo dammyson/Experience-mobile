@@ -1,70 +1,82 @@
 import React, {useEffect} from 'react';
 import {View, Text, StyleSheet, StatusBar} from 'react-native';
+import Svg, {Path, Defs, LinearGradient, Stop} from 'react-native-svg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useNavigation} from '@react-navigation/native';
+import ScreenBackground from '../../components/layout/ScreenBackground';
 import {theme} from '../../theme/colors';
-import {fontFamily, fontSize} from '../../theme/typography';
+
+const VaultaLogo = () => (
+  <Svg width={48} height={56} viewBox="0 0 48 56" fill="none">
+    <Defs>
+      <LinearGradient id="shieldGrad" x1="0" y1="0" x2="48" y2="56" gradientUnits="userSpaceOnUse">
+        <Stop offset="0" stopColor="#8B5CF6" />
+        <Stop offset="1" stopColor="#6366F1" />
+      </LinearGradient>
+    </Defs>
+    <Path
+      d="M24 0L0 10V26C0 40.4 10.2 53.6 24 56C37.8 53.6 48 40.4 48 26V10L24 0Z"
+      fill="url(#shieldGrad)"
+    />
+    <Path
+      d="M20 28L24 32L32 22"
+      stroke="#FFFFFF"
+      strokeWidth={3}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      fill="none"
+    />
+  </Svg>
+);
 
 const Splash = () => {
   const navigation = useNavigation();
 
   useEffect(() => {
     const timer = setTimeout(async () => {
+      const hasSeenOnboarding = await AsyncStorage.getItem('hasSeenOnboarding');
       const token = await AsyncStorage.getItem('token');
+
       if (token) {
         navigation.replace('TabsNavigation');
+      } else if (hasSeenOnboarding) {
+        navigation.replace('Welcome');
       } else {
-        navigation.replace('Login');
+        navigation.replace('Onboarding');
       }
     }, 2500);
     return () => clearTimeout(timer);
   }, [navigation]);
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={theme.BACKGROUND_COLOR} />
-      {/* Purple glow background */}
-      <View style={styles.glow} />
-      <Text style={styles.logo}>Arena</Text>
-      <Text style={styles.tagline}>Unified Loyalty Network</Text>
-    </View>
+    <ScreenBackground>
+      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+      <View style={styles.container}>
+        <View style={styles.logoContainer}>
+          <VaultaLogo />
+          <Text style={styles.logoText}>VAULTA</Text>
+        </View>
+      </View>
+    </ScreenBackground>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.BACKGROUND_COLOR,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  glow: {
-    position: 'absolute',
-    width: 300,
-    height: 300,
-    borderRadius: 150,
-    backgroundColor: theme.PRIMARY_DARK,
-    opacity: 0.25,
-    top: '25%',
-    alignSelf: 'center',
-    // blur via shadow
-    shadowColor: theme.PRIMARY_DARK,
-    shadowOffset: {width: 0, height: 0},
-    shadowOpacity: 1,
-    shadowRadius: 120,
+  logoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
-  logo: {
-    fontFamily: fontFamily.extraBold,
-    fontSize: 48,
-    color: theme.PRIMARY_TEXT_COLOR,
+  logoText: {
+    fontFamily: 'PlusJakartaSans-Bold',
+    fontSize: 36,
+    color: theme.TEXT_PRIMARY,
     letterSpacing: 2,
-  },
-  tagline: {
-    fontFamily: fontFamily.regular,
-    fontSize: fontSize.md,
-    color: theme.SECONDARY_TEXT_COLOR,
-    marginTop: 8,
-    letterSpacing: 1,
   },
 });
 

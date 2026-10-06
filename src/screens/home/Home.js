@@ -1,14 +1,36 @@
 import React from 'react';
 import {ScrollView, StatusBar, StyleSheet} from 'react-native';
-import {useNavigation} from '@react-navigation/native';
 import ScreenBackground from '../../components/layout/ScreenBackground';
-import AppHeader from '../../components/layout/AppHeader';
-import BalanceSection from '../../components/home/BalanceSection';
-import PromoSection from '../../components/home/PromoSection';
-import RecentActivitySection from '../../components/home/RecentActivitySection';
+import HomeHeader from '../../components/home/HomeHeader';
+import BalanceCards from '../../components/home/BalanceCards';
+import ViewQRButton from '../../components/home/ViewQRButton';
+import ActivitiesSection from '../../components/home/ActivitiesSection';
+import RewardsSection from '../../components/home/RewardsSection';
+import OffersSection from '../../components/home/OffersSection';
+import {useTabContext} from '../../navigations/TabContext';
 
 const Home = () => {
-  const navigation = useNavigation();
+  const {switchTab} = useTabContext();
+
+  const handleViewQR = () => {
+    switchTab('ScanQR');
+  };
+
+  const handleRedeem = () => {
+    switchTab('Rewards');
+  };
+
+  const handleOfferDetails = () => {
+    switchTab('Rewards');
+  };
+
+  const handleSeeAllActivities = () => {
+    switchTab('Activity');
+  };
+
+  const handleSeeAllRewards = () => {
+    switchTab('Rewards');
+  };
 
   return (
     <ScreenBackground>
@@ -17,19 +39,22 @@ const Home = () => {
         style={styles.scroll}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}>
-        <AppHeader
-          title="Cooper"
-          subtitle="Ready to start your today"
-          greeting
-          showNotification
-          showCard
-          onTitlePress={() => {}}
+        <HomeHeader
+          name="Sarah"
+          onProfile={() => switchTab('Profile')}
           onNotification={() => {}}
-          onCard={() => {}}
+          onWallet={() => {}}
         />
-        <BalanceSection balance="$3,890.99" />
-        <PromoSection onSeeAll={() => navigation.navigate('Rewards')} />
-        <RecentActivitySection onSeeAll={() => navigation.navigate('Activity')} />
+
+        <BalanceCards points="1750" estimatedValue="950" />
+
+        <ViewQRButton onPress={handleViewQR} />
+
+        <ActivitiesSection onSeeAll={handleSeeAllActivities} />
+
+        <RewardsSection onRedeem={handleRedeem} onSeeAll={handleSeeAllRewards} />
+
+        <OffersSection onDetails={handleOfferDetails} />
       </ScrollView>
     </ScreenBackground>
   );
@@ -39,7 +64,6 @@ const styles = StyleSheet.create({
   scroll: {
     flex: 1,
   },
-  // Extra bottom padding so content clears the floating tab bar
   content: {
     paddingBottom: 110,
   },

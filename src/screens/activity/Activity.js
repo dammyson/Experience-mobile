@@ -7,6 +7,7 @@ import {
   StatusBar,
   StyleSheet,
 } from 'react-native';
+import {useNavigation} from '@react-navigation/native';
 import ScreenBackground from '../../components/layout/ScreenBackground';
 import AppHeader from '../../components/layout/AppHeader';
 import {SearchInput} from '../../components/ui';
@@ -55,7 +56,7 @@ const FilterChip = ({label, active, onPress}) => (
   </TouchableOpacity>
 );
 
-const TransactionCard = ({item}) => (
+const TransactionCard = ({item, onSeeDetails}) => (
   <View style={styles.txCard}>
     <View style={styles.txTop}>
       <Text style={styles.txMerchant}>{item.merchant}</Text>
@@ -70,7 +71,7 @@ const TransactionCard = ({item}) => (
         <Text style={styles.txId}>ID Transaction: {item.txId}</Text>
         <Text style={styles.txType}>Type: {item.type}</Text>
       </View>
-      <TouchableOpacity style={styles.detailsBtn} activeOpacity={0.8}>
+      <TouchableOpacity style={styles.detailsBtn} activeOpacity={0.8} onPress={onSeeDetails}>
         <Text style={styles.detailsBtnText}>See Details</Text>
       </TouchableOpacity>
     </View>
@@ -79,6 +80,7 @@ const TransactionCard = ({item}) => (
 
 // ── Screen ─────────────────────────────────────────────────────────────────
 const Activity = () => {
+  const navigation = useNavigation();
   const [activeFilter, setActiveFilter] = useState('All');
   const [search, setSearch] = useState('');
 
@@ -107,11 +109,9 @@ const Activity = () => {
 
         <AppHeader
           title="Activity"
-          showNotification
           showCard
-          hasNotification
-          onNotification={() => {}}
           onCard={() => {}}
+          walletText={"Wallet"}
         />
 
         {/* Search */}
@@ -144,7 +144,28 @@ const Activity = () => {
           <View key={group.date} style={styles.group}>
             <Text style={styles.dateLabel}>{group.date}</Text>
             {group.items.map(item => (
-              <TransactionCard key={item.id} item={item} />
+              <TransactionCard
+                key={item.id}
+                item={item}
+                onSeeDetails={() => navigation.navigate('TransactionDetails', {
+                  transaction: {
+                    date: group.date,
+                    merchant: item.merchant,
+                    points: item.amount.replace('$', '-'),
+                    epv: `-₦${parseInt(item.amount.replace('$', '')) * 5}`,
+                    status: item.status,
+                    reference: 'User Reference',
+                    txId: item.txId,
+                    redeemType: item.type,
+                    location: 'Lagos',
+                    totalTransactions: 12,
+                    totalReceived: '₦2,500',
+                    totalReceivedRewards: 25,
+                    totalRedeemed: '₦10,500',
+                    totalRedeemedRewards: 40,
+                  },
+                })}
+              />
             ))}
           </View>
         ))}
@@ -262,7 +283,7 @@ const styles = StyleSheet.create({
     color: theme.TEXT_TERTIARY,
   },
   detailsBtn: {
-    backgroundColor: theme.PRIMARY_COLOR,
+    backgroundColor: '#6715EA',
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 8,

@@ -310,7 +310,7 @@ const Profile = () => {
           />
           <SettingRow
             icon={<IdCardIcon />}
-            label="Contac & Verification"
+            label="Contact & Verification"
             onPress={() => {}}
             showDivider={false}
           />
@@ -322,7 +322,7 @@ const Profile = () => {
           <SettingRow
             icon={<CreditCardIcon />}
             label="Manage Cards & Banks"
-            onPress={() => {}}
+            onPress={() => navigation.navigate('CardsAndBanks')}
             showDivider={false}
           />
 
@@ -357,10 +357,10 @@ const Profile = () => {
 
           {/* Help & Support */}
           <SectionLabel label="Help & Support" light />
-          <SettingRow icon={<QuestionIcon />} label="FAQ" onPress={() => {}} />
+          <SettingRow icon={<QuestionIcon />} label="FAQ" onPress={() => navigation.navigate('FAQ')} />
           <SettingRow
             icon={<PhoneIcon />}
-            label="Contac Us"
+            label="Contact Us"
             onPress={() => {}}
           />
           <SettingRow

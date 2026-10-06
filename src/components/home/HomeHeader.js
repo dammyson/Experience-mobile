@@ -1,55 +1,57 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
+import {View, Text, TouchableOpacity, Image, StyleSheet} from 'react-native';
 import BellIcon from '../icons/BellIcon';
-import CardIcon from '../icons/CardIcon';
-import { theme } from '../../theme/colors';
+import WalletIcon from '../icons/WalletIcon';
+import ProfileIcon from '../icons/ProfileIcon';
+import {theme} from '../../theme/colors';
 
-const ChevronIcon = () => (
-  <Svg width={16} height={16} viewBox="0 0 16 16" fill="none">
-    <Path
-      d="M4 6l4 4 4-4"
-      stroke={theme.TEXT_PRIMARY}
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </Svg>
-);
-
-const HomeHeader = ({ name = 'Cooper', onNotification, onCard }) => (
+const HomeHeader = ({
+  name = 'Sarah',
+  avatarUri,
+  onProfile,
+  onNotification,
+  onWallet,
+  hasNotification = true,
+}) => (
   <View style={styles.container}>
-    {/* Greeting */}
-    <View style={styles.greetingContainer}>
-      <TouchableOpacity style={styles.greetingRow} activeOpacity={0.8}>
-        <Text style={styles.greetingName}>Hi, {name}</Text>
-        <ChevronIcon />
+    {/* Left side - Profile avatar and greeting */}
+    <View style={styles.leftSection}>
+      <TouchableOpacity
+        style={styles.avatarContainer}
+        onPress={onProfile}
+        activeOpacity={0.8}>
+        {avatarUri ? (
+          <Image source={{uri: avatarUri}} style={styles.avatarImage} />
+        ) : (
+          <ProfileIcon color={theme.WHITE} size={16} />
+        )}
       </TouchableOpacity>
-      <Text style={styles.greetingSub}>Ready to start your today</Text>
+
+      <View style={styles.greetingContainer}>
+        <Text style={styles.greetingText}>Hello, {name}</Text>
+      </View>
     </View>
 
-    {/* Right actions */}
-    <View style={styles.actions}>
-      {/* Notification bell — the red dot sits top-right of the container */}
+    {/* Right side - Notification and Wallet */}
+    <View style={styles.rightSection}>
+      {/* Notification bell */}
       <TouchableOpacity
         style={styles.bellBtn}
         onPress={onNotification}
-        activeOpacity={0.8}
-      >
-        <BellIcon color={theme.TEXT_PRIMARY} size={22} />
-        <View style={styles.notifDot} />
+        activeOpacity={0.8}>
+        <BellIcon color={theme.TEXT_PRIMARY} size={20} />
+        {hasNotification && <View style={styles.notifDot} />}
       </TouchableOpacity>
 
-      {/* My Card */}
+      {/* Wallet button */}
       <TouchableOpacity
-        style={styles.cardBtn}
-        onPress={onCard}
-        activeOpacity={0.8}
-      >
-        <View style={styles.cardIconBox}>
-          <CardIcon color={theme.BACKGROUND_COLOR} size={20} />
+        style={styles.walletBtn}
+        onPress={onWallet}
+        activeOpacity={0.8}>
+        <View style={styles.walletIconBox}>
+          <WalletIcon color={theme.BACKGROUND_COLOR} size={16} />
         </View>
-        <Text style={styles.cardText}>My Card</Text>
+        <Text style={styles.walletText}>Wallet</Text>
       </TouchableOpacity>
     </View>
   </View>
@@ -64,78 +66,78 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingBottom: 16,
   },
-  greetingContainer: {
-    gap: 6,
-  },
-  greetingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  greetingName: {
-    fontFamily: 'PlusJakartaSans-Medium',
-    fontSize: 20,
-    lineHeight: 26,
-    color: theme.TEXT_PRIMARY,
-  },
-  greetingSub: {
-    fontFamily: 'PlusJakartaSans-Regular',
-    fontSize: 14,
-    lineHeight: 21,
-    color: theme.TEXT_PRIMARY,
-    opacity: 0.7,
-  },
-  actions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  // Bell — 44×44 circle, rgba(255,255,255,0.16)
-  bellBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.16)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  // Red dot sits top-right corner of the bell button, outside the icon
-  notifDot: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    width: 12,
-    height: 12,
-    borderRadius: 5,
-    backgroundColor: theme.ERROR_BADGE,
-  },
-  // My Card — row, gap 8, padding 8px 12px 8px 8px, rgba(255,255,255,0.12), borderRadius 20
-  cardBtn: {
+  leftSection: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+  },
+  avatarContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: 32,
+    height: 32,
+    borderRadius: 22,
+  },
+  greetingContainer: {
+    marginLeft: 8,
+  },
+  greetingText: {
+    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontSize: 16,
+    lineHeight: 32,
+    color: theme.TEXT_PRIMARY,
+  },
+  rightSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  walletBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
     paddingLeft: 8,
     paddingRight: 12,
     paddingVertical: 8,
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
     borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
   },
-  // Card icon box — 36×36, Gray/gy900 fill, borderRadius 16
-  cardIconBox: {
-    width: 36,
-    height: 36,
+  walletIconBox: {
+    width: 23,
+    height: 23,
     borderRadius: 16,
     backgroundColor: theme.TEXT_PRIMARY,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  cardText: {
+  walletText: {
     fontFamily: 'PlusJakartaSans-Medium',
-    fontSize: 16,
+    fontSize: 11,
     lineHeight: 24,
     color: theme.TEXT_PRIMARY,
+  },
+  bellBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  notifDot: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: theme.ERROR_BADGE,
   },
 });
 

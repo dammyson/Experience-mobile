@@ -1,4 +1,4 @@
-import React, {useState, useCallback} from 'react';
+import React, {useCallback} from 'react';
 import {StatusBar} from 'react-native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import TabView from 'react-native-bottom-tabs';
@@ -12,6 +12,7 @@ import Profile from '../screens/profile/Profile';
 import CustomTabBar from '../components/navigation/CustomTabBar';
 import {isIOS26Plus} from '../utilities/platform';
 import {theme} from '../theme/colors';
+import {TabProvider, useTabContext} from './TabContext';
 
 const Tab = createBottomTabNavigator();
 
@@ -32,9 +33,9 @@ const NATIVE_ROUTES = [
   {key: 'Profile',  title: 'Profile',  focusedIcon: {sfSymbol: 'person.crop.circle.fill'}, unfocusedIcon: {sfSymbol: 'person.crop.circle'}},
 ];
 
-const NativeTabsView = () => {
+const NativeTabsContent = () => {
   const navigation = useNavigation();
-  const [index, setIndex] = useState(0);
+  const {tabIndex, setTabIndex} = useTabContext();
 
   const renderScene = useCallback(({route}) => {
     switch (route.key) {
@@ -51,8 +52,8 @@ const NativeTabsView = () => {
     <>
       <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
       <TabView
-        navigationState={{index, routes: NATIVE_ROUTES}}
-        onIndexChange={setIndex}
+        navigationState={{index: tabIndex, routes: NATIVE_ROUTES}}
+        onIndexChange={setTabIndex}
         renderScene={renderScene}
         tabBarActiveTintColor={theme.PRIMARY_COLOR}
         hapticFeedbackEnabled
@@ -62,6 +63,12 @@ const NativeTabsView = () => {
     </>
   );
 };
+
+const NativeTabsView = () => (
+  <TabProvider>
+    <NativeTabsContent />
+  </TabProvider>
+);
 
 // ─── Legacy tab bar (Android + iOS < 26): keeps the existing dark pill design ───
 

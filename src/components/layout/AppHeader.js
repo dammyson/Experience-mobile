@@ -1,10 +1,10 @@
 import React from 'react';
-import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
-import Svg, {Path} from 'react-native-svg';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import BellIcon from '../icons/BellIcon';
 import CardIcon from '../icons/CardIcon';
 import BackIcon from '../icons/BackIcon';
-import {theme} from '../../theme/colors';
+import { theme } from '../../theme/colors';
 
 const ChevronIcon = () => (
   <Svg width={16} height={16} viewBox="0 0 16 16" fill="none">
@@ -48,6 +48,7 @@ const AppHeader = ({
   onCard,
   onTitlePress,
   rightElement,
+  walletText,
 }) => {
   const hasRight = rightElement !== undefined || showNotification || showCard;
 
@@ -59,8 +60,9 @@ const AppHeader = ({
           <TouchableOpacity
             onPress={onBack}
             style={styles.backBtn}
-            hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}
-            activeOpacity={0.8}>
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            activeOpacity={0.8}
+          >
             <BackIcon />
           </TouchableOpacity>
         )}
@@ -70,20 +72,17 @@ const AppHeader = ({
             <TouchableOpacity
               style={styles.greetingRow}
               onPress={onTitlePress}
-              activeOpacity={onTitlePress ? 0.8 : 1}>
+              activeOpacity={onTitlePress ? 0.8 : 1}
+            >
               <Text style={styles.greetingName}>Hi, {title}</Text>
               {onTitlePress && <ChevronIcon />}
             </TouchableOpacity>
-            {!!subtitle && (
-              <Text style={styles.subtitle}>{subtitle}</Text>
-            )}
+            {!!subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
           </View>
         ) : (
           <View style={styles.titleContainer}>
             <Text style={styles.title}>{title}</Text>
-            {!!subtitle && (
-              <Text style={styles.subtitle}>{subtitle}</Text>
-            )}
+            {!!subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
           </View>
         )}
       </View>
@@ -99,7 +98,8 @@ const AppHeader = ({
                 <TouchableOpacity
                   style={styles.bellBtn}
                   onPress={onNotification}
-                  activeOpacity={0.8}>
+                  activeOpacity={0.8}
+                >
                   <BellIcon color={theme.TEXT_PRIMARY} size={22} />
                   {hasNotification && <View style={styles.notifDot} />}
                 </TouchableOpacity>
@@ -109,11 +109,12 @@ const AppHeader = ({
                 <TouchableOpacity
                   style={styles.cardBtn}
                   onPress={onCard}
-                  activeOpacity={0.8}>
+                  activeOpacity={0.8}
+                >
                   <View style={styles.cardIconBox}>
                     <CardIcon color={theme.BACKGROUND_COLOR} size={20} />
                   </View>
-                  <Text style={styles.cardText}>My Card</Text>
+                  <Text style={styles.cardText}>{walletText ?? 'My Card'}</Text>
                 </TouchableOpacity>
               )}
             </>
