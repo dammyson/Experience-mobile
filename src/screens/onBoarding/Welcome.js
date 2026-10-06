@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import Svg, {Path, G, Defs, ClipPath, Rect} from 'react-native-svg';
 import LinearGradient from 'react-native-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useNavigation} from '@react-navigation/native';
 import ScreenBackground from '../../components/layout/ScreenBackground';
 import {theme} from '../../theme/colors';
@@ -56,14 +57,30 @@ const GoogleIcon = () => (
 const Welcome = () => {
   const navigation = useNavigation();
 
-  const handleAppleSignIn = () => {
-    // TODO: Implement Apple Sign In
-    console.log('Apple Sign In');
+  const handleAppleSignIn = async () => {
+    try {
+      await AsyncStorage.setItem('token', 'apple-mock-token');
+      await AsyncStorage.setItem('hasSeenOnboarding', 'true');
+      navigation.reset({
+        index: 0,
+        routes: [{name: 'TabsNavigation'}],
+      });
+    } catch (error) {
+      console.error('Apple Sign In error:', error);
+    }
   };
 
-  const handleGoogleSignIn = () => {
-    // TODO: Implement Google Sign In
-    console.log('Google Sign In');
+  const handleGoogleSignIn = async () => {
+    try {
+      await AsyncStorage.setItem('token', 'google-mock-token');
+      await AsyncStorage.setItem('hasSeenOnboarding', 'true');
+      navigation.reset({
+        index: 0,
+        routes: [{name: 'TabsNavigation'}],
+      });
+    } catch (error) {
+      console.error('Google Sign In error:', error);
+    }
   };
 
   const handleSignUp = () => {
