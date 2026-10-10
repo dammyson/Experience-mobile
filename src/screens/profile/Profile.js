@@ -9,10 +9,10 @@ import {
   StyleSheet,
 } from 'react-native';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import ScreenBackground from '../../components/layout/ScreenBackground';
-import { logout } from '../../actions/authActions';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { theme } from '../../theme/colors';
 import { spacing, radius } from '../../theme/spacing';
 
@@ -269,10 +269,20 @@ const SectionLabel = ({ label, light }) => (
 const Profile = () => {
   const dispatch = useDispatch();
   const navigation = useNavigation();
+  const {user} = useSelector(state => state.auth);
 
-  const handleLogout = () => {
-    dispatch(logout());
-    navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
+  const fullName = user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() : 'User';
+
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.removeItem('token');
+      await AsyncStorage.removeItem('user');
+      await AsyncStorage.removeItem('profile');
+      dispatch({type: 'AUTH_LOGOUT'});
+      navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
+    } catch (error) {
+      console.log('Logout error:', error);
+    }
   };
 
   return (
@@ -294,7 +304,7 @@ const Profile = () => {
             style={styles.avatar}
           />
           <View style={styles.nameRow}>
-            <Text style={styles.name}>Ryan Cooper</Text>
+            <Text style={styles.name}>{fullName}</Text>
             <VerifiedBadge />
           </View>
         </View>

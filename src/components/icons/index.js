@@ -4,6 +4,8 @@ export {default as BellIcon} from './BellIcon';
 export {default as BillIcon} from './BillIcon';
 export {default as CardIcon} from './CardIcon';
 export {default as CheckIcon} from './CheckIcon';
+export {default as CloseIcon} from './CloseIcon';
+export {default as ErrorAlertIcon} from './ErrorAlertIcon';
 export {default as DownloadPDFIcon} from './DownloadPDFIcon';
 export {default as FlagIcon} from './FlagIcon';
 export {default as HomeIcon} from './HomeIcon';

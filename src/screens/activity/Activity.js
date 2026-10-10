@@ -1,4 +1,4 @@
-import React, {useState, useMemo} from 'react';
+import React, {useState, useMemo, useEffect} from 'react';
 import {
   View,
   Text,
@@ -6,37 +6,16 @@ import {
   TouchableOpacity,
   StatusBar,
   StyleSheet,
+  RefreshControl,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
+import {useDispatch, useSelector} from 'react-redux';
 import ScreenBackground from '../../components/layout/ScreenBackground';
 import AppHeader from '../../components/layout/AppHeader';
 import {SearchInput} from '../../components/ui';
 import {theme} from '../../theme/colors';
 import {spacing, radius} from '../../theme/spacing';
-
-// ── Mock data ──────────────────────────────────────────────────────────────
-const TRANSACTIONS = [
-  {
-    date: '01 December 2025',
-    items: [
-      {id: '1', merchant: 'Payment Merchant', status: 'Success', amount: '$20', txId: 'TF457RF6HF', type: 'Payments'},
-    ],
-  },
-  {
-    date: '26 November 2025',
-    items: [
-      {id: '2', merchant: 'TopUp T-Mobile Pulse', status: 'Pending', amount: '$18', txId: 'TF689RF4RR', type: 'TopUp'},
-      {id: '3', merchant: 'Withdraw ATM', status: 'Success', amount: '$50', txId: 'TF123AB7CD', type: 'Withdrawals'},
-    ],
-  },
-  {
-    date: '20 November 2025',
-    items: [
-      {id: '4', merchant: 'Bill Payment', status: 'Failed', amount: '$30', txId: 'TF987XY2ZA', type: 'Payments'},
-      {id: '5', merchant: 'Transfer to John', status: 'Success', amount: '$100', txId: 'TF654QW3ER', type: 'Transfers'},
-    ],
-  },
-];
+import {getTransactions} from '../../actions/customerActions';
 
 const FILTERS = ['All', 'Payments', 'TopUp', 'Transfers', 'Withdrawals'];
 
@@ -78,14 +57,57 @@ const TransactionCard = ({item, onSeeDetails}) => (
   </View>
 );
 
+// ── Helper to group transactions by date ───────────────────────────────────
+const groupTransactionsByDate = (transactions) => {
+  if (!Array.isArray(transactions)) return [];
+
+  const groups = {};
+  transactions.forEach(tx => {
+    const date = tx.created_at ? new Date(tx.created_at).toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+    }) : 'Unknown Date';
+
+    if (!groups[date]) {
+      groups[date] = [];
+    }
+    groups[date].push({
+      id: tx.id || tx.transaction_id || String(Math.random()),
+      merchant: tx.merchant_name || tx.description || 'Transaction',
+      status: tx.status || 'Success',
+      amount: tx.points ? `${tx.points} pts` : tx.amount || '0',
+      txId: tx.transaction_id || tx.id || 'N/A',
+      type: tx.type || tx.transaction_type || 'Payments',
+      raw: tx,
+    });
+  });
+
+  return Object.entries(groups).map(([date, items]) => ({date, items}));
+};
+
 // ── Screen ─────────────────────────────────────────────────────────────────
 const Activity = () => {
   const navigation = useNavigation();
+  const dispatch = useDispatch();
+  const {transactions, transactionsLoading} = useSelector(state => state.customer);
   const [activeFilter, setActiveFilter] = useState('All');
   const [search, setSearch] = useState('');
 
+  useEffect(() => {
+    dispatch(getTransactions());
+  }, [dispatch]);
+
+  const handleRefresh = () => {
+    dispatch(getTransactions());
+  };
+
+  const groupedTransactions = useMemo(() => {
+    return groupTransactionsByDate(transactions);
+  }, [transactions]);
+
   const filtered = useMemo(() => {
-    return TRANSACTIONS.map(group => ({
+    return groupedTransactions.map(group => ({
       ...group,
       items: group.items.filter(tx => {
         const matchesFilter = activeFilter === 'All' || tx.type === activeFilter;
@@ -95,7 +117,7 @@ const Activity = () => {
         return matchesFilter && matchesSearch;
       }),
     })).filter(group => group.items.length > 0);
-  }, [activeFilter, search]);
+  }, [groupedTransactions, activeFilter, search]);
 
   return (
     <ScreenBackground>
@@ -105,7 +127,14 @@ const Activity = () => {
         style={styles.scroll}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled">
+        keyboardShouldPersistTaps="handled"
+        refreshControl={
+          <RefreshControl
+            refreshing={transactionsLoading}
+            onRefresh={handleRefresh}
+            tintColor="#8B5CF6"
+          />
+        }>
 
         <AppHeader
           title="Activity"

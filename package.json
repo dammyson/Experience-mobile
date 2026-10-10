@@ -24,6 +24,7 @@
     "react": "19.2.3",
     "react-native": "0.87.1",
     "react-native-bottom-tabs": "^1.4.0",
+    "react-native-config": "^1.7.2",
     "react-native-confirmation-code-field": "^9.0.0",
     "react-native-flash-message": "^0.4.2",
     "react-native-gesture-handler": "^3.3.0",

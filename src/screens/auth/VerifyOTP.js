@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   StatusBar,
+  ActivityIndicator,
 } from 'react-native';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import ScreenBackground from '../../components/layout/ScreenBackground';
@@ -13,6 +14,7 @@ import OTPInput from '../../components/ui/OTPInput';
 import {theme} from '../../theme/colors';
 import {textStyles} from '../../theme/typography';
 import {spacing, radius} from '../../theme/spacing';
+import {authAPI} from '../../services/api';
 
 const RESEND_SECONDS = 60;
 
@@ -23,6 +25,8 @@ const VerifyOTP = () => {
 
   const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
   const [countdown, setCountdown] = useState(RESEND_SECONDS);
   const timerRef = useRef(null);
 
@@ -45,22 +49,38 @@ const VerifyOTP = () => {
     }, 1000);
   };
 
-  const handleVerify = () => {
+  const handleVerify = async () => {
     if (otp.length < 6) {
       setError('Please enter the complete 6-digit code');
       return;
     }
     setError('');
-    // TODO: dispatch verify OTP action
-    navigation.navigate('ResetPassword', {email, otp});
+    setLoading(true);
+
+    try {
+      await authAPI.verifyOtp({email, otp});
+      navigation.navigate('ResetPassword', {email, otp});
+    } catch (err) {
+      setError(err.message || 'Invalid code. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleResend = () => {
+  const handleResend = async () => {
     if (countdown > 0) return;
     setOtp('');
     setError('');
-    // TODO: dispatch resend OTP action
-    startCountdown();
+    setResending(true);
+
+    try {
+      await authAPI.forgotPassword({email});
+      startCountdown();
+    } catch (err) {
+      setError(err.message || 'Failed to resend code.');
+    } finally {
+      setResending(false);
+    }
   };
 
   const maskedEmail = email
@@ -108,11 +128,15 @@ const VerifyOTP = () => {
         {/* CTA */}
         <View style={styles.bottomContainer}>
           <TouchableOpacity
-            style={[styles.ctaButton, otp.length < 6 && styles.ctaDisabled]}
+            style={[styles.ctaButton, (otp.length < 6 || loading) && styles.ctaDisabled]}
             onPress={handleVerify}
-            disabled={otp.length < 6}
+            disabled={otp.length < 6 || loading}
             activeOpacity={0.85}>
-            <Text style={styles.ctaText}>Verify Code</Text>
+            {loading ? (
+              <ActivityIndicator color={theme.WHITE} />
+            ) : (
+              <Text style={styles.ctaText}>Verify Code</Text>
+            )}
           </TouchableOpacity>
         </View>
       </View>

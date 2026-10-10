@@ -8,49 +8,77 @@ import {
   ScrollView,
   StatusBar,
   StyleSheet,
+  ActivityIndicator,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import ScreenBackground from '../../components/layout/ScreenBackground';
-import {AppInput} from '../../components/ui';
+import {AppInput, PasswordInput} from '../../components/ui';
 import {BackIcon} from '../../components/icons';
 import {theme} from '../../theme/colors';
 import {spacing} from '../../theme/spacing';
+import {authAPI} from '../../services/api';
 
 const SignUp = () => {
   const navigation = useNavigation();
 
   const [form, setForm] = useState({
-    fullName: '',
+    firstName: '',
+    lastName: '',
     phoneNumber: '',
     email: '',
-    pin: '',
+    password: '',
+    confirmPassword: '',
   });
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const set = field => value => setForm(prev => ({...prev, [field]: value}));
 
-  const handleNext = () => {
-    const {fullName, phoneNumber, email, pin} = form;
-    if (!fullName || !phoneNumber || !email || !pin) {
+  const handleSignUp = async () => {
+    const {firstName, lastName, phoneNumber, email, password, confirmPassword} = form;
+
+    if (!firstName || !lastName || !phoneNumber || !email || !password || !confirmPassword) {
       setError('Please fill in all fields');
       return;
     }
-    if (pin.length !== 6) {
-      setError('PIN must be 6 digits');
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters');
       return;
     }
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
     setError('');
-    // Navigate to Identity Verification
-    navigation.navigate('IdentityVerification', {
-      userData: form,
-    });
+    setLoading(true);
+
+    try {
+      await authAPI.register({
+        firstName,
+        lastName,
+        email,
+        phoneNumber,
+        password,
+      });
+
+      navigation.navigate('IdentityVerification', {
+        userData: {email, phoneNumber},
+      });
+    } catch (err) {
+      setError(err.message || 'Registration failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const isValid =
-    form.fullName &&
+    form.firstName &&
+    form.lastName &&
     form.phoneNumber &&
     form.email &&
-    form.pin.length === 6;
+    form.password.length >= 8 &&
+    form.password === form.confirmPassword;
 
   return (
     <ScreenBackground>
@@ -78,10 +106,18 @@ const SignUp = () => {
           {/* Form */}
           <View style={styles.form}>
             <AppInput
-              label="Full Name"
-              value={form.fullName}
-              onChangeText={set('fullName')}
-              placeholder="Enter Full Name"
+              label="First Name"
+              value={form.firstName}
+              onChangeText={set('firstName')}
+              placeholder="Enter First Name"
+              autoCapitalize="words"
+            />
+
+            <AppInput
+              label="Last Name"
+              value={form.lastName}
+              onChangeText={set('lastName')}
+              placeholder="Enter Last Name"
               autoCapitalize="words"
             />
 
@@ -98,20 +134,24 @@ const SignUp = () => {
               label="Email"
               value={form.email}
               onChangeText={set('email')}
-              placeholder="Enter Email Adress"
+              placeholder="Enter Email Address"
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
             />
 
-            <AppInput
-              label="Create PIN"
-              value={form.pin}
-              onChangeText={set('pin')}
-              placeholder="Enter 6 digit PIN"
-              keyboardType="number-pad"
-              maxLength={6}
-              secureTextEntry
+            <PasswordInput
+              label="Password"
+              value={form.password}
+              onChangeText={set('password')}
+              placeholder="Enter Password (min 8 characters)"
+            />
+
+            <PasswordInput
+              label="Confirm Password"
+              value={form.confirmPassword}
+              onChangeText={set('confirmPassword')}
+              placeholder="Re-enter Password"
             />
           </View>
 
@@ -122,11 +162,15 @@ const SignUp = () => {
         {/* Bottom Button */}
         <View style={styles.bottomContainer}>
           <TouchableOpacity
-            style={[styles.ctaButton, !isValid && styles.ctaDisabled]}
-            onPress={handleNext}
-            disabled={!isValid}
+            style={[styles.ctaButton, (!isValid || loading) && styles.ctaDisabled]}
+            onPress={handleSignUp}
+            disabled={!isValid || loading}
             activeOpacity={0.85}>
-            <Text style={styles.ctaText}>Next: Identity Verification</Text>
+            {loading ? (
+              <ActivityIndicator color={theme.WHITE} />
+            ) : (
+              <Text style={styles.ctaText}>Create Account</Text>
+            )}
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>

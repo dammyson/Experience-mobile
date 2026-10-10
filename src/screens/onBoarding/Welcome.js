@@ -126,6 +126,14 @@ const Welcome = () => {
             <Text style={styles.googleBtnText}>Continue with Google</Text>
           </TouchableOpacity>
 
+          {/* Sign In Link */}
+          <View style={styles.signUpRow}>
+            <Text style={styles.signUpText}>Already have an account? </Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Login')} activeOpacity={0.7}>
+              <Text style={styles.signUpLink}>Sign In</Text>
+            </TouchableOpacity>
+          </View>
+
           {/* Sign Up Link */}
           <View style={styles.signUpRow}>
             <Text style={styles.signUpText}>Don't have an account? </Text>

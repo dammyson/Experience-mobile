@@ -9,9 +9,10 @@ import {
   Platform,
   ScrollView,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import ScreenBackground from '../../components/layout/ScreenBackground';
-import { AppInput, PasswordInput } from '../../components/ui';
+import { AppInput, PasswordInput, ErrorSheet } from '../../components/ui';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { theme } from '../../theme/colors';
@@ -25,6 +26,7 @@ const Login = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const { loading, error, isAuthenticated } = useSelector(state => state.auth);
+  const [showError, setShowError] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -32,8 +34,19 @@ const Login = () => {
     }
   }, [isAuthenticated, navigation]);
 
+  useEffect(() => {
+    if (error) {
+      setShowError(true);
+    }
+  }, [error]);
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
+  const handleCloseError = () => {
+    setShowError(false);
+    dispatch({ type: 'AUTH_CLEAR_ERROR' });
+  };
 
   const handleLogin = () => {
     dispatch(login(email, password));
@@ -91,19 +104,18 @@ const Login = () => {
             <Text style={styles.forgotText}>Forgot PIN / Password?</Text>
           </TouchableOpacity>
 
-          {/* Error */}
-          {!!error && <Text style={styles.errorText}>{error}</Text>}
-
           {/* CTA button — Brand/br500 glass fill, borderRadius 20 */}
           <TouchableOpacity
-            style={styles.ctaButton}
+            style={[styles.ctaButton, loading && styles.ctaDisabled]}
             onPress={handleLogin}
             disabled={loading}
             activeOpacity={0.85}
           >
-            <Text style={styles.ctaText}>
-              {loading ? 'Signing in...' : 'Sign In'}
-            </Text>
+            {loading ? (
+              <ActivityIndicator color={theme.WHITE} />
+            ) : (
+              <Text style={styles.ctaText}>Sign In</Text>
+            )}
           </TouchableOpacity>
 
           {/* Divider */}
@@ -122,6 +134,12 @@ const Login = () => {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <ErrorSheet
+        visible={showError}
+        message={error}
+        onClose={handleCloseError}
+      />
     </ScreenBackground>
   );
 };
@@ -173,14 +191,6 @@ const styles = StyleSheet.create({
     color: theme.PRIMARY_COLOR,
   },
 
-  // Error
-  errorText: {
-    ...textStyles.textSm,
-    color: theme.ERROR_COLOR,
-    marginBottom: spacing.sm,
-    textAlign: 'center',
-  },
-
   // CTA button — Brand/br500 rgba(152,96,240,0.52), borderRadius 20px, padding 12px 20px
   ctaButton: {
     backgroundColor: theme.PRIMARY_GLASS,
@@ -189,6 +199,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     alignItems: 'center',
     marginBottom: spacing.xl,
+  },
+  ctaDisabled: {
+    opacity: 0.5,
   },
   // Button label — Text/Text lg/Bold
   ctaText: {

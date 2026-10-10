@@ -69,6 +69,7 @@ yarn-error.log
 # Environment variables (never commit secrets)
 .env
 .env.*
+!.env.example
 .env.local
 .env.*.local
 

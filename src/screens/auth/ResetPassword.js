@@ -8,24 +8,29 @@ import {
   ScrollView,
   StatusBar,
   StyleSheet,
+  ActivityIndicator,
 } from 'react-native';
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useRoute} from '@react-navigation/native';
 import ScreenBackground from '../../components/layout/ScreenBackground';
 import BackIcon from '../../components/icons/BackIcon';
 import {PasswordInput} from '../../components/ui';
 import {theme} from '../../theme/colors';
 import {textStyles} from '../../theme/typography';
 import {spacing, radius} from '../../theme/spacing';
+import {authAPI} from '../../services/api';
 
 const ResetPassword = () => {
   const navigation = useNavigation();
+  const route = useRoute();
+  const {email, otp} = route.params ?? {};
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  const handleReset = () => {
+  const handleReset = async () => {
     if (password.length < 8) {
       setError('Password must be at least 8 characters');
       return;
@@ -35,8 +40,16 @@ const ResetPassword = () => {
       return;
     }
     setError('');
-    // TODO: dispatch reset password action
-    setSuccess(true);
+    setLoading(true);
+
+    try {
+      await authAPI.resetPassword({email, otp, newPassword: password});
+      setSuccess(true);
+    } catch (err) {
+      setError(err.message || 'Failed to reset password. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (success) {
@@ -105,11 +118,15 @@ const ResetPassword = () => {
 
       <View style={styles.bottomContainer}>
         <TouchableOpacity
-          style={[styles.ctaButton, !isValid && styles.ctaDisabled]}
+          style={[styles.ctaButton, (!isValid || loading) && styles.ctaDisabled]}
           onPress={handleReset}
-          disabled={!isValid}
+          disabled={!isValid || loading}
           activeOpacity={0.85}>
-          <Text style={styles.ctaText}>Reset Password</Text>
+          {loading ? (
+            <ActivityIndicator color={theme.WHITE} />
+          ) : (
+            <Text style={styles.ctaText}>Reset Password</Text>
+          )}
         </TouchableOpacity>
       </View>
     </ScreenBackground>

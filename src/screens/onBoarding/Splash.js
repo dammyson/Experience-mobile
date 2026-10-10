@@ -3,7 +3,9 @@ import {View, Text, StyleSheet, StatusBar} from 'react-native';
 import Svg, {Path, Defs, LinearGradient, Stop} from 'react-native-svg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useNavigation} from '@react-navigation/native';
+import {useDispatch} from 'react-redux';
 import ScreenBackground from '../../components/layout/ScreenBackground';
+import {loadUserFromStorage} from '../../actions/authActions';
 import {theme} from '../../theme/colors';
 
 const VaultaLogo = () => (
@@ -31,6 +33,7 @@ const VaultaLogo = () => (
 
 const Splash = () => {
   const navigation = useNavigation();
+  const dispatch = useDispatch();
 
   useEffect(() => {
     const timer = setTimeout(async () => {
@@ -38,6 +41,8 @@ const Splash = () => {
       const token = await AsyncStorage.getItem('token');
 
       if (token) {
+        // Load user data into Redux store
+        dispatch(loadUserFromStorage());
         navigation.replace('TabsNavigation');
       } else if (hasSeenOnboarding) {
         navigation.replace('Welcome');
@@ -46,7 +51,7 @@ const Splash = () => {
       }
     }, 2500);
     return () => clearTimeout(timer);
-  }, [navigation]);
+  }, [navigation, dispatch]);
 
   return (
     <ScreenBackground>
