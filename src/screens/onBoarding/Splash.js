@@ -59,7 +59,7 @@ const Splash = () => {
       <View style={styles.container}>
         <View style={styles.logoContainer}>
           <VaultaLogo />
-          <Text style={styles.logoText}>VAULTA</Text>
+          <Text style={styles.logoText}>Arena</Text>
         </View>
       </View>
     </ScreenBackground>

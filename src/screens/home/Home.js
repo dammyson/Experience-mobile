@@ -11,6 +11,24 @@ import OffersSection from '../../components/home/OffersSection';
 import {useTabContext} from '../../navigations/TabContext';
 import {getDashboard} from '../../actions/customerActions';
 
+const formatSigned = (value, prefix = '') => {
+  const num = Number(value) || 0;
+  const sign = num > 0 ? '+' : num < 0 ? '-' : '';
+  return `${sign}${prefix}${Math.abs(num)}`;
+};
+
+const mapActivity = item => {
+  const isEarned = (item.points_delta ?? 0) > 0;
+  return {
+    id: item.id,
+    merchant: item.merchant_name || 'Transaction',
+    points: `${formatSigned(item.points_delta)} points`,
+    status: isEarned ? 'Earned' : 'Redeemed',
+    epv: `EPV ${formatSigned(item.points_value, '₦')}`,
+    isEarned,
+  };
+};
+
 const Home = () => {
   const {switchTab} = useTabContext();
   const dispatch = useDispatch();
@@ -75,7 +93,7 @@ const Home = () => {
         <ViewQRButton onPress={handleViewQR} />
 
         <ActivitiesSection
-          activities={dashboard?.recent_activity || []}
+          activities={(dashboard?.recent_activity || []).map(mapActivity)}
           onSeeAll={handleSeeAllActivities}
         />
 
