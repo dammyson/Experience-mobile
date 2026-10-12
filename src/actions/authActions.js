@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {authAPI, customerAPI} from '../services/api';
+import cache, {CACHE_KEYS} from '../services/cache';
 
 export const login = (email, password) => async dispatch => {
   dispatch({type: 'AUTH_LOADING'});
@@ -48,13 +49,26 @@ export const register = ({firstName, lastName, email, phoneNumber, password}) =>
   }
 };
 
-export const getProfile = () => async dispatch => {
+export const getProfile = (forceRefresh = false) => async dispatch => {
   dispatch({type: 'PROFILE_LOADING'});
+
   try {
+    // Check cache first (unless force refresh)
+    if (!forceRefresh) {
+      const cached = await cache.get(CACHE_KEYS.PROFILE);
+      if (cached) {
+        dispatch({type: 'PROFILE_SUCCESS', payload: cached});
+        return cached;
+      }
+    }
+
     const response = await customerAPI.getProfile();
     const profileData = response.data;
 
+    // Cache the response
+    await cache.set(CACHE_KEYS.PROFILE, profileData);
     await AsyncStorage.setItem('profile', JSON.stringify(profileData));
+
     dispatch({type: 'PROFILE_SUCCESS', payload: profileData});
     return profileData;
   } catch (error) {
@@ -99,6 +113,7 @@ export const logout = () => async dispatch => {
     await AsyncStorage.removeItem('refreshToken');
     await AsyncStorage.removeItem('user');
     await AsyncStorage.removeItem('profile');
+    await cache.invalidateAll();
   } catch (error) {
     console.log('Error clearing storage:', error);
   }

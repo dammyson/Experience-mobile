@@ -18,11 +18,11 @@ const Home = () => {
   const {dashboard, dashboardLoading} = useSelector(state => state.customer);
 
   useEffect(() => {
-    dispatch(getDashboard());
+    dispatch(getDashboard()); // Uses cache on initial load
   }, [dispatch]);
 
   const handleRefresh = () => {
-    dispatch(getDashboard());
+    dispatch(getDashboard(true)); // Force refresh bypasses cache
   };
 
   const firstName = user?.first_name || 'User';

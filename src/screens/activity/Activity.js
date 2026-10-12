@@ -95,11 +95,11 @@ const Activity = () => {
   const [search, setSearch] = useState('');
 
   useEffect(() => {
-    dispatch(getTransactions());
+    dispatch(getTransactions()); // Uses cache on initial load
   }, [dispatch]);
 
   const handleRefresh = () => {
-    dispatch(getTransactions());
+    dispatch(getTransactions(true)); // Force refresh bypasses cache
   };
 
   const groupedTransactions = useMemo(() => {
