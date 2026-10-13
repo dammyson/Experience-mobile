@@ -33,6 +33,11 @@ import FAQ from '../screens/support/FAQ';
 // Payment
 import CardsAndBanks from '../screens/payment/CardsAndBanks';
 
+// Merchant
+import Programs from '../screens/programs/Programs';
+import ProgramDetails from '../screens/programs/ProgramDetails';
+import AwardPoints from '../screens/programs/AwardPoints';
+
 // Main app
 import TabsNavigation from './tabs-navigation';
 import NavigationService from './NavigationService';
@@ -84,6 +89,11 @@ const Route = () => {
 
         {/* Payment */}
         <Stack.Screen name="CardsAndBanks" component={CardsAndBanks} />
+
+        {/* Merchant */}
+        <Stack.Screen name="Programs" component={Programs} />
+        <Stack.Screen name="ProgramDetails" component={ProgramDetails} />
+        <Stack.Screen name="AwardPoints" component={AwardPoints} />
 
         {/* Main App */}
         <Stack.Screen

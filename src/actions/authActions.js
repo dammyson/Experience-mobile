@@ -1,10 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {authAPI, customerAPI} from '../services/api';
 
-export const login = (email, password) => async dispatch => {
+export const login = (email, password, userType = 'customer') => async dispatch => {
   dispatch({type: 'AUTH_LOADING'});
   try {
-    const response = await authAPI.login({email, password});
+    const response = await authAPI.login({email, password, userType});
     const {user, token, refresh_token} = response.data;
 
     await AsyncStorage.setItem('token', token);
@@ -12,9 +12,15 @@ export const login = (email, password) => async dispatch => {
       await AsyncStorage.setItem('refreshToken', refresh_token);
     }
     await AsyncStorage.setItem('user', JSON.stringify(user));
+    await AsyncStorage.setItem('userType', userType);
     await AsyncStorage.setItem('hasSeenOnboarding', 'true');
 
-    dispatch({type: 'AUTH_SUCCESS', payload: {user, token}});
+    dispatch({type: 'AUTH_SUCCESS', payload: {user, token, userType}});
+
+    // Customer profile endpoint doesn't apply to merchants
+    if (userType === 'merchant') {
+      return;
+    }
 
     // Fetch full profile after login
     try {
@@ -68,10 +74,15 @@ export const loadUserFromStorage = () => async dispatch => {
     const token = await AsyncStorage.getItem('token');
     const userStr = await AsyncStorage.getItem('user');
     const profileStr = await AsyncStorage.getItem('profile');
+    const userType = (await AsyncStorage.getItem('userType')) || 'customer';
 
     if (token && userStr) {
       const user = JSON.parse(userStr);
-      dispatch({type: 'AUTH_SUCCESS', payload: {user, token}});
+      dispatch({type: 'AUTH_SUCCESS', payload: {user, token, userType}});
+
+      if (userType === 'merchant') {
+        return;
+      }
 
       if (profileStr) {
         const profile = JSON.parse(profileStr);
@@ -99,6 +110,7 @@ export const logout = () => async dispatch => {
     await AsyncStorage.removeItem('refreshToken');
     await AsyncStorage.removeItem('user');
     await AsyncStorage.removeItem('profile');
+    await AsyncStorage.removeItem('userType');
   } catch (error) {
     console.log('Error clearing storage:', error);
   }
