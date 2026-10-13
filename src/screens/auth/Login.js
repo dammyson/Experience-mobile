@@ -10,6 +10,7 @@ import {
   ScrollView,
   Dimensions,
   ActivityIndicator,
+  Switch,
 } from 'react-native';
 import ScreenBackground from '../../components/layout/ScreenBackground';
 import { AppInput, PasswordInput, ErrorSheet } from '../../components/ui';
@@ -42,6 +43,7 @@ const Login = () => {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isMerchant, setIsMerchant] = useState(false);
 
   const handleCloseError = () => {
     setShowError(false);
@@ -49,7 +51,7 @@ const Login = () => {
   };
 
   const handleLogin = () => {
-    dispatch(login(email, password));
+    dispatch(login(email, password, isMerchant ? 'merchant' : 'customer'));
   };
 
   return (
@@ -95,6 +97,18 @@ const Login = () => {
             onChangeText={setPassword}
             placeholder="Enter your password"
           />
+
+          {/* User type */}
+          <View style={styles.merchantRow}>
+            <Text style={styles.merchantLabel}>Sign in as merchant</Text>
+            <Switch
+              value={isMerchant}
+              onValueChange={setIsMerchant}
+              trackColor={{ false: theme.SURFACE_ELEVATED, true: theme.PRIMARY_COLOR }}
+              thumbColor={theme.WHITE}
+              ios_backgroundColor={theme.SURFACE_ELEVATED}
+            />
+          </View>
 
           {/* Forgot */}
           <TouchableOpacity
@@ -178,6 +192,18 @@ const styles = StyleSheet.create({
     ...textStyles.displaySm,
     color: theme.TEXT_PRIMARY,
     marginBottom: spacing.xl,
+  },
+
+  // User type
+  merchantRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: spacing.lg,
+  },
+  merchantLabel: {
+    ...textStyles.textMd,
+    color: theme.TEXT_SECONDARY,
   },
 
   // Forgot

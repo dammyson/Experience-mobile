@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,8 @@ import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import ScreenBackground from '../../components/layout/ScreenBackground';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { logout } from '../../actions/authActions';
+import { getMerchantProfile } from '../../actions/merchantActions';
 import { theme } from '../../theme/colors';
 import { spacing, radius } from '../../theme/spacing';
 
@@ -269,16 +270,24 @@ const SectionLabel = ({ label, light }) => (
 const Profile = () => {
   const dispatch = useDispatch();
   const navigation = useNavigation();
-  const {user} = useSelector(state => state.auth);
+  const {user, userType} = useSelector(state => state.auth);
+  const merchantProfile = useSelector(state => state.merchant.profile);
 
-  const fullName = user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() : 'User';
+  const isMerchant = userType === 'merchant';
+  const merchantId = user?.merchant_ids?.[0];
+
+  useEffect(() => {
+    if (isMerchant && merchantId) {
+      dispatch(getMerchantProfile(merchantId)).catch(() => {});
+    }
+  }, [dispatch, isMerchant, merchantId]);
+
+  const userName = user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() : 'User';
+  const fullName = isMerchant ? merchantProfile?.merchant?.name || userName : userName;
 
   const handleLogout = async () => {
     try {
-      await AsyncStorage.removeItem('token');
-      await AsyncStorage.removeItem('user');
-      await AsyncStorage.removeItem('profile');
-      dispatch({type: 'AUTH_LOGOUT'});
+      await dispatch(logout());
       navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
     } catch (error) {
       console.log('Logout error:', error);

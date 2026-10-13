@@ -41,7 +41,7 @@ const refreshAccessToken = async () => {
   console.log('[API Response] /auth/refresh:', JSON.stringify(data, null, 2));
 
   if (!response.ok || data.success === false) {
-    await AsyncStorage.multiRemove(['token', 'refreshToken', 'user', 'profile']);
+    await AsyncStorage.multiRemove(['token', 'refreshToken', 'user', 'profile', 'userType']);
     throw new Error('Session expired. Please login again.');
   }
 
@@ -145,19 +145,20 @@ export const authAPI = {
     return handleResponse(response, '/auth/register/customer');
   },
 
-  login: async ({email, phoneNumber, password}) => {
+  login: async ({email, phoneNumber, password, userType = 'customer'}) => {
     const payload = {password};
     if (email) payload.email = email;
     if (phoneNumber) payload.phone_number = phoneNumber;
 
-    console.log('[API Request] /auth/login:', JSON.stringify(payload, null, 2));
+    const endpoint = userType === 'merchant' ? '/auth/login/merchant' : '/auth/login';
+    console.log(`[API Request] ${endpoint}:`, JSON.stringify(payload, null, 2));
 
-    const response = await fetch(`${BASE_URL}/auth/login`, {
+    const response = await fetch(`${BASE_URL}${endpoint}`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(payload),
     });
-    return handleResponse(response, '/auth/login');
+    return handleResponse(response, endpoint);
   },
 
   forgotPassword: async ({email}) => {
@@ -219,7 +220,47 @@ export const customerAPI = {
   getTransactions: () => authenticatedRequest('/customer/transactions', {method: 'GET'}),
 };
 
+// Merchant endpoints identify the merchant via a `merchant_id` header rather than the URL path
+const merchantRequest = (merchantId, endpoint, options = {}) =>
+  authenticatedRequest(endpoint, {
+    ...options,
+    headers: {...options.headers, merchant_id: merchantId},
+  });
+
+export const merchantAPI = {
+  getWallet: merchantId => merchantRequest(merchantId, '/merchant/wallet', {method: 'GET'}),
+
+  getProfile: merchantId => merchantRequest(merchantId, '/merchant/profile', {method: 'GET'}),
+
+  getPrograms: merchantId => merchantRequest(merchantId, '/merchant/programs', {method: 'GET'}),
+
+  getProgramBalance: (merchantId, programId) =>
+    merchantRequest(merchantId, `/merchant/programs/${programId}/balance`, {method: 'GET'}),
+
+  getActivities: (merchantId, {limit = 50, offset = 0} = {}) =>
+    merchantRequest(merchantId, `/merchant/activities?limit=${limit}&offset=${offset}`, {
+      method: 'GET',
+    }),
+
+  lookupCustomer: (merchantId, {email, phoneNumber, customerId}) => {
+    const params = [];
+    if (email) params.push(`email=${encodeURIComponent(email)}`);
+    if (phoneNumber) params.push(`phone_number=${encodeURIComponent(phoneNumber)}`);
+    if (customerId) params.push(`customer_id=${encodeURIComponent(customerId)}`);
+    return merchantRequest(merchantId, `/merchant/customers/lookup?${params.join('&')}`, {
+      method: 'GET',
+    });
+  },
+
+  awardPoints: (merchantId, programId, customerId, {points, reason}) =>
+    merchantRequest(merchantId, `/merchant/programs/${programId}/customers/${customerId}/award`, {
+      method: 'POST',
+      body: JSON.stringify({points, reason}),
+    }),
+};
+
 export default {
   auth: authAPI,
   customer: customerAPI,
+  merchant: merchantAPI,
 };

@@ -16,6 +16,7 @@ import {SearchInput} from '../../components/ui';
 import {theme} from '../../theme/colors';
 import {spacing, radius} from '../../theme/spacing';
 import {getTransactions} from '../../actions/customerActions';
+import MerchantActivity from './MerchantActivity';
 
 const FILTERS = ['All', 'Payments', 'TopUp', 'Transfers', 'Withdrawals'];
 
@@ -87,7 +88,7 @@ const groupTransactionsByDate = (transactions) => {
 };
 
 // ── Screen ─────────────────────────────────────────────────────────────────
-const Activity = () => {
+const CustomerActivity = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const {transactions, transactionsLoading} = useSelector(state => state.customer);
@@ -333,5 +334,10 @@ const styles = StyleSheet.create({
     color: theme.TEXT_MUTED,
   },
 });
+
+const Activity = () => {
+  const userType = useSelector(state => state.auth.userType);
+  return userType === 'merchant' ? <MerchantActivity /> : <CustomerActivity />;
+};
 
 export default Activity;

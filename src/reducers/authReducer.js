@@ -4,6 +4,7 @@ const initialState = {
   verifications: [],
   bankAccounts: [],
   token: null,
+  userType: null, // 'customer' | 'merchant'
   isAuthenticated: false,
   loading: false,
   profileLoading: false,
@@ -21,6 +22,7 @@ const authReducer = (state = initialState, action) => {
         isAuthenticated: true,
         user: action.payload.user,
         token: action.payload.token,
+        userType: action.payload.userType || 'customer',
       };
     case 'AUTH_ERROR':
       return {...state, loading: false, error: action.payload};
