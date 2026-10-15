@@ -236,11 +236,11 @@ export const customerAPI = {
     }),
 };
 
-// Merchant endpoints identify the merchant via a `merchant_id` header rather than the URL path
+// Merchant endpoints identify the merchant via an `X-Merchant-Id` header rather than the URL path
 const merchantRequest = (merchantId, endpoint, options = {}) =>
   authenticatedRequest(endpoint, {
     ...options,
-    headers: {...options.headers, merchant_id: merchantId},
+    headers: {...options.headers, 'X-Merchant-Id': merchantId},
   });
 
 export const merchantAPI = {
