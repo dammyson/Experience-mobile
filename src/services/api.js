@@ -217,7 +217,23 @@ export const customerAPI = {
 
   getDashboard: () => authenticatedRequest('/customer/dashboard', {method: 'GET'}),
 
-  getTransactions: () => authenticatedRequest('/customer/transactions', {method: 'GET'}),
+  getTransactions: ({limit = 100, offset = 0} = {}) =>
+    authenticatedRequest(`/customer/transactions?limit=${limit}&offset=${offset}`, {method: 'GET'}),
+
+  getPointsByMerchant: () => authenticatedRequest('/customer/points/merchants', {method: 'GET'}),
+
+  getMerchants: () => authenticatedRequest('/customer/merchants', {method: 'GET'}),
+
+  getSpendable: merchantId =>
+    authenticatedRequest(`/customer/merchant/${merchantId}/spendable`, {method: 'GET'}),
+
+  getPurchases: () => authenticatedRequest('/customer/purchases', {method: 'GET'}),
+
+  payWithPoints: (merchantId, purchaseId) =>
+    authenticatedRequest(`/customer/merchant/${merchantId}/pay-with-points`, {
+      method: 'POST',
+      body: JSON.stringify({purchase_id: purchaseId}),
+    }),
 };
 
 // Merchant endpoints identify the merchant via a `merchant_id` header rather than the URL path
@@ -251,6 +267,12 @@ export const merchantAPI = {
       method: 'GET',
     });
   },
+
+  createPurchase: (merchantId, {customerId, amount, currency, reference, note}) =>
+    merchantRequest(merchantId, '/merchant/purchases', {
+      method: 'POST',
+      body: JSON.stringify({customer_id: customerId, amount, currency, reference, note}),
+    }),
 
   awardPoints: (merchantId, programId, customerId, {points, reason}) =>
     merchantRequest(merchantId, `/merchant/programs/${programId}/customers/${customerId}/award`, {

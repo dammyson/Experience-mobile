@@ -19,12 +19,7 @@ import {theme} from '../../theme/colors';
 import {textStyles} from '../../theme/typography';
 import {spacing, radius} from '../../theme/spacing';
 import {merchantAPI} from '../../services/api';
-
-const LOOKUP_TYPES = [
-  {key: 'email', label: 'Email', placeholder: 'Enter customer email', keyboardType: 'email-address'},
-  {key: 'phoneNumber', label: 'Phone', placeholder: 'Enter phone number', keyboardType: 'phone-pad'},
-  {key: 'customerId', label: 'Customer ID', placeholder: 'Enter customer ID', keyboardType: 'default'},
-];
+import CustomerLookup, {getCustomerName} from '../../components/merchant/CustomerLookup';
 
 const AwardPoints = () => {
   const navigation = useNavigation();
@@ -32,46 +27,16 @@ const AwardPoints = () => {
   const {user} = useSelector(state => state.auth);
   const merchantId = user?.merchant_ids?.[0];
 
-  const [lookupType, setLookupType] = useState('email');
-  const [query, setQuery] = useState('');
+  const [lookupKey, setLookupKey] = useState(0);
   const [customer, setCustomer] = useState(null);
   const [points, setPoints] = useState('');
   const [reason, setReason] = useState('');
-  const [searching, setSearching] = useState(false);
   const [awarding, setAwarding] = useState(false);
   const [awarded, setAwarded] = useState(false);
   const [error, setError] = useState(null);
 
-  const activeType = LOOKUP_TYPES.find(type => type.key === lookupType);
   const pointsValue = parseInt(points, 10);
   const canAward = !!customer && pointsValue > 0 && !awarding;
-
-  const handleTypeChange = key => {
-    setLookupType(key);
-    setQuery('');
-    setCustomer(null);
-  };
-
-  const handleLookup = async () => {
-    const value = query.trim();
-    if (!value) {
-      return;
-    }
-    setSearching(true);
-    setCustomer(null);
-    try {
-      const response = await merchantAPI.lookupCustomer(merchantId, {[lookupType]: value});
-      const found = response.data?.customer || response.data;
-      if (!found?.id) {
-        throw new Error('Customer not found');
-      }
-      setCustomer(found);
-    } catch (err) {
-      setError(err?.message || 'Customer not found');
-    } finally {
-      setSearching(false);
-    }
-  };
 
   const handleAward = async () => {
     setAwarding(true);
@@ -89,16 +54,14 @@ const AwardPoints = () => {
   };
 
   const handleAwardAnother = () => {
-    setQuery('');
+    setLookupKey(key => key + 1);
     setCustomer(null);
     setPoints('');
     setReason('');
     setAwarded(false);
   };
 
-  const customerName = customer
-    ? `${customer.first_name || ''} ${customer.last_name || ''}`.trim() || 'Customer'
-    : '';
+  const customerName = getCustomerName(customer);
 
   return (
     <ScreenBackground>
@@ -145,63 +108,17 @@ const AwardPoints = () => {
           ) : (
             <>
               {/* Step 1 — find customer */}
-              <Text style={styles.sectionTitle}>Find Customer</Text>
-
-              <View style={styles.segment}>
-                {LOOKUP_TYPES.map(type => (
-                  <TouchableOpacity
-                    key={type.key}
-                    style={[styles.segmentItem, lookupType === type.key && styles.segmentItemActive]}
-                    onPress={() => handleTypeChange(type.key)}
-                    activeOpacity={0.8}>
-                    <Text
-                      style={[
-                        styles.segmentText,
-                        lookupType === type.key && styles.segmentTextActive,
-                      ]}>
-                      {type.label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-
-              <AppInput
-                value={query}
-                onChangeText={text => {
-                  setQuery(text);
-                  setCustomer(null);
-                }}
-                placeholder={activeType.placeholder}
-                keyboardType={activeType.keyboardType}
-                autoCapitalize="none"
-                autoCorrect={false}
-                returnKeyType="search"
-                onSubmitEditing={handleLookup}
+              <CustomerLookup
+                key={lookupKey}
+                merchantId={merchantId}
+                customer={customer}
+                onCustomerChange={setCustomer}
+                onError={setError}
               />
-
-              <TouchableOpacity
-                style={[styles.secondaryButton, (!query.trim() || searching) && styles.disabled]}
-                onPress={handleLookup}
-                disabled={!query.trim() || searching}
-                activeOpacity={0.85}>
-                {searching ? (
-                  <ActivityIndicator color={theme.WHITE} />
-                ) : (
-                  <Text style={styles.ctaText}>Find Customer</Text>
-                )}
-              </TouchableOpacity>
 
               {/* Step 2 — award */}
               {customer && (
                 <>
-                  <View style={styles.customerCard}>
-                    <Text style={styles.customerName}>{customerName}</Text>
-                    {!!customer.email && <Text style={styles.customerMeta}>{customer.email}</Text>}
-                    {!!customer.phone_number && (
-                      <Text style={styles.customerMeta}>{customer.phone_number}</Text>
-                    )}
-                  </View>
-
                   <Text style={styles.sectionTitle}>Award Details</Text>
 
                   <AppInput
@@ -284,56 +201,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: theme.TEXT_PRIMARY,
     marginBottom: 12,
-  },
-  segment: {
-    flexDirection: 'row',
-    backgroundColor: theme.SURFACE_COLOR,
-    borderRadius: 12,
-    padding: 4,
-    marginBottom: 12,
-  },
-  segmentItem: {
-    flex: 1,
-    paddingVertical: 8,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  segmentItemActive: {
-    backgroundColor: theme.PRIMARY_GLASS,
-  },
-  segmentText: {
-    fontFamily: 'PlusJakartaSans-Medium',
-    fontSize: 14,
-    color: theme.TEXT_TERTIARY,
-  },
-  segmentTextActive: {
-    color: theme.WHITE,
-  },
-  secondaryButton: {
-    backgroundColor: theme.PRIMARY_SURFACE,
-    borderRadius: radius.xl,
-    paddingVertical: 12,
-    paddingHorizontal: spacing.lg,
-    alignItems: 'center',
-    marginTop: 16,
-    marginBottom: spacing.xl,
-  },
-  customerCard: {
-    backgroundColor: theme.SURFACE_COLOR,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: spacing.xl,
-  },
-  customerName: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
-    fontSize: 16,
-    color: theme.TEXT_PRIMARY,
-  },
-  customerMeta: {
-    fontFamily: 'PlusJakartaSans-Regular',
-    fontSize: 14,
-    color: theme.TEXT_TERTIARY,
-    marginTop: 4,
   },
   spacer: {
     height: 20,

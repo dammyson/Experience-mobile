@@ -36,12 +36,44 @@ export const getMerchantPrograms = merchantId => async dispatch => {
   }
 };
 
-export const getMerchantActivities = (merchantId, {limit = 50, offset = 0} = {}) => async dispatch => {
+const ACTIVITIES_PAGE_SIZE = 100;
+
+// Latest few activities for the home screen
+export const getRecentMerchantActivities = (merchantId, limit = 3) => async dispatch => {
+  dispatch({type: 'MERCHANT_RECENT_ACTIVITIES_LOADING'});
+  try {
+    const response = await merchantAPI.getActivities(merchantId, {limit, offset: 0});
+    dispatch({type: 'MERCHANT_RECENT_ACTIVITIES_SUCCESS', payload: response.data?.activities || []});
+    return response.data;
+  } catch (error) {
+    dispatch({
+      type: 'MERCHANT_RECENT_ACTIVITIES_ERROR',
+      payload: error?.message || 'Failed to fetch activities',
+    });
+    throw error;
+  }
+};
+
+// Every activity, fetched page by page until `total` is reached
+export const getMerchantActivities = merchantId => async dispatch => {
   dispatch({type: 'MERCHANT_ACTIVITIES_LOADING'});
   try {
-    const response = await merchantAPI.getActivities(merchantId, {limit, offset});
-    dispatch({type: 'MERCHANT_ACTIVITIES_SUCCESS', payload: response.data, append: offset > 0});
-    return response.data;
+    const all = [];
+    let total = Infinity;
+    while (all.length < total) {
+      const response = await merchantAPI.getActivities(merchantId, {
+        limit: ACTIVITIES_PAGE_SIZE,
+        offset: all.length,
+      });
+      const page = response.data?.activities || [];
+      all.push(...page);
+      total = response.data?.total ?? all.length;
+      if (page.length === 0) {
+        break;
+      }
+    }
+    dispatch({type: 'MERCHANT_ACTIVITIES_SUCCESS', payload: all});
+    return all;
   } catch (error) {
     dispatch({type: 'MERCHANT_ACTIVITIES_ERROR', payload: error?.message || 'Failed to fetch activities'});
     throw error;
