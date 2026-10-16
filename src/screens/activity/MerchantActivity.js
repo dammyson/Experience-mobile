@@ -9,6 +9,7 @@ import {
   RefreshControl,
   ActivityIndicator,
 } from 'react-native';
+import {useFocusEffect} from '@react-navigation/native';
 import {useDispatch, useSelector} from 'react-redux';
 import ScreenBackground from '../../components/layout/ScreenBackground';
 import AppHeader from '../../components/layout/AppHeader';
@@ -23,8 +24,6 @@ import {
   getActivityTitle,
   isActivityCredit,
 } from '../../utilities/merchantActivity';
-
-const PAGE_SIZE = 50;
 
 const FILTERS = [
   {key: 'ALL', label: 'All'},
@@ -112,26 +111,21 @@ const ActivityCard = ({activity}) => {
 const MerchantActivity = () => {
   const dispatch = useDispatch();
   const {user} = useSelector(state => state.auth);
-  const {activities, activitiesTotal, activitiesLoading} = useSelector(state => state.merchant);
+  const {activities, activitiesLoading} = useSelector(state => state.merchant);
   const [activeFilter, setActiveFilter] = useState('ALL');
   const [search, setSearch] = useState('');
   const [refreshing, setRefreshing] = useState(false);
 
   const merchantId = user?.merchant_ids?.[0];
-  const hasMore = activities.length < activitiesTotal;
 
-  const loadActivities = useCallback(
-    (offset = 0) => {
-      if (merchantId) {
-        dispatch(getMerchantActivities(merchantId, {limit: PAGE_SIZE, offset})).catch(() => {});
-      }
-    },
-    [dispatch, merchantId],
-  );
+  const loadActivities = useCallback(() => {
+    if (merchantId) {
+      dispatch(getMerchantActivities(merchantId)).catch(() => {});
+    }
+  }, [dispatch, merchantId]);
 
-  useEffect(() => {
-    loadActivities();
-  }, [loadActivities]);
+  // Reload whenever the tab is opened so new orders/awards show up
+  useFocusEffect(loadActivities);
 
   useEffect(() => {
     if (!activitiesLoading) {
@@ -141,7 +135,7 @@ const MerchantActivity = () => {
 
   const handleRefresh = () => {
     setRefreshing(true);
-    loadActivities(0);
+    loadActivities();
   };
 
   const filtered = useMemo(() => {
@@ -211,24 +205,14 @@ const MerchantActivity = () => {
           </View>
         ))}
 
+        {activitiesLoading && activities.length === 0 && !refreshing && (
+          <ActivityIndicator style={styles.loader} color={theme.PRIMARY_COLOR} />
+        )}
+
         {filtered.length === 0 && !activitiesLoading && (
           <View style={styles.empty}>
             <Text style={styles.emptyText}>No activity found</Text>
           </View>
-        )}
-
-        {hasMore && (
-          <TouchableOpacity
-            style={styles.loadMore}
-            onPress={() => loadActivities(activities.length)}
-            disabled={activitiesLoading}
-            activeOpacity={0.8}>
-            {activitiesLoading ? (
-              <ActivityIndicator color={theme.PRIMARY_COLOR} />
-            ) : (
-              <Text style={styles.loadMoreText}>Load more</Text>
-            )}
-          </TouchableOpacity>
         )}
       </ScrollView>
     </ScreenBackground>
@@ -344,14 +328,8 @@ const styles = StyleSheet.create({
     color: theme.TEXT_MUTED,
   },
 
-  loadMore: {
-    alignItems: 'center',
-    paddingVertical: 16,
-  },
-  loadMoreText: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
-    fontSize: 14,
-    color: theme.PRIMARY_COLOR,
+  loader: {
+    marginTop: 60,
   },
 });
 

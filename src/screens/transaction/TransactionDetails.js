@@ -6,17 +6,24 @@ import {
   TouchableOpacity,
   StatusBar,
   StyleSheet,
+  Share,
 } from 'react-native';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import ScreenBackground from '../../components/layout/ScreenBackground';
 import {
   BackIcon,
-  CheckIcon,
   DownloadPDFIcon,
   ShareIcon,
   FlagIcon,
 } from '../../components/icons';
 import {theme} from '../../theme/colors';
+import {formatMoney, formatType} from '../../utilities/merchantActivity';
+import {
+  formatEntryType,
+  formatPoints,
+  formatValue,
+  isEarned,
+} from '../../utilities/customerTransaction';
 
 const DetailRow = ({label, value, hasBorder = true}) => (
   <View style={[styles.detailRow, hasBorder && styles.detailRowBorder]}>
@@ -25,29 +32,47 @@ const DetailRow = ({label, value, hasBorder = true}) => (
   </View>
 );
 
+const formatDateTime = value =>
+  value
+    ? new Date(value).toLocaleString('en-GB', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    : '';
+
 const TransactionDetails = () => {
   const navigation = useNavigation();
-  const route = useRoute();
+  const {transaction = {}, merchantName = 'Merchant', programName, history} = useRoute().params || {};
 
-  // Get transaction data from route params or use defaults
-  const transaction = route.params?.transaction || {
-    date: '01 December 2025',
-    merchant: 'Air Peace Airline Rewards',
-    points: '-20',
-    epv: '-₦100',
-    status: 'Redeemed',
-    reference: 'Ayobami Ayemi',
-    txId: 'TF457RF6HF',
-    redeemType: 'Online',
-    location: 'Abuja',
-    totalTransactions: 65,
-    totalReceived: '₦2,500',
-    totalReceivedRewards: 25,
-    totalRedeemed: '₦10,500',
-    totalRedeemedRewards: 40,
+  const earned = isEarned(transaction);
+  const detailRows = [
+    {label: 'Type', value: formatEntryType(transaction)},
+    programName && {label: 'Program', value: programName},
+    transaction.balance_after != null && {
+      label: 'Balance After',
+      value: `${transaction.balance_after} points`,
+    },
+    transaction.reference_type && {
+      label: 'Reference Type',
+      value: formatType(transaction.reference_type),
+    },
+    transaction.reference_id && {label: 'Reference', value: transaction.reference_id},
+    {label: 'ID Transaction', value: transaction.id || 'N/A'},
+  ].filter(Boolean);
+
+  const handleShare = () => {
+    Share.share({
+      message: [
+        `${merchantName} — ${formatEntryType(transaction)}`,
+        `${formatPoints(transaction)} (${formatValue(transaction)})`,
+        formatDateTime(transaction.created_at),
+        `Transaction ID: ${transaction.id}`,
+      ].join('\n'),
+    }).catch(() => {});
   };
-
-  const isSuccess = transaction.status === 'Redeemed' || transaction.status === 'Success' || transaction.status === 'Earned';
 
   return (
     <ScreenBackground>
@@ -71,22 +96,22 @@ const TransactionDetails = () => {
         </View>
 
         {/* Date */}
-        <Text style={styles.dateText}>{transaction.date}</Text>
+        <Text style={styles.dateText}>{formatDateTime(transaction.created_at)}</Text>
 
         {/* Main Info */}
         <View style={styles.mainInfo}>
           <View style={styles.mainInfoRow}>
-            <Text style={styles.merchantName}>{transaction.merchant}</Text>
-            <Text style={styles.pointsValue}>{transaction.points}</Text>
+            <Text style={styles.merchantName}>{merchantName}</Text>
+            <Text style={styles.pointsValue}>{formatPoints(transaction)}</Text>
           </View>
           <View style={styles.mainInfoRow}>
             <Text style={styles.epvLabel}>Est. Point Value</Text>
-            <Text style={styles.epvValue}>{transaction.epv}</Text>
+            <Text style={styles.epvValue}>{formatValue(transaction)}</Text>
           </View>
           <View style={styles.mainInfoRow}>
             <Text style={styles.statusLabel}>Status</Text>
-            <Text style={[styles.statusValue, isSuccess && styles.statusSuccess]}>
-              {transaction.status}
+            <Text style={[styles.statusValue, earned && styles.statusSuccess]}>
+              {earned ? 'Earned' : 'Redeemed'}
             </Text>
           </View>
         </View>
@@ -95,59 +120,49 @@ const TransactionDetails = () => {
         <View style={styles.detailsSection}>
           <Text style={styles.sectionTitle}>DETAILS</Text>
           <View style={styles.detailsCard}>
-            <DetailRow label="Reference" value={transaction.reference} />
-            <DetailRow label="ID Transaction" value={transaction.txId} />
-            <DetailRow label="Redeem Type" value={transaction.redeemType} />
-            <DetailRow label="Location" value={transaction.location} hasBorder={false} />
+            {detailRows.map((row, index) => (
+              <DetailRow
+                key={row.label}
+                label={row.label}
+                value={row.value}
+                hasBorder={index < detailRows.length - 1}
+              />
+            ))}
           </View>
         </View>
-
-        {/* Success Message */}
-        {isSuccess && (
-          <View style={styles.successCard}>
-            <View style={styles.successHeader}>
-              <Text style={styles.successTitle}>Reward claimed successfully</Text>
-              <View style={styles.successCheck}>
-                <CheckIcon size={20} />
-              </View>
-            </View>
-            <Text style={styles.successText}>
-              Your reward has been redeemed successfully.
-            </Text>
-            <Text style={styles.successSubtext}>
-              Most redemptions are processed within seconds, but it may take up to 2 hours for the reward to appear in your account.
-            </Text>
-          </View>
-        )}
 
         {/* History Section */}
-        <View style={styles.historySection}>
-          <Text style={styles.historySectionTitle}>
-            HISTORY WITH {transaction.merchant.toUpperCase()}
-          </Text>
-          <View style={styles.historyCard}>
-            <View style={styles.historyRow}>
-              <Text style={styles.historyLabel}>Number of transactions</Text>
-              <Text style={styles.historyValue}>{transaction.totalTransactions}</Text>
-            </View>
-            <View style={styles.historyDivider} />
-            <View style={styles.historyRow}>
-              <View>
-                <Text style={styles.historyLabel}>Total received</Text>
-                <Text style={styles.historySubLabel}>{transaction.totalReceivedRewards} rewards</Text>
+        {history && (
+          <View style={styles.historySection}>
+            <Text style={styles.historySectionTitle}>
+              HISTORY WITH {merchantName.toUpperCase()}
+            </Text>
+            <View style={styles.historyCard}>
+              <View style={styles.historyRow}>
+                <Text style={styles.historyLabel}>Number of transactions</Text>
+                <Text style={styles.historyValue}>{history.count}</Text>
               </View>
-              <Text style={styles.historyValue}>{transaction.totalReceived}</Text>
-            </View>
-            <View style={styles.historyDivider} />
-            <View style={styles.historyRow}>
-              <View>
-                <Text style={styles.historyLabel}>Total redeemed</Text>
-                <Text style={styles.historySubLabel}>{transaction.totalRedeemedRewards} rewards</Text>
+              <View style={styles.historyDivider} />
+              <View style={styles.historyRow}>
+                <View>
+                  <Text style={styles.historyLabel}>Total earned</Text>
+                  <Text style={styles.historySubLabel}>{history.earnedPoints} points</Text>
+                </View>
+                <Text style={styles.historyValue}>{formatMoney(history.earnedValue, 'NGN')}</Text>
               </View>
-              <Text style={styles.historyValue}>{transaction.totalRedeemed}</Text>
+              <View style={styles.historyDivider} />
+              <View style={styles.historyRow}>
+                <View>
+                  <Text style={styles.historyLabel}>Total redeemed</Text>
+                  <Text style={styles.historySubLabel}>{history.redeemedPoints} points</Text>
+                </View>
+                <Text style={styles.historyValue}>
+                  {formatMoney(history.redeemedValue, 'NGN')}
+                </Text>
+              </View>
             </View>
           </View>
-        </View>
+        )}
 
         {/* Report Problem */}
         <TouchableOpacity style={styles.reportBtn} activeOpacity={0.7}>
@@ -163,7 +178,7 @@ const TransactionDetails = () => {
           <Text style={styles.downloadBtnText}>Download PDF</Text>
           <DownloadPDFIcon size={20} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.shareBtn} activeOpacity={0.8}>
+        <TouchableOpacity style={styles.shareBtn} activeOpacity={0.8} onPress={handleShare}>
           <Text style={styles.shareBtnText}>Share</Text>
           <ShareIcon size={20} />
         </TouchableOpacity>
@@ -290,46 +305,6 @@ const styles = StyleSheet.create({
     fontFamily: 'PlusJakartaSans-Medium',
     fontSize: 14,
     color: theme.TEXT_PRIMARY,
-  },
-  successCard: {
-    marginHorizontal: 16,
-    marginBottom: 24,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-    padding: 16,
-  },
-  successHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  successTitle: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
-    fontSize: 16,
-    color: theme.TEXT_PRIMARY,
-    marginRight: 8,
-  },
-  successCheck: {
-    width: 24,
-    height: 24,
-    borderRadius: 4,
-    backgroundColor: 'rgba(32, 187, 89, 0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  successText: {
-    fontFamily: 'PlusJakartaSans-Regular',
-    fontSize: 14,
-    color: theme.TEXT_SECONDARY,
-    marginBottom: 8,
-  },
-  successSubtext: {
-    fontFamily: 'PlusJakartaSans-Regular',
-    fontSize: 13,
-    color: theme.TEXT_TERTIARY,
-    lineHeight: 20,
   },
   historySection: {
     paddingHorizontal: 16,

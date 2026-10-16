@@ -3,11 +3,12 @@ const initialState = {
   profile: null,
   programs: null,
   activities: [],
-  activitiesTotal: 0,
+  recentActivities: [],
   walletLoading: false,
   profileLoading: false,
   programsLoading: false,
   activitiesLoading: false,
+  recentActivitiesLoading: false,
   error: null,
 };
 
@@ -33,17 +34,16 @@ const merchantReducer = (state = initialState, action) => {
       return {...state, programsLoading: false, error: action.payload};
     case 'MERCHANT_ACTIVITIES_LOADING':
       return {...state, activitiesLoading: true, error: null};
-    case 'MERCHANT_ACTIVITIES_SUCCESS': {
-      const incoming = action.payload?.activities || [];
-      return {
-        ...state,
-        activitiesLoading: false,
-        activities: action.append ? [...state.activities, ...incoming] : incoming,
-        activitiesTotal: action.payload?.total ?? incoming.length,
-      };
-    }
+    case 'MERCHANT_ACTIVITIES_SUCCESS':
+      return {...state, activitiesLoading: false, activities: action.payload};
     case 'MERCHANT_ACTIVITIES_ERROR':
       return {...state, activitiesLoading: false, error: action.payload};
+    case 'MERCHANT_RECENT_ACTIVITIES_LOADING':
+      return {...state, recentActivitiesLoading: true, error: null};
+    case 'MERCHANT_RECENT_ACTIVITIES_SUCCESS':
+      return {...state, recentActivitiesLoading: false, recentActivities: action.payload};
+    case 'MERCHANT_RECENT_ACTIVITIES_ERROR':
+      return {...state, recentActivitiesLoading: false, error: action.payload};
     case 'AUTH_LOGOUT':
       return {...initialState};
     default:

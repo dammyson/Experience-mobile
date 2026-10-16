@@ -104,7 +104,7 @@ const Welcome = () => {
       <View style={styles.container}>
         {/* Content */}
         <View style={styles.content}>
-          <Text style={styles.title}>Welcome to VAULTA</Text>
+          <Text style={styles.title}>Welcome to ARENA</Text>
           <Text style={styles.subtitle}>
             A secure, fast digital wallet that is always under your control.
           </Text>
