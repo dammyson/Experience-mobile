@@ -1,6 +1,14 @@
 import React from 'react';
-import {NavigationContainer} from '@react-navigation/native';
+import {NavigationContainer, DefaultTheme} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
+
+const AppTheme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    background: '#0B0B0E',
+  },
+};
 
 // Onboarding
 import Splash from '../screens/onBoarding/Splash';
@@ -59,7 +67,7 @@ const Stack = createStackNavigator();
 
 const Route = () => {
   return (
-    <NavigationContainer ref={ref => NavigationService.setTopLevelNavigator(ref)}>
+    <NavigationContainer ref={ref => NavigationService.setTopLevelNavigator(ref)} theme={AppTheme}>
       <Stack.Navigator
         screenOptions={{
           gestureEnabled: true,

@@ -20,7 +20,7 @@ export const login = (email, password, userType = 'customer') => async dispatch 
 
     // Customer profile endpoint doesn't apply to merchants
     if (userType === 'merchant') {
-      return;
+      return true;
     }
 
     // Fetch full profile after login
@@ -32,8 +32,11 @@ export const login = (email, password, userType = 'customer') => async dispatch 
     } catch (profileError) {
       console.log('Failed to fetch profile after login:', profileError.message);
     }
+
+    return true;
   } catch (error) {
     dispatch({type: 'AUTH_ERROR', payload: error?.message || 'Login failed'});
+    throw error;
   }
 };
 
