@@ -106,15 +106,15 @@ const CustomerActivity = () => {
   const [search, setSearch] = useState('');
   const [loadError, setLoadError] = useState(null);
 
-  const loadTransactions = useCallback(() => {
+  const loadTransactions = useCallback((forceRefresh = false) => {
     setLoadError(null);
-    dispatch(getTransactions()).catch(err =>
+    dispatch(getTransactions(forceRefresh)).catch(err =>
       setLoadError(err?.message || 'Failed to load transactions'),
     );
   }, [dispatch]);
 
   useEffect(() => {
-    loadTransactions();
+    loadTransactions(); // Uses cache on initial load
   }, [loadTransactions]);
 
   // Transactions only carry IDs; this supplies merchant and program names
@@ -122,7 +122,7 @@ const CustomerActivity = () => {
   const names = useMemo(() => buildNameLookup(pointsByMerchant.data), [pointsByMerchant.data]);
 
   const handleRefresh = () => {
-    loadTransactions();
+    loadTransactions(true); // Force refresh bypasses cache
     pointsByMerchant.reload();
   };
 

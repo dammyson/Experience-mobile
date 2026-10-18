@@ -1,9 +1,20 @@
 import {merchantAPI} from '../services/api';
+import cache, {CACHE_KEYS} from '../services/cache';
 
-export const getMerchantWallet = merchantId => async dispatch => {
+export const getMerchantWallet = (merchantId, forceRefresh = false) => async dispatch => {
   dispatch({type: 'MERCHANT_WALLET_LOADING'});
   try {
+    const cacheKey = `${CACHE_KEYS.WALLET}_merchant_${merchantId}`;
+    if (!forceRefresh) {
+      const cached = await cache.get(cacheKey);
+      if (cached) {
+        dispatch({type: 'MERCHANT_WALLET_SUCCESS', payload: cached});
+        return cached;
+      }
+    }
+
     const response = await merchantAPI.getWallet(merchantId);
+    await cache.set(cacheKey, response.data);
     dispatch({type: 'MERCHANT_WALLET_SUCCESS', payload: response.data});
     return response.data;
   } catch (error) {
@@ -12,10 +23,20 @@ export const getMerchantWallet = merchantId => async dispatch => {
   }
 };
 
-export const getMerchantProfile = merchantId => async dispatch => {
+export const getMerchantProfile = (merchantId, forceRefresh = false) => async dispatch => {
   dispatch({type: 'MERCHANT_PROFILE_LOADING'});
   try {
+    const cacheKey = `${CACHE_KEYS.PROFILE}_merchant_${merchantId}`;
+    if (!forceRefresh) {
+      const cached = await cache.get(cacheKey);
+      if (cached) {
+        dispatch({type: 'MERCHANT_PROFILE_SUCCESS', payload: cached});
+        return cached;
+      }
+    }
+
     const response = await merchantAPI.getProfile(merchantId);
+    await cache.set(cacheKey, response.data);
     dispatch({type: 'MERCHANT_PROFILE_SUCCESS', payload: response.data});
     return response.data;
   } catch (error) {
@@ -24,10 +45,20 @@ export const getMerchantProfile = merchantId => async dispatch => {
   }
 };
 
-export const getMerchantPrograms = merchantId => async dispatch => {
+export const getMerchantPrograms = (merchantId, forceRefresh = false) => async dispatch => {
   dispatch({type: 'MERCHANT_PROGRAMS_LOADING'});
   try {
+    const cacheKey = `merchant_programs_${merchantId}`;
+    if (!forceRefresh) {
+      const cached = await cache.get(cacheKey);
+      if (cached) {
+        dispatch({type: 'MERCHANT_PROGRAMS_SUCCESS', payload: cached});
+        return cached;
+      }
+    }
+
     const response = await merchantAPI.getPrograms(merchantId);
+    await cache.set(cacheKey, response.data);
     dispatch({type: 'MERCHANT_PROGRAMS_SUCCESS', payload: response.data});
     return response.data;
   } catch (error) {
@@ -39,11 +70,22 @@ export const getMerchantPrograms = merchantId => async dispatch => {
 const ACTIVITIES_PAGE_SIZE = 100;
 
 // Latest few activities for the home screen
-export const getRecentMerchantActivities = (merchantId, limit = 3) => async dispatch => {
+export const getRecentMerchantActivities = (merchantId, forceRefresh = false) => async dispatch => {
   dispatch({type: 'MERCHANT_RECENT_ACTIVITIES_LOADING'});
   try {
-    const response = await merchantAPI.getActivities(merchantId, {limit, offset: 0});
-    dispatch({type: 'MERCHANT_RECENT_ACTIVITIES_SUCCESS', payload: response.data?.activities || []});
+    const cacheKey = `merchant_recent_activities_${merchantId}`;
+    if (!forceRefresh) {
+      const cached = await cache.get(cacheKey);
+      if (cached) {
+        dispatch({type: 'MERCHANT_RECENT_ACTIVITIES_SUCCESS', payload: cached});
+        return cached;
+      }
+    }
+
+    const response = await merchantAPI.getActivities(merchantId, {limit: 3, offset: 0});
+    const activities = response.data?.activities || [];
+    await cache.set(cacheKey, activities);
+    dispatch({type: 'MERCHANT_RECENT_ACTIVITIES_SUCCESS', payload: activities});
     return response.data;
   } catch (error) {
     dispatch({

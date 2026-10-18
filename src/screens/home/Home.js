@@ -49,23 +49,26 @@ const Home = () => {
   const isMerchant = userType === 'merchant';
   const merchantId = user?.merchant_ids?.[0];
 
-  const loadData = useCallback(() => {
+  const loadData = useCallback((forceRefresh = false) => {
     if (isMerchant) {
       if (merchantId) {
-        dispatch(getMerchantWallet(merchantId));
-        dispatch(getMerchantPrograms(merchantId));
-        dispatch(getRecentMerchantActivities(merchantId)).catch(() => {});
+        dispatch(getMerchantWallet(merchantId, forceRefresh));
+        dispatch(getMerchantPrograms(merchantId, forceRefresh));
+        dispatch(getRecentMerchantActivities(merchantId, forceRefresh)).catch(() => {});
       }
     } else {
-      dispatch(getDashboard());
+      dispatch(getDashboard(forceRefresh));
     }
   }, [dispatch, isMerchant, merchantId]);
 
   useEffect(() => {
-    loadData();
+    loadData(); // Uses cache on initial load
   }, [loadData]);
 
-  const handleRefresh = loadData;
+  const handleRefresh = () => {
+    loadData(true); // Force refresh bypasses cache
+  };
+
   const refreshing = isMerchant
     ? walletLoading || programsLoading || recentActivitiesLoading
     : dashboardLoading;

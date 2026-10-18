@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,8 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
+import {useDispatch, useSelector} from 'react-redux';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import ScreenBackground from '../../components/layout/ScreenBackground';
 import {AppInput, PasswordInput} from '../../components/ui';
 import {BackIcon} from '../../components/icons';
@@ -20,6 +22,8 @@ import {authAPI} from '../../services/api';
 
 const SignUp = () => {
   const navigation = useNavigation();
+  const dispatch = useDispatch();
+  const {isAuthenticated} = useSelector(state => state.auth);
 
   const [form, setForm] = useState({
     firstName: '',
@@ -31,6 +35,12 @@ const SignUp = () => {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigation.reset({index: 0, routes: [{name: 'TabsNavigation'}]});
+    }
+  }, [isAuthenticated, navigation]);
 
   const set = field => value => setForm(prev => ({...prev, [field]: value}));
 
@@ -54,7 +64,7 @@ const SignUp = () => {
     setLoading(true);
 
     try {
-      await authAPI.register({
+      const response = await authAPI.register({
         firstName,
         lastName,
         email,
@@ -62,12 +72,21 @@ const SignUp = () => {
         password,
       });
 
-      navigation.navigate('IdentityVerification', {
-        userData: {email, phoneNumber},
-      });
+      const {user, token, refresh_token} = response.data;
+
+      // Store auth data
+      await AsyncStorage.setItem('token', token);
+      if (refresh_token) {
+        await AsyncStorage.setItem('refreshToken', refresh_token);
+      }
+      await AsyncStorage.setItem('user', JSON.stringify(user));
+      await AsyncStorage.setItem('userType', 'customer');
+      await AsyncStorage.setItem('hasSeenOnboarding', 'true');
+
+      // Update Redux state - useEffect will handle navigation
+      dispatch({type: 'AUTH_SUCCESS', payload: {user, token, userType: 'customer'}});
     } catch (err) {
       setError(err.message || 'Registration failed. Please try again.');
-    } finally {
       setLoading(false);
     }
   };

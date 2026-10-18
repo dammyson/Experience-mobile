@@ -29,21 +29,25 @@ const refreshAccessToken = async () => {
     throw new Error('No refresh token available');
   }
 
-  console.log('[API Request] /auth/refresh: Refreshing token...');
+  const endpoint = '/auth/refresh';
+  const body = JSON.stringify({refresh_token: refreshToken});
+  logRequest(endpoint, 'POST', body);
 
-  const response = await fetch(`${BASE_URL}/auth/refresh`, {
+  const response = await fetch(`${BASE_URL}${endpoint}`, {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({refresh_token: refreshToken}),
+    body,
   });
 
   const data = await response.json();
-  console.log('[API Response] /auth/refresh:', JSON.stringify(data, null, 2));
 
   if (!response.ok || data.success === false) {
+    logResponse(endpoint, {error: 'Session expired', status: response.status}, true);
     await AsyncStorage.multiRemove(['token', 'refreshToken', 'user', 'profile', 'userType']);
     throw new Error('Session expired. Please login again.');
   }
+
+  logResponse(endpoint, data);
 
   const newToken = data.data?.token || data.data?.access_token;
   const newRefreshToken = data.data?.refresh_token;
@@ -56,6 +60,16 @@ const refreshAccessToken = async () => {
   }
 
   return newToken;
+};
+
+const logRequest = (endpoint, method, body) => {
+  const payload = body ? JSON.parse(body) : null;
+  console.log(`[API ${method}] ${endpoint}`, payload ? JSON.stringify(payload, null, 2) : '');
+};
+
+const logResponse = (endpoint, data, isError = false) => {
+  const prefix = isError ? '[API Error]' : '[API Response]';
+  console.log(`${prefix} ${endpoint}:`, JSON.stringify(data, null, 2));
 };
 
 const handleResponse = async (response, endpoint, retryFn) => {
@@ -90,21 +104,34 @@ const handleResponse = async (response, endpoint, retryFn) => {
   }
 
   const data = await response.json();
-  console.log(`[API Response] ${endpoint}:`, JSON.stringify(data, null, 2));
 
   if (!response.ok || data.success === false) {
     const errorMessage = data.detail || data.message || data.error || 'Something went wrong';
-    console.log(`[API Error] ${endpoint}:`, errorMessage);
+    logResponse(endpoint, {error: errorMessage, status: response.status}, true);
     throw new Error(errorMessage);
   }
+
+  logResponse(endpoint, data);
   return data;
+};
+
+const request = async (endpoint, options = {}) => {
+  const fullUrl = `${BASE_URL}${endpoint}`;
+  logRequest(endpoint, options.method || 'GET', options.body);
+
+  const response = await fetch(fullUrl, {
+    ...options,
+    headers: {'Content-Type': 'application/json', ...options.headers},
+  });
+
+  return handleResponse(response, endpoint);
 };
 
 const authenticatedRequest = async (endpoint, options = {}) => {
   const headers = await getHeaders();
   const fullUrl = `${BASE_URL}${endpoint}`;
 
-  console.log(`[API Request] ${endpoint}:`, options.body || 'GET');
+  logRequest(endpoint, options.method || 'GET', options.body);
 
   const response = await fetch(fullUrl, {
     ...options,
@@ -127,87 +154,49 @@ const authenticatedRequest = async (endpoint, options = {}) => {
 };
 
 export const authAPI = {
-  register: async ({firstName, lastName, email, phoneNumber, password}) => {
-    const payload = {
-      first_name: firstName,
-      last_name: lastName,
-      email,
-      phone_number: phoneNumber,
-      password,
-    };
-    console.log('[API Request] /auth/register/customer:', JSON.stringify(payload, null, 2));
-
-    const response = await fetch(`${BASE_URL}/auth/register/customer`, {
+  register: ({firstName, lastName, email, phoneNumber, password}) =>
+    request('/auth/register/customer', {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(payload),
-    });
-    return handleResponse(response, '/auth/register/customer');
-  },
+      body: JSON.stringify({
+        first_name: firstName,
+        last_name: lastName,
+        email,
+        phone_number: phoneNumber,
+        password,
+      }),
+    }),
 
-  login: async ({email, phoneNumber, password, userType = 'customer'}) => {
+  login: ({email, phoneNumber, password, userType = 'customer'}) => {
     const payload = {password};
     if (email) payload.email = email;
     if (phoneNumber) payload.phone_number = phoneNumber;
-
     const endpoint = userType === 'merchant' ? '/auth/login/merchant' : '/auth/login';
-    console.log(`[API Request] ${endpoint}:`, JSON.stringify(payload, null, 2));
-
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(payload),
-    });
-    return handleResponse(response, endpoint);
+    return request(endpoint, {method: 'POST', body: JSON.stringify(payload)});
   },
 
-  forgotPassword: async ({email}) => {
-    const payload = {email};
-    console.log('[API Request] /auth/forgot-password:', JSON.stringify(payload, null, 2));
-
-    const response = await fetch(`${BASE_URL}/auth/forgot-password`, {
+  forgotPassword: ({email}) =>
+    request('/auth/forgot-password', {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(payload),
-    });
-    return handleResponse(response, '/auth/forgot-password');
-  },
+      body: JSON.stringify({email}),
+    }),
 
-  verifyOtp: async ({email, otp}) => {
-    const payload = {email, otp};
-    console.log('[API Request] /auth/verify-otp:', JSON.stringify(payload, null, 2));
-
-    const response = await fetch(`${BASE_URL}/auth/verify-otp`, {
+  verifyOtp: ({email, otp}) =>
+    request('/auth/verify-otp', {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(payload),
-    });
-    return handleResponse(response, '/auth/verify-otp');
-  },
+      body: JSON.stringify({email, otp}),
+    }),
 
-  resetPassword: async ({email, otp, newPassword}) => {
-    const payload = {email, otp, new_password: newPassword};
-    console.log('[API Request] /auth/reset-password:', JSON.stringify(payload, null, 2));
-
-    const response = await fetch(`${BASE_URL}/auth/reset-password`, {
+  resetPassword: ({email, otp, newPassword}) =>
+    request('/auth/reset-password', {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(payload),
-    });
-    return handleResponse(response, '/auth/reset-password');
-  },
+      body: JSON.stringify({email, otp, new_password: newPassword}),
+    }),
 
-  refreshToken: async ({refreshToken}) => {
-    const payload = {refresh_token: refreshToken};
-    console.log('[API Request] /auth/refresh:', JSON.stringify(payload, null, 2));
-
-    const response = await fetch(`${BASE_URL}/auth/refresh`, {
+  refreshToken: ({refreshToken}) =>
+    request('/auth/refresh', {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(payload),
-    });
-    return handleResponse(response, '/auth/refresh');
-  },
+      body: JSON.stringify({refresh_token: refreshToken}),
+    }),
 };
 
 export const customerAPI = {
