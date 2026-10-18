@@ -1,5 +1,5 @@
 import React from 'react';
-import {View, Text, StyleSheet} from 'react-native';
+import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import {theme} from '../../theme/colors';
 
@@ -7,10 +7,19 @@ const BalanceCards = ({
   points = '1750',
   estimatedValue = '950',
   currency = '₦',
+  pointsLabel = 'Points',
+  pointsSubLabel = 'Current Balance',
+  valueLabel = 'Est. Point Value',
+  valueSubLabel = 'Available to Redeem',
+  onPointsPress,
 }) => (
   <View style={styles.container}>
     {/* Current Balance Card - Gradient */}
-    <View style={styles.cardWrapper}>
+    <TouchableOpacity
+      style={styles.cardWrapper}
+      onPress={onPointsPress}
+      disabled={!onPointsPress}
+      activeOpacity={0.85}>
       <LinearGradient
         colors={['#885DF5', '#6B7CFE']}
         start={{x: 0, y: 0.5}}
@@ -18,21 +27,21 @@ const BalanceCards = ({
         style={StyleSheet.absoluteFill}
       />
       <View style={styles.cardContent}>
-        <Text style={styles.cardLabel}>Points</Text>
+        <Text style={styles.cardLabel}>{pointsLabel}</Text>
         <Text style={styles.cardPoints}>{points}</Text>
-        <Text style={styles.cardSubLabel}>Current Balance</Text>
+        <Text style={styles.cardSubLabel}>{pointsSubLabel}</Text>
       </View>
-    </View>
+    </TouchableOpacity>
 
     {/* Est. Point Value Card - Solid */}
     <View style={styles.cardSolid}>
       <View style={styles.cardContent}>
-        <Text style={styles.cardLabel}>Est. Point Value</Text>
+        <Text style={styles.cardLabel}>{valueLabel}</Text>
         <Text style={styles.cardPoints}>
           {currency}
           {estimatedValue}
         </Text>
-        <Text style={styles.cardSubLabel}>Available to Redeem</Text>
+        <Text style={styles.cardSubLabel}>{valueSubLabel}</Text>
       </View>
     </View>
   </View>

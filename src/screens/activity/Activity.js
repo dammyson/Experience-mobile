@@ -1,4 +1,4 @@
-import React, {useState, useMemo, useEffect} from 'react';
+import React, {useState, useMemo, useEffect, useCallback} from 'react';
 import {
   View,
   Text,
@@ -13,17 +13,24 @@ import {useDispatch, useSelector} from 'react-redux';
 import ScreenBackground from '../../components/layout/ScreenBackground';
 import AppHeader from '../../components/layout/AppHeader';
 import {SearchInput} from '../../components/ui';
+import RequestState from '../../components/layout/RequestState';
 import {theme} from '../../theme/colors';
 import {spacing, radius} from '../../theme/spacing';
 import {getTransactions} from '../../actions/customerActions';
+import {customerAPI} from '../../services/api';
+import useRequest from '../../utilities/useRequest';
+import {
+  buildNameLookup,
+  formatEntryType,
+  formatPoints,
+  formatValue,
+  getMerchantHistory,
+  isEarned,
+  shortId,
+} from '../../utilities/customerTransaction';
+import MerchantActivity from './MerchantActivity';
 
-const FILTERS = ['All', 'Payments', 'TopUp', 'Transfers', 'Withdrawals'];
-
-const STATUS_COLOR = {
-  Success: theme.SUCCESS_COLOR,
-  Pending: theme.WARNING_COLOR,
-  Failed: theme.ERROR_COLOR,
-};
+const FILTERS = ['All', 'Earned', 'Redeemed'];
 
 // ── Sub-components ─────────────────────────────────────────────────────────
 const FilterChip = ({label, active, onPress}) => (
@@ -39,7 +46,7 @@ const TransactionCard = ({item, onSeeDetails}) => (
   <View style={styles.txCard}>
     <View style={styles.txTop}>
       <Text style={styles.txMerchant}>{item.merchant}</Text>
-      <Text style={[styles.txStatus, {color: STATUS_COLOR[item.status]}]}>
+      <Text style={[styles.txStatus, item.isEarned ? styles.txEarned : styles.txRedeemed]}>
         {item.status}
       </Text>
     </View>
@@ -48,7 +55,7 @@ const TransactionCard = ({item, onSeeDetails}) => (
     <View style={styles.txBottom}>
       <View style={styles.txMeta}>
         <Text style={styles.txId}>ID Transaction: {item.txId}</Text>
-        <Text style={styles.txType}>Type: {item.type}</Text>
+        <Text style={styles.txType}>Value: {item.value}</Text>
       </View>
       <TouchableOpacity style={styles.detailsBtn} activeOpacity={0.8} onPress={onSeeDetails}>
         <Text style={styles.detailsBtnText}>See Details</Text>
@@ -58,7 +65,7 @@ const TransactionCard = ({item, onSeeDetails}) => (
 );
 
 // ── Helper to group transactions by date ───────────────────────────────────
-const groupTransactionsByDate = (transactions) => {
+const groupTransactionsByDate = (transactions, names) => {
   if (!Array.isArray(transactions)) return [];
 
   const groups = {};
@@ -72,13 +79,17 @@ const groupTransactionsByDate = (transactions) => {
     if (!groups[date]) {
       groups[date] = [];
     }
+    const earned = isEarned(tx);
     groups[date].push({
-      id: tx.id || tx.transaction_id || String(Math.random()),
-      merchant: tx.merchant_name || tx.description || 'Transaction',
-      status: tx.status || 'Success',
-      amount: tx.points ? `${tx.points} pts` : tx.amount || '0',
-      txId: tx.transaction_id || tx.id || 'N/A',
-      type: tx.type || tx.transaction_type || 'Payments',
+      id: tx.id,
+      merchant: names.merchants[tx.merchant_id] || 'Merchant',
+      program: names.programs[tx.program_id],
+      status: formatEntryType(tx),
+      isEarned: earned,
+      amount: formatPoints(tx),
+      value: formatValue(tx),
+      txId: shortId(tx.id),
+      type: earned ? 'Earned' : 'Redeemed',
       raw: tx,
     });
   });
@@ -87,37 +98,55 @@ const groupTransactionsByDate = (transactions) => {
 };
 
 // ── Screen ─────────────────────────────────────────────────────────────────
-const Activity = () => {
+const CustomerActivity = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const {transactions, transactionsLoading} = useSelector(state => state.customer);
   const [activeFilter, setActiveFilter] = useState('All');
   const [search, setSearch] = useState('');
+  const [loadError, setLoadError] = useState(null);
 
-  useEffect(() => {
-    dispatch(getTransactions()); // Uses cache on initial load
+  const loadTransactions = useCallback((forceRefresh = false) => {
+    setLoadError(null);
+    dispatch(getTransactions(forceRefresh)).catch(err =>
+      setLoadError(err?.message || 'Failed to load transactions'),
+    );
   }, [dispatch]);
 
+  useEffect(() => {
+    loadTransactions(); // Uses cache on initial load
+  }, [loadTransactions]);
+
+  // Transactions only carry IDs; this supplies merchant and program names
+  const pointsByMerchant = useRequest(() => customerAPI.getPointsByMerchant(), []);
+  const names = useMemo(() => buildNameLookup(pointsByMerchant.data), [pointsByMerchant.data]);
+
   const handleRefresh = () => {
-    dispatch(getTransactions(true)); // Force refresh bypasses cache
+    loadTransactions(true); // Force refresh bypasses cache
+    pointsByMerchant.reload();
   };
 
+  // Guards against a stale filter value (e.g. one kept across a hot reload)
+  const filter = FILTERS.includes(activeFilter) ? activeFilter : 'All';
+
   const groupedTransactions = useMemo(() => {
-    return groupTransactionsByDate(transactions);
-  }, [transactions]);
+    return groupTransactionsByDate(transactions, names);
+  }, [transactions, names]);
 
   const filtered = useMemo(() => {
     return groupedTransactions.map(group => ({
       ...group,
       items: group.items.filter(tx => {
-        const matchesFilter = activeFilter === 'All' || tx.type === activeFilter;
+        const matchesFilter = filter === 'All' || tx.type === filter;
+        const query = search.toLowerCase();
         const matchesSearch = search === '' ||
-          tx.merchant.toLowerCase().includes(search.toLowerCase()) ||
-          tx.txId.toLowerCase().includes(search.toLowerCase());
+          [tx.merchant, tx.program, tx.status, tx.txId]
+            .filter(Boolean)
+            .some(field => field.toLowerCase().includes(query));
         return matchesFilter && matchesSearch;
       }),
     })).filter(group => group.items.length > 0);
-  }, [groupedTransactions, activeFilter, search]);
+  }, [groupedTransactions, filter, search]);
 
   return (
     <ScreenBackground>
@@ -162,7 +191,7 @@ const Activity = () => {
             <FilterChip
               key={f}
               label={f}
-              active={activeFilter === f}
+              active={filter === f}
               onPress={() => setActiveFilter(f)}
             />
           ))}
@@ -177,22 +206,10 @@ const Activity = () => {
                 key={item.id}
                 item={item}
                 onSeeDetails={() => navigation.navigate('TransactionDetails', {
-                  transaction: {
-                    date: group.date,
-                    merchant: item.merchant,
-                    points: item.amount.replace('$', '-'),
-                    epv: `-₦${parseInt(item.amount.replace('$', '')) * 5}`,
-                    status: item.status,
-                    reference: 'User Reference',
-                    txId: item.txId,
-                    redeemType: item.type,
-                    location: 'Lagos',
-                    totalTransactions: 12,
-                    totalReceived: '₦2,500',
-                    totalReceivedRewards: 25,
-                    totalRedeemed: '₦10,500',
-                    totalRedeemedRewards: 40,
-                  },
+                  transaction: item.raw,
+                  merchantName: item.merchant,
+                  programName: item.program,
+                  history: getMerchantHistory(transactions, item.raw.merchant_id),
                 })}
               />
             ))}
@@ -200,9 +217,15 @@ const Activity = () => {
         ))}
 
         {filtered.length === 0 && (
-          <View style={styles.empty}>
-            <Text style={styles.emptyText}>No transactions found</Text>
-          </View>
+          <RequestState
+            loading={transactionsLoading && transactions.length === 0}
+            error={loadError}
+            empty
+            emptyText={
+              transactions.length > 0 ? 'No transactions match your search' : 'No transactions yet'
+            }
+            onRetry={loadTransactions}
+          />
         )}
       </ScrollView>
     </ScreenBackground>
@@ -283,6 +306,12 @@ const styles = StyleSheet.create({
     fontFamily: 'PlusJakartaSans-Medium',
     fontSize: 14,
   },
+  txEarned: {
+    color: theme.SUCCESS_COLOR,
+  },
+  txRedeemed: {
+    color: theme.WARNING_COLOR,
+  },
   txAmount: {
     fontFamily: 'PlusJakartaSans-SemiBold',
     fontSize: 22,
@@ -323,15 +352,11 @@ const styles = StyleSheet.create({
     color: theme.WHITE,
   },
 
-  empty: {
-    alignItems: 'center',
-    paddingTop: 60,
-  },
-  emptyText: {
-    fontFamily: 'PlusJakartaSans-Regular',
-    fontSize: 16,
-    color: theme.TEXT_MUTED,
-  },
 });
+
+const Activity = () => {
+  const userType = useSelector(state => state.auth.userType);
+  return userType === 'merchant' ? <MerchantActivity /> : <CustomerActivity />;
+};
 
 export default Activity;

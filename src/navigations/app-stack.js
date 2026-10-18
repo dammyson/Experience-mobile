@@ -33,6 +33,24 @@ import FAQ from '../screens/support/FAQ';
 // Payment
 import CardsAndBanks from '../screens/payment/CardsAndBanks';
 
+// Merchant
+import Programs from '../screens/programs/Programs';
+import ProgramDetails from '../screens/programs/ProgramDetails';
+import AwardPoints from '../screens/programs/AwardPoints';
+
+// Customer
+import MyPoints from '../screens/customer/MyPoints';
+import CheckEligibility from '../screens/customer/CheckEligibility';
+import MerchantEligibility from '../screens/customer/MerchantEligibility';
+import Purchases from '../screens/customer/Purchases';
+import PayPurchase from '../screens/customer/PayPurchase';
+
+// Orders
+import CreateOrder from '../screens/orders/CreateOrder';
+
+// QR code
+import MyQRCode from '../screens/qrcode/MyQRCode';
+
 // Main app
 import TabsNavigation from './tabs-navigation';
 import NavigationService from './NavigationService';
@@ -84,6 +102,24 @@ const Route = () => {
 
         {/* Payment */}
         <Stack.Screen name="CardsAndBanks" component={CardsAndBanks} />
+
+        {/* Merchant */}
+        <Stack.Screen name="Programs" component={Programs} />
+        <Stack.Screen name="ProgramDetails" component={ProgramDetails} />
+        <Stack.Screen name="AwardPoints" component={AwardPoints} />
+
+        {/* Customer */}
+        <Stack.Screen name="MyPoints" component={MyPoints} />
+        <Stack.Screen name="CheckEligibility" component={CheckEligibility} />
+        <Stack.Screen name="MerchantEligibility" component={MerchantEligibility} />
+        <Stack.Screen name="Purchases" component={Purchases} />
+        <Stack.Screen name="PayPurchase" component={PayPurchase} />
+
+        {/* Orders */}
+        <Stack.Screen name="CreateOrder" component={CreateOrder} />
+
+        {/* QR code */}
+        <Stack.Screen name="MyQRCode" component={MyQRCode} />
 
         {/* Main App */}
         <Stack.Screen
