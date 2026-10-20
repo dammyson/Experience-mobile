@@ -1,21 +1,8 @@
 import React from 'react';
 import {StyleSheet} from 'react-native';
-import Svg, {Path, Circle} from 'react-native-svg';
 import AppInput from './AppInput';
-import {theme} from '../../theme/colors';
-import {radius} from '../../theme/spacing';
-
-const SearchIcon = () => (
-  <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
-    <Circle cx={8} cy={8} r={5.5} stroke={theme.TEXT_TERTIARY} strokeWidth={1.5} />
-    <Path
-      d="M12.5 12.5L16 16"
-      stroke={theme.TEXT_TERTIARY}
-      strokeWidth={1.5}
-      strokeLinecap="round"
-    />
-  </Svg>
-);
+import Icon from '../icons/Icon';
+import {colors, type} from '../../theme/tokens';
 
 /**
  * Search input — rounded pill shape, search icon on the left.
@@ -25,9 +12,11 @@ const SearchIcon = () => (
 const SearchInput = ({placeholder = 'Search...', containerStyle, ...props}) => (
   <AppInput
     placeholder={placeholder}
-    leftElement={<SearchIcon />}
+    leftElement={<Icon name="search" size={18} color={colors.textMuted} />}
     containerStyle={[styles.container, containerStyle]}
+    boxStyle={styles.box}
     inputStyle={styles.input}
+    accessibilityLabel={placeholder}
     returnKeyType="search"
     autoCorrect={false}
     autoCapitalize="none"
@@ -39,9 +28,12 @@ const styles = StyleSheet.create({
   container: {
     gap: 0,
   },
+  box: {
+    height: 46,
+  },
   input: {
-    fontFamily: 'Inter-Regular',
-    fontSize: 15,
+    ...type.body,
+    fontFamily: type.input.fontFamily,
   },
 });
 

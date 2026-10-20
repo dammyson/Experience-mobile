@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerTitle: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontFamily: 'DMSans-SemiBold',
     fontSize: 18,
     color: theme.TEXT_PRIMARY,
   },
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   description: {
-    fontFamily: 'PlusJakartaSans-Regular',
+    fontFamily: 'DMSans-Regular',
     fontSize: 16,
     color: theme.TEXT_SECONDARY,
     textAlign: 'center',
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   ctaText: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontFamily: 'DMSans-SemiBold',
     fontSize: 16,
     color: theme.WHITE,
   },

@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Experience Business — Overview</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#B4A7FF;text-decoration:none}a:hover{color:#D3CBFF}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #0A0A0F; background-image: linear-gradient(180deg, #3A1A8F 0px, #1C0F4A 110px, #0A0A0F 240px); font-family: 'DM Sans', system-ui, sans-serif; color: #F4F4F7; font-variant-numeric: tabular-nums">
+  <div style="padding: 60px 20px 120px; display: flex; flex-direction: column; gap: 20px">
+    <header style="display: flex; align-items: center; justify-content: space-between">
+      <div style="display: flex; align-items: center; gap: 12px">
+        <div style="width: 42px; height: 42px; border-radius: 12px; background: #2A2240; border: 1px solid #4A3C7A; color: #D3CBFF; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px">KH</div>
+        <div style="display: flex; flex-direction: column; gap: 2px">
+          <span style="font-size: 11px; color: #B9B9C6">Hi Tunde</span>
+          <span style="font-weight: 600; font-size: 15px">Kopi House</span>
+        </div>
+      </div>
+      <button aria-label="Switch account" style="height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid #3A2E6E; background: rgba(255,255,255,0.04); color: #F4F4F7; font: inherit; font-size: 11px; font-weight: 600; display: flex; align-items: center; gap: 6px; cursor: pointer">Business
+        <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+    </header>
+
+    <section aria-label="Business wallet" style="border-radius: 20px; background: linear-gradient(135deg, #7A5CFA 0%, #4B2BD1 55%, #2E1890 100%); padding: 18px; display: flex; flex-direction: column; gap: 10px">
+      <span style="font-size: 11px; color: #E2DCFF">Business wallet</span>
+      <span style="font-weight: 700; font-size: 26px; letter-spacing: -0.02em">₦2,418,600<span style="font-size: 16px; color: #E2DCFF">.00</span></span>
+      <span style="display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: #7FF0C8"><span style="width: 8px; height: 8px; border-radius: 4px; background: #34D5A1"></span>Safe Haven account active</span>
+    </section>
+
+    <section aria-label="Quick actions" style="display: flex; flex-direction: column; gap: 10px">
+      <h2 style="margin: 0; text-align: center; font-size: 13px; font-weight: 600; color: #D9D9E3">Quick actions</h2>
+      <nav style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+        <sc-for list="{{actions}}" as="a" hint-placeholder-count="4">
+          <a href="{{a.href}}" style="height: 78px; border-radius: 16px; background: {{a.bg}}; border: 1px solid {{a.border}}; color: #F4F4F7; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; font-size: 12px; font-weight: 600">
+            <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{a.icon}}"/></svg>{{a.label}}</a>
+        </sc-for>
+      </nav>
+    </section>
+
+    <section aria-label="Programs" style="display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; justify-content: space-between; align-items: center">
+        <h2 style="margin: 0; font-weight: 600; font-size: 14px">Programs</h2>
+        <a href="Programs.dc.html" style="font-size: 12px; font-weight: 600">Manage</a>
+      </div>
+      <sc-for list="{{programs}}" as="p" hint-placeholder-count="2">
+        <article style="border-radius: 14px; background: #15151C; border: 1px solid #24242E; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+          <div style="display: flex; justify-content: space-between; align-items: center">
+            <span style="font-weight: 600; font-size: 13px">{{p.name}}</span>
+            <span style="padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; background: {{p.tagBg}}; color: {{p.tagFg}}">{{p.type}}</span>
+          </div>
+          <div aria-hidden="true" style="height: 6px; border-radius: 3px; background: #24242E; overflow: hidden"><div style="height: 6px; width: {{p.pct}}; background: {{p.bar}}"></div></div>
+          <div style="display: flex; justify-content: space-between; font-size: 11px; color: #9C9CAB"><span>{{p.left}}</span><span>{{p.right}}</span></div>
+        </article>
+      </sc-for>
+    </section>
+  </div>
+
+  <nav aria-label="Business" style="position: absolute; left: 0; right: 0; bottom: 0; height: 86px; background: #0F0F15; border-top: 1px solid #1F1F29; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); padding: 8px 6px 26px; box-sizing: border-box">
+    <sc-for list="{{tabs}}" as="t" hint-placeholder-count="5">
+      <a href="{{t.href}}" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: {{t.color}}; font-size: 11px; font-weight: {{t.weight}}">
+        <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{t.icon}}"/></svg>{{t.label}}</a>
+    </sc-for>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const tab = (label, icon, on, href) => ({ label, icon, href: href || '#', color: on ? '#B4A7FF' : '#8A8A99', weight: on ? '600' : '500' });
+    const tile = (label, icon, href, primary) => ({ label, icon, href, bg: primary ? '#6B4EF0' : '#15151C', border: primary ? '#8B74F7' : '#2A2A35' });
+    return {
+      actions: [
+        tile('Award points', 'M12 5v14M5 12h14', 'AwardPoints.dc.html', true),
+        tile('New program', 'M4 6h16M4 12h10M4 18h7M18 15v6M15 18h6', 'CreateProgram.dc.html', false),
+        tile('Giveaway', 'M3 7h18v3a2 2 0 0 0 0 4v3H3v-3a2 2 0 0 0 0-4zM14 7v10', 'Promotions.dc.html', false),
+        tile('Purchase', 'M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6', '#', false)
+      ],
+      programs: [
+        { name: 'Kopi Regulars', type: 'Prepaid', tagBg: 'rgba(52,213,161,0.14)', tagFg: '#5EE6B6', pct: '64%', bar: '#34D5A1', left: '₦320,000 funding left', right: 'of ₦500,000' },
+        { name: 'Weekend Brunch Club', type: 'Postpaid', tagBg: 'rgba(165,149,255,0.16)', tagFg: '#C9BFFF', pct: '38%', bar: '#8B74F7', left: '18,940 pts awarded', right: 'Billed when closed' }
+      ],
+      tabs: [
+        tab('Overview', 'M4 4h7v7H4zM13 4h7v4h-7zM13 10h7v10h-7zM4 13h7v7H4z', true, 'MerchantOverview.dc.html'),
+        tab('Programs', 'M4 6h16M4 12h16M4 18h10', false, 'Programs.dc.html'),
+        tab('Customers', 'M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM2 21a7 7 0 0 1 14 0M16 3.5a4 4 0 0 1 0 7M22 21a7 7 0 0 0-4-6.3', false, 'CustomerLookup.dc.html'),
+        tab('Activity', 'M3 12h4l3 8 4-16 3 8h4', false, 'Activity.dc.html'),
+        tab('Business', 'M3 9 4.5 4h15L21 9M3 9v11h18V9M3 9h18M9 20v-6h6v6', false, 'Business.dc.html')
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

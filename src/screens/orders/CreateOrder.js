@@ -1,283 +1,201 @@
 import React, {useState} from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  StatusBar,
-  StyleSheet,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
+import {View, Text, StyleSheet} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {useDispatch, useSelector} from 'react-redux';
-import ScreenBackground from '../../components/layout/ScreenBackground';
-import {BackIcon} from '../../components/icons';
-import {AppInput, ErrorSheet} from '../../components/ui';
-import CustomerLookup, {getCustomerName} from '../../components/merchant/CustomerLookup';
-import {theme} from '../../theme/colors';
-import {textStyles} from '../../theme/typography';
-import {spacing, radius} from '../../theme/spacing';
+import FormLayout from '../../components/layout/FormLayout';
+import {Button, InlineField, PrimaryButton, StatusScreen} from '../../components/ui';
+import CustomerFinder, {FoundCustomerCard} from '../../components/merchant/CustomerFinder';
 import {merchantAPI} from '../../services/api';
 import {getRecentMerchantActivities, getMerchantWallet} from '../../actions/merchantActions';
-import {formatMoney} from '../../utilities/merchantActivity';
+import {useMerchantId, customerName} from '../../utilities/merchantData';
+import {parseAmount, formatAmountInput} from '../../utilities/transfer';
+import {formatNaira} from '../../utilities/format';
+import {isNetworkError} from '../../utilities/errors';
+import {colors, type} from '../../theme/tokens';
 
 const newReference = () => `PURCHASE-${Date.now()}`;
+const LABEL_WIDTH = 92;
 
-// Digits with at most one decimal point and two decimal places
-const sanitizeAmount = text => {
-  const cleaned = text.replace(/[^0-9.]/g, '');
-  const [whole, ...rest] = cleaned.split('.');
-  return rest.length ? `${whole}.${rest.join('').slice(0, 2)}` : whole;
-};
-
+/**
+ * Record a purchase for a customer so they can pay it with points.
+ * Not in the design files; built from the shared components.
+ */
 const CreateOrder = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const {user} = useSelector(state => state.auth);
+  const merchantId = useMerchantId();
   const wallet = useSelector(state => state.merchant.wallet);
-  const merchantId = user?.merchant_ids?.[0];
   const currency = wallet?.currency || 'NGN';
 
-  const [lookupKey, setLookupKey] = useState(0);
+  const [finderKey, setFinderKey] = useState(0);
   const [customer, setCustomer] = useState(null);
-  const [amount, setAmount] = useState('');
+  const [amountText, setAmountText] = useState('');
   const [reference, setReference] = useState(newReference);
   const [note, setNote] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [completed, setCompleted] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState('');
+  const [result, setResult] = useState(null);
 
-  const amountValue = parseFloat(amount);
-  const canSubmit = !!customer && amountValue > 0 && !!reference.trim() && !submitting;
+  const amount = parseAmount(amountText);
+  const valid = !!customer && amount > 0 && !!reference.trim();
 
   const handleSubmit = async () => {
-    setSubmitting(true);
+    setError('');
     try {
       await merchantAPI.createPurchase(merchantId, {
         customerId: customer.id,
-        amount: amountValue,
+        amount,
         currency,
         reference: reference.trim(),
         note: note.trim(),
       });
-      setCompleted(true);
-      // Keep the home screen's activity feed and wallet in sync
+      setResult('success');
+      // Keep the overview's activity feed and wallet in sync
       dispatch(getRecentMerchantActivities(merchantId)).catch(() => {});
       dispatch(getMerchantWallet(merchantId)).catch(() => {});
     } catch (err) {
-      setError(err?.message || 'Failed to create order');
-    } finally {
-      setSubmitting(false);
+      if (isNetworkError(err)) {
+        setResult('pending');
+      } else {
+        setError(err.message || "The purchase couldn't be created.");
+      }
     }
   };
 
-  const handleCreateAnother = () => {
-    setLookupKey(key => key + 1);
+  const startOver = () => {
+    setFinderKey(k => k + 1);
     setCustomer(null);
-    setAmount('');
+    setAmountText('');
     setReference(newReference());
     setNote('');
-    setCompleted(false);
+    setResult(null);
   };
 
+  if (result) {
+    const success = result === 'success';
+    return (
+      <StatusScreen
+        headerTitle="New purchase"
+        status={success ? 'success' : 'pending'}
+        title={success ? 'Purchase created' : "We couldn't confirm the purchase"}
+        body={
+          success
+            ? `${customerName(customer)} can now pay ${formatNaira(amount, {currency})} with points from their app.`
+            : 'We lost connection before the server replied. Check Activity before creating it again.'
+        }
+        details={[
+          {label: 'Customer', value: customerName(customer)},
+          {label: 'Amount', value: formatNaira(amount, {currency})},
+          {label: 'Reference', value: reference.trim()},
+          !!note.trim() && {label: 'Note', value: note.trim()},
+        ]}
+        secondary={{title: 'Done', onPress: () => navigation.goBack()}}
+        primary={{title: 'New purchase', onPress: startOver}}
+      />
+    );
+  }
+
   return (
-    <ScreenBackground>
-      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
-
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backBtn}
-          onPress={() => navigation.goBack()}
-          activeOpacity={0.7}>
-          <BackIcon size={24} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Create Order</Text>
-        <View style={styles.headerSpacer} />
-      </View>
-
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView
-          contentContainerStyle={styles.content}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}>
-          {completed ? (
-            <View style={styles.successCard}>
-              <Text style={styles.successTitle}>Order created</Text>
-              <Text style={styles.successText}>
-                {formatMoney(amountValue, currency)} purchase recorded for{' '}
-                {getCustomerName(customer)}.
+    <FormLayout
+      title="New purchase"
+      onBack={() => navigation.goBack()}
+      contentStyle={styles.content}
+      footer={
+        customer && (
+          <>
+            {!!error && (
+              <Text style={styles.error} accessibilityRole="alert">
+                {error}
               </Text>
-              <Text style={styles.successReference}>Ref: {reference}</Text>
-
-              <TouchableOpacity
-                style={[styles.ctaButton, styles.successButton]}
-                onPress={handleCreateAnother}
-                activeOpacity={0.85}>
-                <Text style={styles.ctaText}>Create Another Order</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
-                <Text style={styles.linkText}>Back to Home</Text>
-              </TouchableOpacity>
+            )}
+            <PrimaryButton
+              title={amount > 0 ? `Create purchase · ${formatNaira(amount, {currency})}` : 'Create purchase'}
+              onPress={handleSubmit}
+              disabled={!valid}
+            />
+          </>
+        )
+      }>
+      {customer ? (
+        <>
+          <FoundCustomerCard customer={customer}>
+            <View style={styles.change}>
+              <Button title="Change customer" variant="secondary" size="sm" onPress={startOver} />
             </View>
-          ) : (
-            <>
-              {/* Step 1 — find customer */}
-              <CustomerLookup
-                key={lookupKey}
-                merchantId={merchantId}
-                customer={customer}
-                onCustomerChange={setCustomer}
-                onError={setError}
-              />
+          </FoundCustomerCard>
 
-              {/* Step 2 — order details */}
-              {customer && (
-                <>
-                  <Text style={styles.sectionTitle}>Order Details</Text>
-
-                  <AppInput
-                    label={`Amount (${currency})`}
-                    value={amount}
-                    onChangeText={text => setAmount(sanitizeAmount(text))}
-                    placeholder="e.g. 5000"
-                    keyboardType="decimal-pad"
-                  />
-
-                  <View style={styles.spacer} />
-
-                  <AppInput
-                    label="Reference"
-                    value={reference}
-                    onChangeText={setReference}
-                    autoCapitalize="characters"
-                    autoCorrect={false}
-                  />
-
-                  <View style={styles.spacer} />
-
-                  <AppInput
-                    label="Note (optional)"
-                    value={note}
-                    onChangeText={setNote}
-                    placeholder="e.g. counter purchase"
-                  />
-
-                  <TouchableOpacity
-                    style={[styles.ctaButton, !canSubmit && styles.disabled]}
-                    onPress={handleSubmit}
-                    disabled={!canSubmit}
-                    activeOpacity={0.85}>
-                    {submitting ? (
-                      <ActivityIndicator color={theme.WHITE} />
-                    ) : (
-                      <Text style={styles.ctaText}>
-                        Create Order
-                        {amountValue > 0 ? ` · ${formatMoney(amountValue, currency)}` : ''}
-                      </Text>
-                    )}
-                  </TouchableOpacity>
-                </>
-              )}
-            </>
+          <View style={styles.fields}>
+            <InlineField
+              label="Amount:"
+              labelWidth={LABEL_WIDTH}
+              value={amountText}
+              onChangeText={text => setAmountText(formatAmountInput(text))}
+              placeholder="₦0"
+              keyboardType="decimal-pad"
+              strong
+              valid={amount > 0}
+            />
+            <InlineField
+              label="Reference:"
+              labelWidth={LABEL_WIDTH}
+              value={reference}
+              onChangeText={setReference}
+              autoCapitalize="characters"
+              autoCorrect={false}
+            />
+            <InlineField
+              label="Note:"
+              labelWidth={LABEL_WIDTH}
+              value={note}
+              onChangeText={setNote}
+              placeholder="Optional"
+              maxLength={120}
+            />
+          </View>
+          <Text style={styles.helper}>The customer pays this in full with points from their app.</Text>
+        </>
+      ) : (
+        <CustomerFinder
+          key={finderKey}
+          merchantId={merchantId}
+          renderFound={found => (
+            <View style={styles.flex}>
+              <Button title="Use this customer" size="sm" onPress={() => setCustomer(found)} />
+            </View>
           )}
-        </ScrollView>
-      </KeyboardAvoidingView>
-
-      <ErrorSheet visible={!!error} message={error} onClose={() => setError(null)} />
-    </ScreenBackground>
+          missingHint={identifier =>
+            `Purchases need an existing customer. Check the ${identifier.short}, or ask them to sign up first.`
+          }
+          renderMissing={() => null}
+        />
+      )}
+    </FormLayout>
   );
 };
 
 const styles = StyleSheet.create({
-  flex: {flex: 1},
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.base,
-    paddingTop: 60,
-    paddingBottom: 20,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
-    fontSize: 18,
-    color: theme.TEXT_PRIMARY,
-  },
-  headerSpacer: {
-    width: 40,
-  },
   content: {
-    paddingHorizontal: spacing.base,
-    paddingTop: spacing.md,
-    paddingBottom: 40,
+    paddingTop: 18,
+    gap: 16,
   },
-  sectionTitle: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
-    fontSize: 16,
-    color: theme.TEXT_PRIMARY,
-    marginBottom: 12,
+  flex: {
+    flex: 1,
   },
-  spacer: {
-    height: 20,
+  change: {
+    flex: 1,
   },
-  ctaButton: {
-    backgroundColor: theme.PRIMARY_GLASS,
-    borderRadius: radius.xl,
-    paddingVertical: 12,
-    paddingHorizontal: spacing.lg,
-    alignItems: 'center',
-    marginTop: spacing.xl,
+  fields: {
+    gap: 12,
   },
-  ctaText: {
-    ...textStyles.textLgBold,
-    color: theme.WHITE,
-  },
-  disabled: {
-    opacity: 0.5,
-  },
-  successCard: {
-    backgroundColor: theme.SURFACE_COLOR,
-    borderRadius: 16,
-    padding: 20,
-    alignItems: 'center',
-  },
-  successTitle: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
-    fontSize: 18,
-    color: theme.TEXT_PRIMARY,
-  },
-  successText: {
-    fontFamily: 'PlusJakartaSans-Regular',
-    fontSize: 14,
-    color: theme.TEXT_TERTIARY,
-    marginTop: 8,
+  helper: {
+    ...type.caption,
+    color: colors.textMuted,
     textAlign: 'center',
   },
-  successReference: {
-    fontFamily: 'PlusJakartaSans-Medium',
-    fontSize: 13,
-    color: theme.TEXT_TERTIARY,
-    marginTop: 6,
-  },
-  successButton: {
-    alignSelf: 'stretch',
-  },
-  linkText: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
-    fontSize: 14,
-    color: theme.PRIMARY_COLOR,
-    marginTop: 16,
+  error: {
+    ...type.captionStrong,
+    fontSize: 12,
+    color: colors.danger,
+    textAlign: 'center',
   },
 });
 

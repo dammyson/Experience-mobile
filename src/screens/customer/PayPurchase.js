@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   sectionTitle: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontFamily: 'DMSans-SemiBold',
     fontSize: 16,
     color: theme.TEXT_PRIMARY,
     marginBottom: 12,
@@ -184,12 +184,12 @@ const styles = StyleSheet.create({
     borderBottomColor: 'rgba(255,255,255,0.06)',
   },
   rowLabel: {
-    fontFamily: 'PlusJakartaSans-Regular',
+    fontFamily: 'DMSans-Regular',
     fontSize: 14,
     color: theme.TEXT_TERTIARY,
   },
   rowValue: {
-    fontFamily: 'PlusJakartaSans-Medium',
+    fontFamily: 'DMSans-Medium',
     fontSize: 14,
     color: theme.TEXT_PRIMARY,
     flexShrink: 1,
@@ -225,12 +225,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   successTitle: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontFamily: 'DMSans-SemiBold',
     fontSize: 18,
     color: theme.TEXT_PRIMARY,
   },
   successText: {
-    fontFamily: 'PlusJakartaSans-Regular',
+    fontFamily: 'DMSans-Regular',
     fontSize: 14,
     color: theme.TEXT_TERTIARY,
     marginTop: 8,

@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Experience Business — Programs</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#B4A7FF;text-decoration:none}a:hover{color:#D3CBFF}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #0A0A0F; background-image: linear-gradient(180deg, #3A1A8F 0px, #1C0F4A 110px, #0A0A0F 240px); font-family: 'DM Sans', system-ui, sans-serif; color: #F4F4F7; font-variant-numeric: tabular-nums">
+  <header style="padding: 56px 20px 14px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.08)">
+    <h1 style="margin: 0; font-weight: 600; font-size: 18px; line-height: 44px">Programs</h1>
+    <a href="CreateProgram.dc.html" style="height: 36px; padding: 0 12px; border-radius: 10px; background: #6B4EF0; color: #FFFFFF; display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600">
+      <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>New</a>
+  </header>
+
+  <div style="padding: 16px 20px 120px; display: flex; flex-direction: column; gap: 12px">
+    <sc-for list="{{programs}}" as="p" hint-placeholder-count="3">
+      <article style="border-radius: 16px; background: #15151C; border: 1px solid {{p.frame}}; padding: 14px; display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px">
+          <div style="display: flex; flex-direction: column; gap: 3px">
+            <span style="font-weight: 600; font-size: 14px">{{p.name}}</span>
+            <span style="font-size: 11px; color: #9C9CAB">{{p.rule}}</span>
+          </div>
+          <span style="flex-shrink: 0; padding: 4px 9px; border-radius: 999px; font-size: 11px; font-weight: 600; background: {{p.tagBg}}; color: {{p.tagFg}}">{{p.tag}}</span>
+        </div>
+        <sc-if value="{{p.hasBar}}" hint-placeholder-val="{{ true }}">
+          <div aria-hidden="true" style="height: 6px; border-radius: 3px; background: #24242E; overflow: hidden"><div style="height: 6px; width: {{p.pct}}; background: {{p.bar}}"></div></div>
+        </sc-if>
+        <dl style="margin: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; font-size: 11px">
+          <sc-for list="{{p.stats}}" as="s" hint-placeholder-count="3">
+            <div style="display: flex; flex-direction: column; gap: 2px"><dt style="color: #9C9CAB">{{s.k}}</dt><dd style="margin: 0; font-weight: 600; font-size: 13px; color: {{s.c}}">{{s.v}}</dd></div>
+          </sc-for>
+        </dl>
+        <sc-if value="{{p.hasAction}}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; align-items: center; gap: 10px; padding-top: 10px; border-top: 1px solid #24242E">
+            <span style="flex: 1; font-size: 11px; line-height: 1.4; color: {{p.noteColor}}">{{p.note}}</span>
+            <button style="height: 34px; padding: 0 12px; border-radius: 10px; border: 1px solid {{p.btnBorder}}; background: {{p.btnBg}}; color: {{p.btnFg}}; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer">{{p.action}}</button>
+          </div>
+        </sc-if>
+      </article>
+    </sc-for>
+  </div>
+
+  <nav aria-label="Business" style="position: absolute; left: 0; right: 0; bottom: 0; height: 86px; background: #0F0F15; border-top: 1px solid #1F1F29; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); padding: 8px 6px 26px; box-sizing: border-box">
+    <sc-for list="{{tabs}}" as="t" hint-placeholder-count="5">
+      <a href="{{t.href}}" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: {{t.color}}; font-size: 11px; font-weight: {{t.weight}}">
+        <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{t.icon}}"/></svg>{{t.label}}</a>
+    </sc-for>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const tab = (label, icon, on, href) => ({ label, icon, href, color: on ? '#B4A7FF' : '#8A8A99', weight: on ? '600' : '500' });
+    const W = '#F4F4F7';
+    return {
+      programs: [
+        { name: 'Kopi Regulars', rule: '1 pt per ₦1 · ₦0.50 per pt · up to 50% of a purchase', tag: 'Prepaid', tagBg: 'rgba(52,213,161,0.14)', tagFg: '#5EE6B6', frame: '#24242E',
+          hasBar: true, pct: '64%', bar: '#34D5A1',
+          stats: [{ k: 'Funding left', v: '₦320,000', c: '#34D5A1' }, { k: 'Funded', v: '₦500,000', c: W }, { k: 'Expiry', v: 'Never', c: W }],
+          hasAction: false },
+        { name: 'Weekend Brunch Club', rule: '2 pts per ₦1 · ₦0.25 per pt · up to 30%', tag: 'Postpaid · open', tagBg: 'rgba(165,149,255,0.16)', tagFg: '#C9BFFF', frame: '#24242E',
+          hasBar: false, pct: '0', bar: '#8B74F7',
+          stats: [{ k: 'Awarded', v: '18,940 pts', c: '#C9BFFF' }, { k: 'Owed if closed', v: '₦4,735', c: W }, { k: 'Expiry', v: 'Never', c: W }],
+          hasAction: true, note: 'Closing charges your wallet for points awarded.', noteColor: '#9C9CAB', action: 'Close program', btnBg: 'transparent', btnBorder: '#3A3A48', btnFg: W },
+        { name: 'Harmattan Promo 2025', rule: '1 pt per ₦1 · ₦0.50 per pt · up to 50%', tag: 'Closed · payment pending', tagBg: 'rgba(245,183,64,0.14)', tagFg: '#F5B740', frame: '#4A3A1C',
+          hasBar: false, pct: '0', bar: '#F5B740',
+          stats: [{ k: 'Awarded', v: '62,400 pts', c: '#C9BFFF' }, { k: 'Amount due', v: '₦31,200', c: '#F5B740' }, { k: 'Closed', v: '12 Oct', c: W }],
+          hasAction: true, note: 'Wallet was short when closed. Fund it, then settle.', noteColor: '#F5D08A', action: 'Settle now', btnBg: '#6B4EF0', btnBorder: '#6B4EF0', btnFg: '#FFFFFF' }
+      ],
+      tabs: [
+        tab('Overview', 'M4 4h7v7H4zM13 4h7v4h-7zM13 10h7v10h-7zM4 13h7v7H4z', false, 'MerchantOverview.dc.html'),
+        tab('Programs', 'M4 6h16M4 12h16M4 18h10', true, 'Programs.dc.html'),
+        tab('Customers', 'M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM2 21a7 7 0 0 1 14 0M16 3.5a4 4 0 0 1 0 7M22 21a7 7 0 0 0-4-6.3', false, 'CustomerLookup.dc.html'),
+        tab('Activity', 'M3 12h4l3 8 4-16 3 8h4', false, 'Activity.dc.html'),
+        tab('Business', 'M3 9 4.5 4h15L21 9M3 9v11h18V9M3 9h18M9 20v-6h6v6', false, 'Business.dc.html')
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

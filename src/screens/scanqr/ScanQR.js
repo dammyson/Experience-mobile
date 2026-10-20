@@ -11,7 +11,7 @@ const ScanQR = () => (
 
 const styles = StyleSheet.create({
   center: {alignItems: 'center', justifyContent: 'center'},
-  text: {fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 20, color: theme.TEXT_PRIMARY},
+  text: {fontFamily: 'DMSans-SemiBold', fontSize: 20, color: theme.TEXT_PRIMARY},
 });
 
 export default ScanQR;

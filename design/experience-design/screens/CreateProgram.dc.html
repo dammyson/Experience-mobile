@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Experience Business — New program</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#B4A7FF;text-decoration:none}a:hover{color:#D3CBFF}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #0A0A0F; background-image: linear-gradient(180deg, #3A1A8F 0px, #1C0F4A 110px, #0A0A0F 240px); font-family: 'DM Sans', system-ui, sans-serif; color: #F4F4F7; font-variant-numeric: tabular-nums; display: flex; flex-direction: column">
+  <header style="padding: 56px 12px 14px; display: flex; align-items: center; gap: 4px; border-bottom: 1px solid rgba(255,255,255,0.08)">
+    <a href="Programs.dc.html" aria-label="Back" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #F4F4F7">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg>
+    </a>
+    <h1 style="margin: 0; flex: 1; font-weight: 600; font-size: 16px">New program</h1>
+    <span style="padding-right: 8px; font-size: 11px; font-weight: 600; color: #B9B9C6">Step 1 of 2</span>
+  </header>
+
+  <form style="flex: 1; padding: 16px 20px 0; display: flex; flex-direction: column; gap: 14px">
+    <p style="margin: 0; text-align: center; font-size: 13px; font-weight: 500; color: #D9D9E3">How do you want to pay for points?</p>
+    <div role="radiogroup" aria-label="Billing type" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+      <sc-for list="{{types}}" as="t" hint-placeholder-count="2">
+        <button type="button" role="radio" aria-checked="{{t.on}}" onClick="{{t.pick}}" style="height: 84px; border-radius: 16px; border: 1px solid {{t.border}}; background: {{t.bg}}; color: #F4F4F7; font: inherit; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; cursor: pointer">
+          <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{t.icon}}"/></svg>
+          <span style="font-size: 13px; font-weight: 600">{{t.label}}</span>
+        </button>
+      </sc-for>
+    </div>
+    <p style="margin: 0; padding: 12px 14px; border-radius: 12px; background: rgba(107,78,240,0.10); border: 1px solid #3A2E6E; font-size: 12px; line-height: 1.5; color: #D9D9E3">{{explain}}</p>
+
+    <div style="display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 12px 10px; align-items: center">
+      <label for="pname" style="font-size: 12px; color: #B9B9C6">Program name:</label>
+      <input id="pname" value="Kopi Regulars" style="height: 42px; border-radius: 12px; border: 1px solid #2E2E3A; background: #15151C; color: #F4F4F7; padding: 0 12px; font: inherit; font-size: 13px; outline: none">
+      <sc-if value="{{prepaid}}" hint-placeholder-val="{{ true }}">
+        <label for="fund" style="font-size: 12px; color: #B9B9C6">Funding:</label>
+        <input id="fund" value="₦500,000" style="height: 42px; border-radius: 12px; border: 1px solid #6B4EF0; background: #15151C; color: #F4F4F7; padding: 0 12px; font: inherit; font-size: 13px; font-weight: 600; outline: none">
+      </sc-if>
+      <label for="earn" style="font-size: 12px; color: #B9B9C6">Points per ₦1:</label>
+      <input id="earn" value="1" style="height: 42px; border-radius: 12px; border: 1px solid #2E2E3A; background: #15151C; color: #F4F4F7; padding: 0 12px; font: inherit; font-size: 13px; outline: none">
+      <label for="pval" style="font-size: 12px; color: #B9B9C6">Value of 1 pt:</label>
+      <input id="pval" value="₦0.50" style="height: 42px; border-radius: 12px; border: 1px solid #2E2E3A; background: #15151C; color: #F4F4F7; padding: 0 12px; font: inherit; font-size: 13px; outline: none">
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <span style="font-size: 12px; color: #B9B9C6">Max share of a purchase payable with points</span>
+      <div role="radiogroup" aria-label="Maximum redemption" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px">
+        <sc-for list="{{caps}}" as="c" hint-placeholder-count="4">
+          <button type="button" role="radio" aria-checked="{{c.on}}" onClick="{{c.pick}}" style="height: 34px; border-radius: 999px; border: 1px solid {{c.border}}; background: {{c.bg}}; color: #F4F4F7; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer">{{c.label}}</button>
+        </sc-for>
+      </div>
+    </div>
+  </form>
+
+  <div style="padding: 14px 20px 36px; display: flex; flex-direction: column; gap: 8px">
+    <span style="font-size: 11px; color: #9C9CAB; text-align: center">Next: where points can be spent and when they expire.</span>
+    <button style="height: 52px; border-radius: 14px; border: 0; background: #6B4EF0; color: #FFFFFF; font: inherit; font-weight: 600; font-size: 14px; cursor: pointer">Continue</button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { type: 'PREPAID', cap: 50 };
+  }
+  renderVals() {
+    const s = this.state;
+    const on = { bg: '#6B4EF0', border: '#8B74F7' };
+    const off = { bg: '#15151C', border: '#2A2A35' };
+    return {
+      prepaid: s.type === 'PREPAID',
+      types: [
+        { id: 'PREPAID', label: 'Prepaid', icon: 'M19 7V5a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H5a2 2 0 0 1-2-2V6M16.5 13.5h.01' },
+        { id: 'POSTPAID', label: 'Postpaid', icon: 'M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6' }
+      ].map((t) => { const x = s.type === t.id ? on : off; return { ...t, on: s.type === t.id ? 'true' : 'false', bg: x.bg, border: x.border, pick: () => this.setState({ type: t.id }) }; }),
+      explain: s.type === 'PREPAID'
+        ? 'The funding amount leaves your business wallet now. You can only award points up to what is funded.'
+        : 'Nothing is charged now and there is no cap. When you close the program, your wallet is charged for the value of all points awarded.',
+      caps: [25, 50, 75, 100].map((v) => { const x = s.cap === v ? on : off; return { label: v + '%', on: s.cap === v ? 'true' : 'false', bg: x.bg, border: x.border, pick: () => this.setState({ cap: v }) }; })
+    };
+  }
+}
+</script>
+</body>
+</html>

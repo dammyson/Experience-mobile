@@ -1,295 +1,169 @@
-import React, {useCallback, useState} from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  StatusBar,
-  StyleSheet,
-  RefreshControl,
-  ActivityIndicator,
-} from 'react-native';
+import React, {useCallback, useRef, useState} from 'react';
+import {Text, StyleSheet, RefreshControl} from 'react-native';
 import {useFocusEffect, useNavigation, useRoute} from '@react-navigation/native';
-import {useSelector} from 'react-redux';
-import LinearGradient from 'react-native-linear-gradient';
-import ScreenBackground from '../../components/layout/ScreenBackground';
-import {BackIcon} from '../../components/icons';
-import {theme} from '../../theme/colors';
-import {spacing, radius} from '../../theme/spacing';
-import {textStyles} from '../../theme/typography';
+import {useDispatch} from 'react-redux';
+import {showMessage} from 'react-native-flash-message';
+import FormLayout from '../../components/layout/FormLayout';
+import RequestState from '../../components/layout/RequestState';
+import {ButtonPair, ConfirmSheet, KeyValueCard, PrimaryButton, SkeletonList} from '../../components/ui';
+import {getMerchantPrograms, getMerchantWallet} from '../../actions/merchantActions';
 import {merchantAPI} from '../../services/api';
-
-const formatMoney = (value, currency) => {
-  const num = Number(value) || 0;
-  const symbol = currency === 'NGN' ? '₦' : currency ? `${currency} ` : '';
-  const [whole, fraction] = num.toFixed(2).split('.');
-  return `${symbol}${whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}.${fraction}`;
-};
-
-const formatLabel = value =>
-  value
-    ? value
-        .toLowerCase()
-        .split('_')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ')
-    : '—';
-
-const formatDate = value =>
-  value
-    ? new Date(value).toLocaleString('en-GB', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      })
-    : '—';
-
-const DetailRow = ({label, value, isLast}) => (
-  <View style={[styles.row, !isLast && styles.rowBorder]}>
-    <Text style={styles.rowLabel}>{label}</Text>
-    <Text style={styles.rowValue}>{value}</Text>
-  </View>
-);
+import useRequest from '../../utilities/useRequest';
+import {useMerchantId, readBalance, programRule, programTag, isPrepaid, isOpen} from '../../utilities/merchantData';
+import {formatType} from '../../utilities/merchantActivity';
+import {formatNaira, formatPts, formatActivityDate} from '../../utilities/format';
+import {colors, type} from '../../theme/tokens';
 
 const ProgramDetails = () => {
   const navigation = useNavigation();
+  const dispatch = useDispatch();
   const {program} = useRoute().params;
-  const {user} = useSelector(state => state.auth);
-  const merchantId = user?.merchant_ids?.[0];
+  const merchantId = useMerchantId();
+  const [closing, setClosing] = useState(false);
 
-  const [balance, setBalance] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  const loadBalance = useCallback(async () => {
-    if (!merchantId) {
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await merchantAPI.getProgramBalance(merchantId, program.id);
-      setBalance(response.data);
-    } catch (err) {
-      setError(err?.message || 'Failed to fetch program balance');
-    } finally {
-      setLoading(false);
-    }
-  }, [merchantId, program.id]);
-
-  // Reload on focus so the balance reflects points awarded on the next screen
-  useFocusEffect(
-    useCallback(() => {
-      loadBalance();
-    }, [loadBalance]),
+  const balanceReq = useRequest(() => merchantAPI.getProgramBalance(merchantId, program.id), [merchantId, program.id]);
+  const policyReq = useRequest(
+    () => merchantAPI.getProgramRedemptionPolicy(merchantId, program.id),
+    [merchantId, program.id],
   );
 
+  // Reload on return so figures reflect points just awarded
+  const hasFocused = useRef(false);
+  const {reload: reloadBalance} = balanceReq;
+  useFocusEffect(
+    useCallback(() => {
+      if (hasFocused.current) {
+        reloadBalance();
+      }
+      hasFocused.current = true;
+    }, [reloadBalance]),
+  );
+
+  const balance = balanceReq.data;
+  const b = readBalance(balance);
   const currency = balance?.currency || program.currency;
-  const rows = balance
-    ? [
-        {label: 'Billing Type', value: formatLabel(balance.billing_type)},
-        {label: 'Funding Amount', value: formatMoney(balance.funding_amount, currency)},
-        {label: 'Amount Used', value: formatMoney(balance.funded_amount_used, currency)},
-        {label: 'Amount Due', value: formatMoney(balance.amount_due, currency)},
-        {label: 'Point Value', value: formatMoney(balance.point_value, currency)},
-        {label: 'Settlement Status', value: formatLabel(balance.settlement_status)},
-        {label: 'Last Updated', value: formatDate(balance.updated_at)},
-      ]
-    : [];
+  const money = value => (value != null ? formatNaira(value, {currency}) : '—');
+  const tag = programTag(program, balance);
+  const open = isOpen(program);
+  const policy = policyReq.data?.policy ?? policyReq.data;
+  const cap = policy?.maximum_redemption_percentage ?? program.maximum_redemption_percentage;
+
+  const handleClose = async () => {
+    try {
+      await merchantAPI.closeProgram(merchantId, program.id);
+      setClosing(false);
+      showMessage({message: `${program.name} closed`, type: 'success'});
+      dispatch(getMerchantPrograms(merchantId, true)).catch(() => {});
+      dispatch(getMerchantWallet(merchantId, true)).catch(() => {});
+      navigation.goBack();
+    } catch (err) {
+      setClosing(false);
+      showMessage({message: err.message || "The program couldn't be closed.", type: 'danger'});
+    }
+  };
+
+  const award = () => navigation.navigate('AwardPoints', {program});
 
   return (
-    <ScreenBackground>
-      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
-
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backBtn}
-          onPress={() => navigation.goBack()}
-          activeOpacity={0.7}>
-          <BackIcon size={24} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle} numberOfLines={1}>
-          {program.name || 'Program'}
-        </Text>
-        <View style={styles.headerSpacer} />
-      </View>
-
-      <ScrollView
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
+    <>
+      <FormLayout
+        title={program.name || 'Program'}
+        onBack={() => navigation.goBack()}
+        contentStyle={styles.content}
         refreshControl={
           <RefreshControl
-            refreshing={loading && !!balance}
-            onRefresh={loadBalance}
-            tintColor="#8B5CF6"
+            refreshing={balanceReq.refreshing}
+            onRefresh={() => {
+              balanceReq.refresh();
+              policyReq.refresh();
+            }}
+            tintColor={colors.link}
           />
+        }
+        footer={
+          open &&
+          (isPrepaid(program) ? (
+            <PrimaryButton title="Award points" onPress={award} />
+          ) : (
+            <ButtonPair
+              secondary={{title: 'Close program', onPress: () => setClosing(true)}}
+              primary={{title: 'Award points', onPress: award}}
+            />
+          ))
         }>
-        {loading && !balance ? (
-          <ActivityIndicator style={styles.loader} color={theme.PRIMARY_COLOR} />
-        ) : error && !balance ? (
-          <View style={styles.errorState}>
-            <Text style={styles.errorText}>{error}</Text>
-            <TouchableOpacity onPress={loadBalance} activeOpacity={0.7}>
-              <Text style={styles.retryText}>Try again</Text>
-            </TouchableOpacity>
-          </View>
+        <Text style={[styles.tag, {color: tag.fg}]}>{tag.label}</Text>
+        {!!programRule(program) && <Text style={styles.rule}>{programRule(program)}</Text>}
+
+        {balanceReq.loading ? (
+          <SkeletonList rows={2} />
+        ) : balanceReq.error ? (
+          <RequestState error={balanceReq.error} onRetry={balanceReq.reload} />
         ) : (
-          <>
-            {/* Remaining balance */}
-            <View style={styles.balanceCard}>
-              <LinearGradient
-                colors={['#885DF5', '#6B7CFE']}
-                start={{x: 0, y: 0.5}}
-                end={{x: 1, y: 0}}
-                style={StyleSheet.absoluteFill}
-              />
-              <Text style={styles.balanceLabel}>Funds Remaining</Text>
-              <Text style={styles.balanceValue}>
-                {formatMoney(balance?.funded_amount_remaining, currency)}
-              </Text>
-              {!!program.status && (
-                <Text style={styles.balanceSubLabel}>{formatLabel(program.status)} program</Text>
-              )}
-            </View>
-
-            {/* Breakdown */}
-            <View style={styles.card}>
-              {rows.map((row, index) => (
-                <DetailRow
-                  key={row.label}
-                  label={row.label}
-                  value={row.value}
-                  isLast={index === rows.length - 1}
-                />
-              ))}
-            </View>
-
-            <TouchableOpacity
-              style={styles.ctaButton}
-              onPress={() => navigation.navigate('AwardPoints', {program})}
-              activeOpacity={0.85}>
-              <Text style={styles.ctaText}>Award Points</Text>
-            </TouchableOpacity>
-          </>
+          <KeyValueCard
+            title="Funding"
+            rows={
+              isPrepaid(program)
+                ? [
+                    {label: 'Funded', value: money(b.funded)},
+                    {label: 'Used', value: money(b.used)},
+                    {label: 'Funding left', value: money(b.left), color: colors.success},
+                    b.pointsAwarded != null && {label: 'Points awarded', value: formatPts(b.pointsAwarded), color: colors.points},
+                  ]
+                : [
+                    b.pointsAwarded != null && {label: 'Points awarded', value: formatPts(b.pointsAwarded), color: colors.points},
+                    {
+                      label: open ? 'Owed if closed' : 'Amount due',
+                      value: money(b.due),
+                      color: tag.pending ? colors.pending : undefined,
+                    },
+                    !!b.settlement && {label: 'Settlement', value: formatType(b.settlement)},
+                    balance?.updated_at && {label: 'Last updated', value: formatActivityDate(balance.updated_at)},
+                  ]
+            }
+          />
         )}
-      </ScrollView>
-    </ScreenBackground>
+
+        {!policyReq.loading && !policyReq.error && (
+          <KeyValueCard
+            title="Redemption"
+            rows={[
+              cap != null && {label: 'Max share of a purchase', value: `${Number(cap)}%`},
+              {label: 'Where points can be spent', value: formatType(policy?.redemption_mode || program.redemption_mode) || 'Private'},
+              {label: 'Expiry', value: formatType(program.expiration_type) || 'Never'},
+            ]}
+          />
+        )}
+      </FormLayout>
+
+      <ConfirmSheet
+        visible={closing}
+        title={`Close ${program.name}?`}
+        rows={[b.due != null && {label: 'Charged to your wallet', value: money(b.due)}]}
+        note="Customers can't earn in this program once it's closed. Your wallet is charged for the points awarded."
+        editLabel="Cancel"
+        confirmLabel="Close program"
+        destructive
+        onConfirm={handleClose}
+        onClose={() => setClosing(false)}
+      />
+    </>
   );
 };
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.base,
-    paddingTop: 60,
-    paddingBottom: 20,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    flex: 1,
-    textAlign: 'center',
-    fontFamily: 'PlusJakartaSans-SemiBold',
-    fontSize: 18,
-    color: theme.TEXT_PRIMARY,
-  },
-  headerSpacer: {
-    width: 40,
-  },
   content: {
-    paddingHorizontal: spacing.base,
-    paddingBottom: 40,
+    gap: 16,
   },
-  loader: {
-    marginTop: 80,
+  tag: {
+    ...type.captionStrong,
+    textTransform: 'uppercase',
+    letterSpacing: 0.66,
   },
-  balanceCard: {
-    borderRadius: 23,
-    padding: 20,
-    overflow: 'hidden',
-    marginBottom: 20,
-  },
-  balanceLabel: {
-    fontFamily: 'PlusJakartaSans-Medium',
-    fontSize: 14,
-    color: theme.TEXT_PRIMARY,
-  },
-  balanceValue: {
-    fontFamily: 'PlusJakartaSans-Bold',
-    fontSize: 32,
-    color: theme.WHITE,
-    marginTop: 8,
-  },
-  balanceSubLabel: {
-    fontFamily: 'PlusJakartaSans-Regular',
-    fontSize: 13,
-    color: theme.TEXT_PRIMARY,
-    marginTop: 8,
-  },
-  card: {
-    backgroundColor: theme.SURFACE_COLOR,
-    borderRadius: 16,
-    paddingHorizontal: 16,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 14,
-    gap: 12,
-  },
-  rowBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
-  },
-  rowLabel: {
-    fontFamily: 'PlusJakartaSans-Regular',
-    fontSize: 14,
-    color: theme.TEXT_TERTIARY,
-  },
-  rowValue: {
-    fontFamily: 'PlusJakartaSans-Medium',
-    fontSize: 14,
-    color: theme.TEXT_PRIMARY,
-    flexShrink: 1,
-    textAlign: 'right',
-  },
-  ctaButton: {
-    backgroundColor: theme.PRIMARY_GLASS,
-    borderRadius: radius.xl,
-    paddingVertical: 12,
-    paddingHorizontal: spacing.lg,
-    alignItems: 'center',
-    marginTop: spacing.xl,
-  },
-  ctaText: {
-    ...textStyles.textLgBold,
-    color: theme.WHITE,
-  },
-  errorState: {
-    alignItems: 'center',
-    paddingTop: 80,
-    gap: 12,
-  },
-  errorText: {
-    fontFamily: 'PlusJakartaSans-Regular',
-    fontSize: 14,
-    color: theme.TEXT_TERTIARY,
-    textAlign: 'center',
-  },
-  retryText: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
-    fontSize: 14,
-    color: theme.PRIMARY_COLOR,
+  rule: {
+    ...type.body,
+    fontFamily: type.label.fontFamily,
+    color: colors.textSecondary,
+    marginTop: -10,
   },
 });
 

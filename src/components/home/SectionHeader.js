@@ -20,13 +20,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontFamily: 'DMSans-SemiBold',
     fontSize: 18,
     lineHeight: 27,
     color: theme.TEXT_PRIMARY,
   },
   seeAll: {
-    fontFamily: 'PlusJakartaSans-Regular',
+    fontFamily: 'DMSans-Regular',
     fontSize: 12,
     lineHeight: 18,
     color: theme.BRAND_600,

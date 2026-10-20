@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   headerTitle: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontFamily: 'DMSans-SemiBold',
     fontSize: 18,
     color: theme.TEXT_PRIMARY,
   },
@@ -125,14 +125,14 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   successTitle: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontFamily: 'DMSans-SemiBold',
     fontSize: 22,
     color: theme.TEXT_PRIMARY,
     textAlign: 'center',
     marginBottom: 8,
   },
   successSubtitle: {
-    fontFamily: 'PlusJakartaSans-Regular',
+    fontFamily: 'DMSans-Regular',
     fontSize: 16,
     color: theme.TEXT_SECONDARY,
     textAlign: 'center',
@@ -151,12 +151,12 @@ const styles = StyleSheet.create({
     borderBottomColor: 'rgba(255, 255, 255, 0.08)',
   },
   detailLabel: {
-    fontFamily: 'PlusJakartaSans-Regular',
+    fontFamily: 'DMSans-Regular',
     fontSize: 14,
     color: theme.TEXT_TERTIARY,
   },
   detailValue: {
-    fontFamily: 'PlusJakartaSans-Medium',
+    fontFamily: 'DMSans-Medium',
     fontSize: 14,
     color: theme.TEXT_PRIMARY,
   },
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   reportText: {
-    fontFamily: 'PlusJakartaSans-Medium',
+    fontFamily: 'DMSans-Medium',
     fontSize: 14,
     color: '#E53935',
   },
@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.12)',
   },
   downloadBtnText: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontFamily: 'DMSans-SemiBold',
     fontSize: 14,
     color: theme.TEXT_PRIMARY,
   },
@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   shareBtnText: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontFamily: 'DMSans-SemiBold',
     fontSize: 14,
     color: theme.WHITE,
   },

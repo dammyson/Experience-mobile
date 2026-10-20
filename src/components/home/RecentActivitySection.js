@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   avatarInitials: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontFamily: 'DMSans-SemiBold',
     fontSize: 14,
     color: theme.WHITE,
   },
@@ -98,19 +98,19 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   itemTitle: {
-    fontFamily: 'PlusJakartaSans-Medium',
+    fontFamily: 'DMSans-Medium',
     fontSize: 14,
     lineHeight: 21,
     color: theme.TEXT_PRIMARY,
   },
   itemStatus: {
-    fontFamily: 'PlusJakartaSans-Medium',
+    fontFamily: 'DMSans-Medium',
     fontSize: 12,
     lineHeight: 18,
   },
   // Amount — Text/Text lg/SemiBold
   itemAmount: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontFamily: 'DMSans-SemiBold',
     fontSize: 16,
     lineHeight: 24,
     color: theme.TEXT_PRIMARY,

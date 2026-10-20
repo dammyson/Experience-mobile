@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   title: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontFamily: 'DMSans-SemiBold',
     fontSize: 20,
     lineHeight: 26,
     color: theme.TEXT_PRIMARY,
@@ -164,13 +164,13 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   greetingName: {
-    fontFamily: 'PlusJakartaSans-Medium',
+    fontFamily: 'DMSans-Medium',
     fontSize: 20,
     lineHeight: 26,
     color: theme.TEXT_PRIMARY,
   },
   subtitle: {
-    fontFamily: 'PlusJakartaSans-Regular',
+    fontFamily: 'DMSans-Regular',
     fontSize: 14,
     lineHeight: 21,
     color: theme.TEXT_PRIMARY,
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   cardText: {
-    fontFamily: 'PlusJakartaSans-Medium',
+    fontFamily: 'DMSans-Medium',
     fontSize: 16,
     lineHeight: 24,
     color: theme.TEXT_PRIMARY,

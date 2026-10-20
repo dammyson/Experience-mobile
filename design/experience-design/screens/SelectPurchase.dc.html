@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Experience — Choose a purchase</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#B4A7FF;text-decoration:none}a:hover{color:#D3CBFF}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #0A0A0F; background-image: linear-gradient(180deg, #3A1A8F 0px, #1C0F4A 110px, #0A0A0F 240px); font-family: 'DM Sans', system-ui, sans-serif; color: #F4F4F7; font-variant-numeric: tabular-nums; display: flex; flex-direction: column">
+  <header style="padding: 56px 12px 14px; display: flex; align-items: center; gap: 4px; border-bottom: 1px solid rgba(255,255,255,0.08)">
+    <a href="Main.dc.html" aria-label="Back" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #F4F4F7">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg>
+    </a>
+    <h1 style="margin: 0; font-weight: 600; font-size: 16px">Pay with points</h1>
+  </header>
+
+  <div style="flex: 1; padding: 18px 20px 0; display: flex; flex-direction: column; gap: 16px">
+    <p style="margin: 0; text-align: center; font-size: 13px; font-weight: 500; color: #D9D9E3">Choose merchant</p>
+    <div role="radiogroup" aria-label="Merchant" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+      <sc-for list="{{merchants}}" as="m" hint-placeholder-count="3">
+        <button role="radio" aria-checked="{{m.on}}" onClick="{{m.pick}}" style="height: 76px; border-radius: 14px; border: 1px solid {{m.border}}; background: {{m.bg}}; color: #F4F4F7; font: inherit; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; cursor: pointer">
+          <span style="width: 30px; height: 30px; border-radius: 10px; background: rgba(255,255,255,0.10); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700">{{m.initials}}</span>
+          <span style="font-size: 11px; font-weight: 600">{{m.name}}</span>
+        </button>
+      </sc-for>
+    </div>
+
+    <section aria-label="Spendable" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-radius: 14px; background: #15151C; border: 1px solid #24242E">
+      <div style="display: flex; flex-direction: column; gap: 2px">
+        <span style="font-size: 11px; color: #9C9CAB">Eligible at {{sel.name}}</span>
+        <span style="font-weight: 700; font-size: 16px; color: #C9BFFF">{{sel.pts}} pts</span>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+        <span style="font-size: 11px; color: #9C9CAB">Spendable</span>
+        <span style="font-weight: 700; font-size: 14px; color: #34D5A1">≈ {{sel.value}}</span>
+      </div>
+    </section>
+
+    <section aria-label="Open purchases" style="display: flex; flex-direction: column; gap: 8px">
+      <h2 style="margin: 0; font-size: 13px; font-weight: 600">Open purchases</h2>
+      <sc-if value="{{hasPurchases}}" hint-placeholder-val="{{ true }}">
+        <div role="radiogroup" aria-label="Purchase" style="display: flex; flex-direction: column; gap: 8px">
+          <sc-for list="{{purchases}}" as="p" hint-placeholder-count="3">
+            <button role="radio" aria-checked="{{p.on}}" aria-disabled="{{p.disabled}}" onClick="{{p.pick}}" style="padding: 12px 14px; border-radius: 14px; border: 1px solid {{p.border}}; background: {{p.bg}}; color: #F4F4F7; font: inherit; text-align: left; display: flex; align-items: center; gap: 12px; cursor: pointer; opacity: {{p.opacity}}">
+              <span style="width: 18px; height: 18px; flex-shrink: 0; border-radius: 9px; border: 2px solid {{p.ring}}; box-sizing: border-box; background: {{p.dot}}"></span>
+              <span style="flex: 1; display: flex; flex-direction: column; gap: 2px">
+                <span style="font-weight: 600; font-size: 13px">{{p.ref}}</span>
+                <span style="font-size: 11px; color: #9C9CAB">{{p.sub}}</span>
+              </span>
+              <span style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+                <span style="font-weight: 700; font-size: 13px">{{p.amount}}</span>
+                <span style="font-size: 11px; color: {{p.ptsColor}}">{{p.pts}}</span>
+              </span>
+            </button>
+          </sc-for>
+        </div>
+      </sc-if>
+      <sc-if value="{{noPurchases}}" hint-placeholder-val="{{ false }}">
+        <div style="padding: 22px 16px; border-radius: 14px; border: 1.5px dashed #33333F; text-align: center; display: flex; flex-direction: column; gap: 4px">
+          <span style="font-weight: 600; font-size: 13px">No open purchases here</span>
+          <span style="font-size: 11px; color: #9C9CAB">Ask the cashier to create your purchase, then pull to refresh.</span>
+        </div>
+      </sc-if>
+    </section>
+  </div>
+
+  <div style="padding: 16px 20px 36px; display: flex; flex-direction: column; gap: 8px">
+    <span style="font-size: 11px; color: #9C9CAB; text-align: center">The full purchase amount is paid with points.</span>
+    <a href="{{ctaHref}}" aria-disabled="{{ctaDisabled}}" style="height: 52px; border-radius: 14px; background: {{ctaBg}}; color: {{ctaFg}}; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px">Continue</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { m: 'kh', p: 'p1' };
+  }
+  renderVals() {
+    const s = this.state;
+    const data = {
+      kh: { name: 'Kopi House', initials: 'KH', pts: '4,200', value: '₦2,100', budget: 4200, purchases: [
+        { id: 'p1', ref: 'KH-20931', sub: 'Today, 10:22 · Counter 2', amount: '₦1,800.00', need: 3600 },
+        { id: 'p2', ref: 'KH-20877', sub: 'Yesterday · Takeaway', amount: '₦4,500.00', need: 9000 }
+      ]},
+      lf: { name: 'Lagos Fresh', initials: 'LF', pts: '3,150', value: '₦1,575', budget: 3150, purchases: [] },
+      pg: { name: 'Pulse Gym', initials: 'PG', pts: '1,900', value: '₦950', budget: 1900, purchases: [
+        { id: 'p3', ref: 'PG-1182', sub: '18 Oct · Day pass', amount: '₦900.00', need: 1800 }
+      ]}
+    };
+    const sel = data[s.m];
+    const purchases = sel.purchases.map((p) => {
+      const ok = p.need <= sel.budget;
+      const on = s.p === p.id && ok;
+      return { ...p, on: on ? 'true' : 'false', disabled: ok ? 'false' : 'true', opacity: ok ? '1' : '0.55',
+        pts: ok ? p.need.toLocaleString('en-US') + ' pts' : 'Needs ' + p.need.toLocaleString('en-US') + ' pts',
+        ptsColor: ok ? '#C9BFFF' : '#F58E9B',
+        bg: on ? 'rgba(107,78,240,0.16)' : '#15151C', border: on ? '#8B74F7' : '#24242E',
+        ring: on ? '#8B74F7' : '#4A4A58', dot: on ? 'radial-gradient(circle, #8B74F7 0 4px, transparent 5px)' : 'transparent',
+        pick: () => { if (ok) this.setState({ p: p.id }); } };
+    });
+    const chosen = purchases.some((p) => p.on === 'true');
+    return {
+      sel,
+      merchants: Object.keys(data).map((k) => ({ ...data[k], on: s.m === k ? 'true' : 'false', bg: s.m === k ? '#6B4EF0' : '#15151C', border: s.m === k ? '#8B74F7' : '#2A2A35', pick: () => this.setState({ m: k, p: (data[k].purchases[0] || {}).id }) })),
+      purchases,
+      hasPurchases: purchases.length > 0,
+      noPurchases: purchases.length === 0,
+      ctaHref: chosen ? 'PayWithPoints.dc.html' : '#',
+      ctaDisabled: chosen ? 'false' : 'true',
+      ctaBg: chosen ? '#6B4EF0' : '#2A2148',
+      ctaFg: chosen ? '#FFFFFF' : '#9C93C9'
+    };
+  }
+}
+</script>
+</body>
+</html>

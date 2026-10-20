@@ -1,54 +1,54 @@
 import React from 'react';
-import {View, Text, TouchableOpacity, Image, StyleSheet} from 'react-native';
-import {LiquidGlassView} from '@callstack/liquid-glass';
-import {canUseGlass} from '../../utilities/platform';
-import {theme} from '../../theme/colors';
-import HomeIcon from '../icons/HomeIcon';
-import ActivityIcon from '../icons/ActivityIcon';
+import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import Icon from '../icons/Icon';
 import ScanQRIcon from '../icons/ScanQRIcon';
-import RewardsIcon from '../icons/RewardsIcon';
+import {colors, fonts} from '../../theme/tokens';
 
-const PROFILE_PLACEHOLDER = require('../../assets/images/profile_placeholder.jpg');
+// Route name → label + icon. Covers the customer and merchant tab sets.
+const TABS = {
+  Home: {label: 'Home', icon: 'home'},
+  Explore: {label: 'Explore', icon: 'explore'},
+  Rewards: {label: 'Rewards', icon: 'rewards'},
+  Wallet: {label: 'Wallet', icon: 'wallet'},
+  Profile: {label: 'Profile', icon: 'profile'},
+  Overview: {label: 'Overview', icon: 'overview'},
+  Programs: {label: 'Programs', icon: 'programs'},
+  Customers: {label: 'Customers', icon: 'customers'},
+  Activity: {label: 'Activity', icon: 'activity'},
+  Business: {label: 'Business', icon: 'business'},
+  ScanQR: {label: 'Scan QR', Component: ScanQRIcon},
+};
 
-const TABS = [
-  {name: 'Home',     label: 'Home',     Icon: HomeIcon},
-  {name: 'Activity', label: 'Activity', Icon: ActivityIcon},
-  {name: 'ScanQR',   label: 'Scan QR',  Icon: ScanQRIcon},
-  {name: 'Rewards',  label: 'Rewards',  Icon: RewardsIcon},
-  {name: 'Profile',  label: 'Profile',  Icon: null}, // uses avatar image
-];
-
-const ACTIVE_COLOR   = theme.BRAND_600;   // #A777F3
-const INACTIVE_COLOR = theme.TEXT_TERTIARY; // #A8A8A8
-
-const TabItem = ({tab, isFocused, onPress}) => {
-  const color = isFocused ? ACTIVE_COLOR : INACTIVE_COLOR;
+const TabItem = ({routeName, isFocused, onPress}) => {
+  const tab = TABS[routeName] ?? {label: routeName};
+  const color = isFocused ? colors.link : colors.tabInactive;
 
   return (
-    <TouchableOpacity style={styles.tabItem} onPress={onPress} activeOpacity={0.7}>
-      {tab.Icon ? (
-        <tab.Icon color={color} size={22} />
-      ) : (
-        <View style={[styles.avatar, isFocused && styles.avatarActive]}>
-          <Image source={PROFILE_PLACEHOLDER} style={styles.avatarImage} />
-        </View>
-      )}
+    <TouchableOpacity
+      style={styles.tabItem}
+      onPress={onPress}
+      activeOpacity={0.7}
+      accessibilityRole="tab"
+      accessibilityState={{selected: isFocused}}
+      accessibilityLabel={tab.label}>
+      {tab.icon && <Icon name={tab.icon} size={22} color={color} strokeWidth={isFocused ? 2 : 1.8} />}
+      {tab.Component && <tab.Component color={color} size={22} />}
       <Text style={[styles.tabLabel, {color}]}>{tab.label}</Text>
     </TouchableOpacity>
   );
 };
 
+/**
+ * Flat bottom tab bar from the redesign (Android and iOS < 26; iOS 26+ uses
+ * the native glass bar in tabs-navigation.js).
+ */
 const CustomTabBar = ({state, navigation}) => {
-  const useGlass = canUseGlass;
+  const insets = useSafeAreaInsets();
 
-  const tabItems = (
-    <View style={styles.tabRow}>
+  return (
+    <View style={[styles.bar, {paddingBottom: Math.max(insets.bottom, 12)}]} accessibilityRole="tablist">
       {state.routes.map((route, index) => {
-        const tab = TABS.find(t => t.name === route.name) ?? {
-          name: route.name,
-          label: route.name,
-          Icon: null,
-        };
         const isFocused = state.index === index;
 
         const onPress = () => {
@@ -62,74 +62,32 @@ const CustomTabBar = ({state, navigation}) => {
           }
         };
 
-        return (
-          <TabItem key={route.key} tab={tab} isFocused={isFocused} onPress={onPress} />
-        );
+        return <TabItem key={route.key} routeName={route.name} isFocused={isFocused} onPress={onPress} />;
       })}
-    </View>
-  );
-
-  return (
-    <View style={styles.wrapper} pointerEvents="box-none">
-      {useGlass ? (
-        <LiquidGlassView style={styles.pill} effect="regular" colorScheme="dark">
-          {tabItems}
-        </LiquidGlassView>
-      ) : (
-        <View style={[styles.pill, styles.pillFallback]}>{tabItems}</View>
-      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  wrapper: {
-    position: 'absolute',
-    bottom: 24,
-    left: 16,
-    right: 16,
-  },
-  pill: {
-    borderRadius: 48,
-    overflow: 'hidden',
-  },
-  pillFallback: {
-    backgroundColor: 'rgba(20, 20, 28, 0.82)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-  },
-  tabRow: {
+  bar: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
+    backgroundColor: colors.tabBar,
+    borderTopWidth: 1,
+    borderTopColor: colors.divider,
+    paddingTop: 8,
+    paddingHorizontal: 6,
   },
   tabItem: {
     flex: 1,
+    minHeight: 44,
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 4,
   },
   tabLabel: {
-    fontFamily: 'PlusJakartaSans-Medium',
+    fontFamily: fonts.semiBold,
     fontSize: 11,
     lineHeight: 14,
-  },
-  avatar: {
-    width: 26,
-    height: 26,
-    borderRadius: 9999,
-    overflow: 'hidden',
-    borderWidth: 1.5,
-    borderColor: 'transparent',
-  },
-  avatarActive: {
-    borderColor: ACTIVE_COLOR,
-  },
-  avatarImage: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 9999,
   },
 });
 

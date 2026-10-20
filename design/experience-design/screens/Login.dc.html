@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Experience — Sign in</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#B4A7FF;text-decoration:none}a:hover{color:#D3CBFF}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #0A0A0F; background-image: linear-gradient(180deg, #3A1A8F 0px, #1C0F4A 110px, #0A0A0F 240px); font-family: 'DM Sans', system-ui, sans-serif; color: #F4F4F7; display: flex; flex-direction: column">
+  <header style="padding: 56px 12px 14px; display: flex; align-items: center; gap: 4px; border-bottom: 1px solid rgba(255,255,255,0.08)">
+    <a href="Onboarding.dc.html" aria-label="Back" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #F4F4F7">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg>
+    </a>
+    <h1 style="margin: 0; font-weight: 600; font-size: 16px">Sign in</h1>
+  </header>
+
+  <form style="flex: 1; padding: 22px 20px 0; display: flex; flex-direction: column; gap: 18px">
+    <p style="margin: 0; text-align: center; font-size: 13px; font-weight: 600; color: #D9D9E3">Choose account type</p>
+    <div role="radiogroup" aria-label="Account type" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+      <button type="button" role="radio" aria-checked="{{custSel}}" onClick="{{pickCustomer}}" style="height: 96px; border-radius: 16px; border: 1px solid {{custBorder}}; background: {{custBg}}; color: #F4F4F7; font: inherit; font-size: 12px; font-weight: 600; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; cursor: pointer">
+        <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Customer</button>
+      <button type="button" role="radio" aria-checked="{{merchSel}}" onClick="{{pickMerchant}}" style="height: 96px; border-radius: 16px; border: 1px solid {{merchBorder}}; background: {{merchBg}}; color: #F4F4F7; font: inherit; font-size: 12px; font-weight: 600; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; cursor: pointer">
+        <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9 4.5 4h15L21 9M3 9v11h18V9M3 9h18M9 20v-6h6v6"/></svg>Merchant</button>
+    </div>
+
+    <label style="display: flex; flex-direction: column; gap: 8px; margin-top: 6px">
+      <span style="font-size: 12px; color: #B9B9C6">Email address</span>
+      <input type="email" value="{{email}}" onChange="{{onEmail}}" placeholder="you@example.com" aria-invalid="{{emailInvalid}}" style="height: 48px; border-radius: 12px; border: {{emailBorder}}; background: #15151C; padding: 0 14px; font: inherit; font-size: 14px; color: #F4F4F7; outline: none">
+      <sc-if value="{{showEmailError}}" hint-placeholder-val="{{ false }}">
+        <span role="alert" style="font-size: 11px; color: #F58E9B; font-weight: 600">Enter a valid email address.</span>
+      </sc-if>
+    </label>
+    <label style="display: flex; flex-direction: column; gap: 8px">
+      <span style="font-size: 12px; color: #B9B9C6">Password</span>
+      <input type="password" placeholder="Your password" style="height: 48px; border-radius: 12px; border: 1px solid #2E2E3A; background: #15151C; padding: 0 14px; font: inherit; font-size: 14px; color: #F4F4F7; outline: none">
+    </label>
+    <a href="ResetPassword.dc.html" style="align-self: flex-end; font-size: 12px; font-weight: 600; padding: 6px 0">Forgot password?</a>
+  </form>
+
+  <div style="padding: 16px 20px 36px; display: flex; flex-direction: column; gap: 12px">
+    <button onClick="{{submit}}" style="height: 52px; border-radius: 14px; border: 0; background: #6B4EF0; color: #FFFFFF; font: inherit; font-weight: 600; font-size: 14px; cursor: pointer">{{cta}}</button>
+    <p style="margin: 0; text-align: center; font-size: 12px; color: #9C9CAB">New to Experience? <a href="{{registerHref}}" style="font-weight: 600">{{registerLabel}}</a></p>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { role: 'customer', email: '', tried: false };
+  }
+  renderVals() {
+    const s = this.state;
+    const cust = s.role === 'customer';
+    const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.email);
+    const bad = s.tried && !valid;
+    const on = { bg: '#6B4EF0', border: '#8B74F7' };
+    const off = { bg: '#15151C', border: '#2E2E3A' };
+    return {
+      custSel: cust ? 'true' : 'false', merchSel: cust ? 'false' : 'true',
+      custBg: (cust ? on : off).bg, custBorder: (cust ? on : off).border,
+      merchBg: (cust ? off : on).bg, merchBorder: (cust ? off : on).border,
+      pickCustomer: () => this.setState({ role: 'customer' }),
+      pickMerchant: () => this.setState({ role: 'merchant' }),
+      email: s.email,
+      onEmail: (e) => this.setState({ email: e.target.value }),
+      emailInvalid: bad ? 'true' : 'false',
+      emailBorder: bad ? '1.5px solid #F58E9B' : '1px solid #2E2E3A',
+      showEmailError: bad,
+      submit: () => this.setState({ tried: true }),
+      cta: cust ? 'Sign in' : 'Sign in to business',
+      registerLabel: cust ? 'Create an account' : 'Register your business',
+      registerHref: cust ? 'Register.dc.html' : 'MerchantRegister.dc.html'
+    };
+  }
+}
+</script>
+</body>
+</html>

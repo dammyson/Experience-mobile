@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   label: {
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'DMSans-Medium',
     fontSize: 14,
     lineHeight: 20,
     color: theme.TEXT_SECONDARY,
@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    fontFamily: 'Inter-Regular',
+    fontFamily: 'DMSans-Regular',
     fontSize: 16,
     lineHeight: 24,
     color: theme.TEXT_PRIMARY,

@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerTitle: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontFamily: 'DMSans-SemiBold',
     fontSize: 18,
     color: theme.TEXT_PRIMARY,
   },
@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
   },
   faqQuestion: {
     flex: 1,
-    fontFamily: 'PlusJakartaSans-Medium',
+    fontFamily: 'DMSans-Medium',
     fontSize: 15,
     color: theme.TEXT_PRIMARY,
     marginRight: 12,
@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
     paddingTop: 60,
   },
   emptyText: {
-    fontFamily: 'PlusJakartaSans-Regular',
+    fontFamily: 'DMSans-Regular',
     fontSize: 16,
     color: theme.TEXT_MUTED,
   },

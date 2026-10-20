@@ -21,31 +21,31 @@ export const GlobalStyle = StyleSheet.create({
     alignItems: 'center',
   },
   screenPadding: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
   },
   h1: {
     fontFamily: fontFamily.bold,
     fontSize: fontSize['4xl'],
-    color: theme.PRIMARY_TEXT_COLOR,
+    color: theme.TEXT_PRIMARY,
   },
   h2: {
     fontFamily: fontFamily.semiBold,
     fontSize: fontSize['3xl'],
-    color: theme.PRIMARY_TEXT_COLOR,
+    color: theme.TEXT_PRIMARY,
   },
   h3: {
     fontFamily: fontFamily.semiBold,
     fontSize: fontSize.xl,
-    color: theme.PRIMARY_TEXT_COLOR,
+    color: theme.TEXT_PRIMARY,
   },
   body: {
     fontFamily: fontFamily.regular,
     fontSize: fontSize.base,
-    color: theme.SECONDARY_TEXT_COLOR,
+    color: theme.TEXT_SECONDARY,
   },
   caption: {
     fontFamily: fontFamily.regular,
     fontSize: fontSize.sm,
-    color: theme.TERTIARY_TEXT_COLOR,
+    color: theme.TEXT_TERTIARY,
   },
 });

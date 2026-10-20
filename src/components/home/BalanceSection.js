@@ -52,13 +52,13 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   balanceTitle: {
-    fontFamily: 'PlusJakartaSans-Regular',
+    fontFamily: 'DMSans-Regular',
     fontSize: 20,
     lineHeight: 26,
     color: theme.TEXT_PRIMARY,
   },
   balanceAmount: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontFamily: 'DMSans-SemiBold',
     fontSize: 36,
     lineHeight: 50,
     color: theme.TEXT_PRIMARY,
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   actionLabel: {
-    fontFamily: 'PlusJakartaSans-Medium',
+    fontFamily: 'DMSans-Medium',
     fontSize: 13,
     lineHeight: 20,
     color: theme.TEXT_PRIMARY,
