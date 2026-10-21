@@ -96,7 +96,7 @@ const CustomerHome = () => {
             <Text style={styles.avatarText}>{initials(fullName)}</Text>
           </View>
           <View style={styles.greetingText}>
-            <Text style={styles.greeting}>{greeting()}</Text>
+            <Text style={styles.greeting}>{greeting()},</Text>
             <Text style={styles.name} accessibilityRole="header">
               {fullName}
             </Text>
