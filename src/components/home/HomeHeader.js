@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   greetingText: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontFamily: 'DMSans-SemiBold',
     fontSize: 16,
     lineHeight: 32,
     color: theme.TEXT_PRIMARY,
@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   walletText: {
-    fontFamily: 'PlusJakartaSans-Medium',
+    fontFamily: 'DMSans-Medium',
     fontSize: 11,
     lineHeight: 24,
     color: theme.TEXT_PRIMARY,

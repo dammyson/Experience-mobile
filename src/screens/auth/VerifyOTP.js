@@ -1,23 +1,17 @@
 import React, {useState, useEffect, useRef} from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  StatusBar,
-  ActivityIndicator,
-} from 'react-native';
+import {View, Text, StyleSheet} from 'react-native';
 import {useNavigation, useRoute} from '@react-navigation/native';
-import ScreenBackground from '../../components/layout/ScreenBackground';
-import BackIcon from '../../components/icons/BackIcon';
+import FormLayout from '../../components/layout/FormLayout';
 import OTPInput from '../../components/ui/OTPInput';
-import {theme} from '../../theme/colors';
-import {textStyles} from '../../theme/typography';
-import {spacing, radius} from '../../theme/spacing';
+import {PrimaryButton} from '../../components/ui';
 import {authAPI} from '../../services/api';
+import {colors, type} from '../../theme/tokens';
 
 const RESEND_SECONDS = 60;
 
+const formatCountdown = seconds => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+
+// Step 2 of 3 of the reset flow
 const VerifyOTP = () => {
   const navigation = useNavigation();
   const route = useRoute();
@@ -25,15 +19,10 @@ const VerifyOTP = () => {
 
   const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const [countdown, setCountdown] = useState(RESEND_SECONDS);
   const timerRef = useRef(null);
-
-  useEffect(() => {
-    startCountdown();
-    return () => clearInterval(timerRef.current);
-  }, []);
+  const resendInFlight = useRef(false);
 
   const startCountdown = () => {
     setCountdown(RESEND_SECONDS);
@@ -49,175 +38,117 @@ const VerifyOTP = () => {
     }, 1000);
   };
 
-  const handleVerify = async () => {
-    if (otp.length < 6) {
-      setError('Please enter the complete 6-digit code');
-      return;
-    }
-    setError('');
-    setLoading(true);
+  useEffect(() => {
+    startCountdown();
+    return () => clearInterval(timerRef.current);
+  }, []);
 
+  const handleVerify = async () => {
+    setError('');
     try {
       await authAPI.verifyOtp({email, otp});
       navigation.navigate('ResetPassword', {email, otp});
     } catch (err) {
       setError(err.message || 'Invalid code. Please try again.');
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleResend = async () => {
-    if (countdown > 0) return;
+    if (countdown > 0 || resendInFlight.current) {
+      return;
+    }
+    resendInFlight.current = true;
     setOtp('');
     setError('');
     setResending(true);
-
     try {
       await authAPI.forgotPassword({email});
       startCountdown();
     } catch (err) {
       setError(err.message || 'Failed to resend code.');
     } finally {
+      resendInFlight.current = false;
       setResending(false);
     }
   };
 
-  const maskedEmail = email
-    ? email.replace(/(.{2})(.*)(@.*)/, (_, a, b, c) => a + '*'.repeat(b.length) + c)
-    : 'your email';
+  const canResend = countdown === 0 && !resending;
 
   return (
-    <ScreenBackground>
-      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+    <FormLayout
+      title="Enter code"
+      onBack={() => navigation.goBack()}
+      step={{current: 2, total: 3}}
+      contentStyle={styles.content}
+      footer={<PrimaryButton title="Verify code" onPress={handleVerify} disabled={otp.length < 6} />}>
+      <Text style={styles.instruction}>
+        Enter the 6-digit code sent to <Text style={styles.email}>{email}</Text>
+      </Text>
 
-      <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.backBtn}
-            hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}>
-            <BackIcon />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Verify Email</Text>
-        </View>
+      <OTPInput
+        value={otp}
+        onChange={value => {
+          setOtp(value);
+          setError('');
+        }}
+      />
 
-        {/* Body */}
-        <View style={styles.body}>
-          <View style={styles.textBlock}>
-            <Text style={styles.instruction}>Enter the 6-digit code sent to</Text>
-            <Text style={styles.email}>{maskedEmail}</Text>
-          </View>
+      {!!error && (
+        <Text style={styles.error} accessibilityRole="alert">
+          {error}
+        </Text>
+      )}
 
-          <OTPInput value={otp} onChange={setOtp} />
-
-          {!!error && <Text style={styles.errorText}>{error}</Text>}
-
-          {/* Resend */}
-          <View style={styles.resendRow}>
-            <Text style={styles.resendPrompt}>Didn't receive the code? </Text>
-            <TouchableOpacity onPress={handleResend} disabled={countdown > 0}>
-              <Text style={[styles.resendLink, countdown > 0 && styles.resendDisabled]}>
-                {countdown > 0 ? `Resend in ${countdown}s` : 'Resend'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* CTA */}
-        <View style={styles.bottomContainer}>
-          <TouchableOpacity
-            style={[styles.ctaButton, (otp.length < 6 || loading) && styles.ctaDisabled]}
-            onPress={handleVerify}
-            disabled={otp.length < 6 || loading}
-            activeOpacity={0.85}>
-            {loading ? (
-              <ActivityIndicator color={theme.WHITE} />
-            ) : (
-              <Text style={styles.ctaText}>Verify Code</Text>
-            )}
-          </TouchableOpacity>
-        </View>
+      <View style={styles.resendRow}>
+        <Text style={styles.resendPrompt}>
+          Didn't get it?{' '}
+          <Text
+            style={[styles.resendLink, !canResend && styles.resendWaiting]}
+            onPress={canResend ? handleResend : undefined}
+            accessibilityRole="button"
+            accessibilityState={{disabled: !canResend}}>
+            {resending ? 'Sending…' : countdown > 0 ? `Resend in ${formatCountdown(countdown)}` : 'Resend code'}
+          </Text>
+        </Text>
       </View>
-    </ScreenBackground>
+    </FormLayout>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {flex: 1},
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: spacing.base,
-    paddingTop: 64,
-    paddingBottom: spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.BORDER_COLOR,
-  },
-  backBtn: {width: 32, height: 32, alignItems: 'center', justifyContent: 'center'},
-  headerTitle: {...textStyles.displaySm, color: theme.TEXT_PRIMARY},
-  body: {
-    flex: 1,
-    paddingHorizontal: spacing.base,
-    paddingTop: 48,
-    gap: 32,
-  },
-  textBlock: {
-    alignItems: 'center',
-    gap: 8,
+  content: {
+    paddingTop: 22,
   },
   instruction: {
-    fontFamily: 'PlusJakartaSans-Regular',
-    fontSize: 16,
-    lineHeight: 24,
-    color: theme.TEXT_TERTIARY,
-    textAlign: 'center',
+    ...type.body,
+    fontFamily: type.label.fontFamily,
+    lineHeight: 20,
+    color: colors.textSecondary,
   },
   email: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
-    fontSize: 16,
-    lineHeight: 24,
-    color: theme.TEXT_PRIMARY,
-    textAlign: 'center',
+    fontFamily: type.bodyStrong.fontFamily,
+    color: colors.text,
   },
-  errorText: {
-    fontFamily: 'Inter-Medium',
-    fontSize: 14,
-    color: theme.ERROR_COLOR,
-    textAlign: 'center',
+  error: {
+    ...type.captionStrong,
+    fontSize: 12,
+    color: colors.danger,
   },
   resendRow: {
-    flexDirection: 'row',
+    minHeight: 24,
     justifyContent: 'center',
-    alignItems: 'center',
   },
   resendPrompt: {
-    fontFamily: 'PlusJakartaSans-Regular',
-    fontSize: 14,
-    color: theme.TEXT_TERTIARY,
+    ...type.label,
+    color: colors.textMuted,
   },
   resendLink: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
-    fontSize: 14,
-    color: theme.PRIMARY_COLOR,
+    fontFamily: type.bodyStrong.fontFamily,
+    color: colors.link,
   },
-  resendDisabled: {
-    color: theme.TEXT_MUTED,
+  resendWaiting: {
+    color: colors.textMuted,
   },
-  bottomContainer: {
-    padding: spacing.base,
-    paddingBottom: 40,
-  },
-  ctaButton: {
-    backgroundColor: theme.PRIMARY_GLASS,
-    borderRadius: radius.xl,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  ctaDisabled: {opacity: 0.5},
-  ctaText: {...textStyles.textLgBold, color: theme.WHITE},
 });
 
 export default VerifyOTP;

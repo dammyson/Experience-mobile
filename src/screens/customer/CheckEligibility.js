@@ -121,12 +121,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   name: {
-    fontFamily: 'PlusJakartaSans-Medium',
+    fontFamily: 'DMSans-Medium',
     fontSize: 15,
     color: theme.TEXT_PRIMARY,
   },
   description: {
-    fontFamily: 'PlusJakartaSans-Regular',
+    fontFamily: 'DMSans-Regular',
     fontSize: 13,
     color: theme.TEXT_TERTIARY,
     marginTop: 2,

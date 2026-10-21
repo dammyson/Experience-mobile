@@ -1,24 +1,13 @@
-import React, {useState} from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  ActivityIndicator,
-} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {View, Text, StyleSheet} from 'react-native';
 import {useNavigation, useRoute} from '@react-navigation/native';
-import ScreenBackground from '../../components/layout/ScreenBackground';
-import BackIcon from '../../components/icons/BackIcon';
-import {PasswordInput} from '../../components/ui';
-import {theme} from '../../theme/colors';
-import {textStyles} from '../../theme/typography';
-import {spacing, radius} from '../../theme/spacing';
+import FormLayout from '../../components/layout/FormLayout';
+import {PasswordInput, PrimaryButton, StatusIcon} from '../../components/ui';
+import PasswordRules, {isStrongPassword} from '../../components/ui/PasswordRules';
 import {authAPI} from '../../services/api';
+import {colors, type} from '../../theme/tokens';
 
+// Step 3 of 3 of the reset flow, then the "All set" state
 const ResetPassword = () => {
   const navigation = useNavigation();
   const route = useRoute();
@@ -27,182 +16,120 @@ const ResetPassword = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  const handleReset = async () => {
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters');
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-    setError('');
-    setLoading(true);
+  const mismatch = confirmPassword.length > 0 && password !== confirmPassword;
+  const isValid = isStrongPassword(password) && password === confirmPassword;
 
+  const handleReset = async () => {
+    setError('');
     try {
       await authAPI.resetPassword({email, otp, newPassword: password});
       setSuccess(true);
     } catch (err) {
       setError(err.message || 'Failed to reset password. Please try again.');
-    } finally {
-      setLoading(false);
     }
   };
 
+  // The code is spent once the password changes, so don't allow swiping back
+  useEffect(() => {
+    if (success) {
+      navigation.setOptions({gestureEnabled: false});
+    }
+  }, [success, navigation]);
+
+  const backToSignIn = () => navigation.reset({index: 0, routes: [{name: 'Login', params: {email}}]});
+
   if (success) {
     return (
-      <ScreenBackground>
-        <View style={styles.successContainer}>
-          <Text style={styles.successIcon}>✓</Text>
-          <Text style={styles.successTitle}>Password Reset!</Text>
-          <Text style={styles.successSub}>Your password has been updated successfully.</Text>
-          <TouchableOpacity
-            style={[styles.ctaButton, styles.successCtaButton]}
-            onPress={() => navigation.reset({index: 0, routes: [{name: 'Login'}]})}
-            activeOpacity={0.85}>
-            <Text style={styles.ctaText}>Back to Sign In</Text>
-          </TouchableOpacity>
+      <FormLayout
+        title="All set"
+        step={{current: 3, total: 3, label: ''}}
+        contentStyle={styles.successContent}
+        footer={<PrimaryButton title="Back to sign in" onPress={backToSignIn} />}>
+        <View style={styles.success} accessibilityRole="alert" accessibilityLiveRegion="polite">
+          <StatusIcon status="success" />
+          <Text style={styles.successTitle}>Password updated</Text>
+          <Text style={styles.successBody}>Sign in with your new password.</Text>
         </View>
-      </ScreenBackground>
+      </FormLayout>
     );
   }
 
-  const isValid = password.length >= 8 && confirmPassword.length >= 8;
-
   return (
-    <ScreenBackground>
-      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled">
-
-          <View style={styles.header}>
-            <TouchableOpacity
-              onPress={() => navigation.goBack()}
-              style={styles.backBtn}
-              hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}>
-              <BackIcon />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Reset Password</Text>
-          </View>
-
-          <View style={styles.body}>
-            <Text style={styles.instruction}>
-              Create a new password. It must be at least 8 characters.
+    <FormLayout
+      title="New password"
+      onBack={() => navigation.goBack()}
+      step={{current: 3, total: 3}}
+      contentStyle={styles.content}
+      footer={
+        <>
+          {!!error && (
+            <Text style={styles.error} accessibilityRole="alert">
+              {error}
             </Text>
-
-            <PasswordInput
-              label="New Password"
-              value={password}
-              onChangeText={setPassword}
-              placeholder="Enter new password"
-            />
-
-            <PasswordInput
-              label="Confirm New Password"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              placeholder="Confirm new password"
-            />
-
-            {!!error && <Text style={styles.errorText}>{error}</Text>}
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-
-      <View style={styles.bottomContainer}>
-        <TouchableOpacity
-          style={[styles.ctaButton, (!isValid || loading) && styles.ctaDisabled]}
-          onPress={handleReset}
-          disabled={!isValid || loading}
-          activeOpacity={0.85}>
-          {loading ? (
-            <ActivityIndicator color={theme.WHITE} />
-          ) : (
-            <Text style={styles.ctaText}>Reset Password</Text>
           )}
-        </TouchableOpacity>
-      </View>
-    </ScreenBackground>
+          <PrimaryButton title="Reset password" onPress={handleReset} disabled={!isValid} />
+        </>
+      }>
+      <Text style={styles.instruction}>Choose a new password you haven't used before.</Text>
+
+      <PasswordInput
+        label="New password"
+        value={password}
+        onChangeText={value => {
+          setPassword(value);
+          setError('');
+        }}
+        textContentType="newPassword"
+      />
+      <PasswordRules password={password} />
+
+      <PasswordInput
+        label="Confirm password"
+        value={confirmPassword}
+        onChangeText={value => {
+          setConfirmPassword(value);
+          setError('');
+        }}
+        textContentType="newPassword"
+        error={mismatch ? "Passwords don't match." : undefined}
+      />
+    </FormLayout>
   );
 };
 
 const styles = StyleSheet.create({
-  flex: {flex: 1},
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: spacing.base,
-    paddingTop: 64,
-    paddingBottom: spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.BORDER_COLOR,
-  },
-  backBtn: {width: 32, height: 32, alignItems: 'center', justifyContent: 'center'},
-  headerTitle: {...textStyles.displaySm, color: theme.TEXT_PRIMARY},
-  body: {
-    paddingHorizontal: spacing.base,
-    paddingTop: spacing.xl,
-    gap: spacing.xl,
+  content: {
+    paddingTop: 22,
   },
   instruction: {
-    fontFamily: 'PlusJakartaSans-Regular',
-    fontSize: 16,
-    lineHeight: 24,
-    color: theme.TEXT_TERTIARY,
+    ...type.body,
+    fontFamily: type.label.fontFamily,
+    lineHeight: 20,
+    color: colors.textSecondary,
   },
-  errorText: {
-    fontFamily: 'Inter-Medium',
-    fontSize: 14,
-    color: theme.ERROR_COLOR,
+  error: {
+    ...type.captionStrong,
+    fontSize: 12,
+    color: colors.danger,
     textAlign: 'center',
   },
-  bottomContainer: {
-    padding: spacing.base,
-    paddingBottom: 40,
-  },
-  ctaButton: {
-    backgroundColor: theme.PRIMARY_GLASS,
-    borderRadius: radius.xl,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  ctaDisabled: {opacity: 0.5},
-  ctaText: {...textStyles.textLgBold, color: theme.WHITE},
-  // Success state
-  successContainer: {
-    flex: 1,
-    alignItems: 'center',
+  successContent: {
     justifyContent: 'center',
-    paddingHorizontal: spacing.base,
-    gap: 16,
+    paddingBottom: 80,
   },
-  successIcon: {
-    fontSize: 64,
-    color: theme.SUCCESS_COLOR,
+  success: {
+    alignItems: 'center',
+    gap: 12,
   },
   successTitle: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
-    fontSize: 28,
-    color: theme.TEXT_PRIMARY,
-    textAlign: 'center',
+    ...type.statusTitle,
+    color: colors.text,
   },
-  successSub: {
-    fontFamily: 'PlusJakartaSans-Regular',
-    fontSize: 16,
-    color: theme.TEXT_TERTIARY,
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  successCtaButton: {
-    alignSelf: 'stretch',
+  successBody: {
+    ...type.label,
+    color: colors.textSecondary,
   },
 });
 

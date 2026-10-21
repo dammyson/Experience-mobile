@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Experience Business — Activity</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#B4A7FF;text-decoration:none}a:hover{color:#D3CBFF}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #0A0A0F; background-image: linear-gradient(180deg, #3A1A8F 0px, #1C0F4A 110px, #0A0A0F 240px); font-family: 'DM Sans', system-ui, sans-serif; color: #F4F4F7; font-variant-numeric: tabular-nums">
+  <header style="padding: 56px 20px 14px; border-bottom: 1px solid rgba(255,255,255,0.08)">
+    <h1 style="margin: 0; font-weight: 600; font-size: 18px; line-height: 44px">Activity</h1>
+  </header>
+
+  <div style="padding: 14px 20px 120px; display: flex; flex-direction: column; gap: 12px">
+    <div role="group" aria-label="Activity type" style="display: flex; gap: 8px">
+      <sc-for list="{{types}}" as="c" hint-placeholder-count="3">
+        <button onClick="{{c.pick}}" aria-pressed="{{c.on}}" style="height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid {{c.border}}; background: {{c.bg}}; color: #F4F4F7; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer">{{c.label}}</button>
+      </sc-for>
+    </div>
+    <div style="display: flex; gap: 8px">
+      <button style="flex: 1; height: 36px; padding: 0 12px; border-radius: 10px; border: 1px solid #2E2E3A; background: #15151C; color: #D9D9E3; font: inherit; font-size: 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer">All programs
+        <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+      <button style="flex: 1; height: 36px; padding: 0 12px; border-radius: 10px; border: 1px solid #2E2E3A; background: #15151C; color: #D9D9E3; font: inherit; font-size: 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer">Last 7 days
+        <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg></button>
+    </div>
+
+    <sc-for list="{{groups}}" as="g" hint-placeholder-count="2">
+      <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #9C9CAB; padding-top: 4px">{{g.label}}</span>
+      <sc-for list="{{g.rows}}" as="r" hint-placeholder-count="2">
+        <div style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 14px; background: #15151C; border: 1px solid #24242E">
+          <span style="width: 34px; height: 34px; flex-shrink: 0; border-radius: 10px; background: {{r.iconBg}}; color: {{r.iconFg}}; display: flex; align-items: center; justify-content: center">
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="{{r.icon}}"/></svg>
+          </span>
+          <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+            <span style="font-weight: 600; font-size: 13px">{{r.title}}</span>
+            <span style="font-size: 11px; color: #9C9CAB">{{r.sub}}</span>
+          </span>
+          <span style="display: flex; flex-direction: column; align-items: flex-end; gap: 3px">
+            <span style="font-weight: 600; font-size: 13px; color: {{r.color}}">{{r.amount}}</span>
+            <sc-if value="{{r.reversible}}" hint-placeholder-val="{{ false }}">
+              <a href="ReverseAward.dc.html" style="font-size: 11px; font-weight: 600">Reverse</a>
+            </sc-if>
+          </span>
+        </div>
+      </sc-for>
+    </sc-for>
+    <button style="height: 40px; border-radius: 12px; border: 1px solid #2E2E3A; background: transparent; color: #D9D9E3; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer">Load more</button>
+  </div>
+
+  <nav aria-label="Business" style="position: absolute; left: 0; right: 0; bottom: 0; height: 86px; background: #0F0F15; border-top: 1px solid #1F1F29; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); padding: 8px 6px 26px; box-sizing: border-box">
+    <sc-for list="{{tabs}}" as="t" hint-placeholder-count="5">
+      <a href="{{t.href}}" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: {{t.color}}; font-size: 11px; font-weight: {{t.weight}}">
+        <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{t.icon}}"/></svg>{{t.label}}</a>
+    </sc-for>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { t: 'ALL' };
+  }
+  renderVals() {
+    const tab = (label, icon, on, href) => ({ label, icon, href, color: on ? '#B4A7FF' : '#8A8A99', weight: on ? '600' : '500' });
+    const P = { icon: 'M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z', iconBg: 'rgba(165,149,255,0.16)', iconFg: '#C9BFFF' };
+    const R = { icon: 'M9 14 4 9l5-5M4 9h11a5 5 0 0 1 0 10h-3', iconBg: 'rgba(245,142,155,0.14)', iconFg: '#F58E9B' };
+    const Win = { icon: 'M17 7 7 17M16 17H7V8', iconBg: 'rgba(52,213,161,0.14)', iconFg: '#5EE6B6' };
+    const Wout = { icon: 'M7 17 17 7M8 7h9v9', iconBg: '#24242E', iconFg: '#D9D9E3' };
+    const all = [
+      { day: 'Today', type: 'POINTS', title: 'Award · Ada Okafor', sub: 'Kopi Regulars · 09:14', amount: '+500 pts', color: '#C9BFFF', reversible: true, ...P },
+      { day: 'Today', type: 'WALLET', title: 'Wallet funded', sub: 'Manual top-up · 08:30', amount: '+₦200,000', color: '#5EE6B6', reversible: false, ...Win },
+      { day: 'Yesterday', type: 'POINTS', title: 'Reversal · Zainab Kano', sub: 'Item returned · 17:40', amount: '−80 pts', color: '#F58E9B', reversible: false, ...R },
+      { day: 'Yesterday', type: 'POINTS', title: 'Award · Femi Bello', sub: 'Brunch Club · 11:05', amount: '+300 pts', color: '#C9BFFF', reversible: true, ...P },
+      { day: 'Yesterday', type: 'WALLET', title: 'Program funding', sub: 'Kopi Regulars · 10:00', amount: '−₦500,000', color: '#F4F4F7', reversible: false, ...Wout }
+    ];
+    const t = this.state.t;
+    const rows = all.filter((r) => t === 'ALL' || r.type === t);
+    const days = [...new Set(rows.map((r) => r.day))];
+    return {
+      types: [['ALL', 'All'], ['POINTS', 'Points'], ['WALLET', 'Wallet']].map(([id, label]) => ({ label, on: t === id ? 'true' : 'false', bg: t === id ? '#6B4EF0' : 'transparent', border: t === id ? '#8B74F7' : '#2E2E3A', pick: () => this.setState({ t: id }) })),
+      groups: days.map((d) => ({ label: d, rows: rows.filter((r) => r.day === d) })),
+      tabs: [
+        tab('Overview', 'M4 4h7v7H4zM13 4h7v4h-7zM13 10h7v10h-7zM4 13h7v7H4z', false, 'MerchantOverview.dc.html'),
+        tab('Programs', 'M4 6h16M4 12h16M4 18h10', false, 'Programs.dc.html'),
+        tab('Customers', 'M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM2 21a7 7 0 0 1 14 0M16 3.5a4 4 0 0 1 0 7M22 21a7 7 0 0 0-4-6.3', false, 'CustomerLookup.dc.html'),
+        tab('Activity', 'M3 12h4l3 8 4-16 3 8h4', true, 'Activity.dc.html'),
+        tab('Business', 'M3 9 4.5 4h15L21 9M3 9v11h18V9M3 9h18M9 20v-6h6v6', false, 'Business.dc.html')
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

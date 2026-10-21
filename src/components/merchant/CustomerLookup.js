@@ -120,7 +120,7 @@ const CustomerLookup = ({merchantId, customer, onCustomerChange, onError}) => {
 
 const styles = StyleSheet.create({
   sectionTitle: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontFamily: 'DMSans-SemiBold',
     fontSize: 16,
     color: theme.TEXT_PRIMARY,
     marginBottom: 12,
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.PRIMARY_GLASS,
   },
   segmentText: {
-    fontFamily: 'PlusJakartaSans-Medium',
+    fontFamily: 'DMSans-Medium',
     fontSize: 14,
     color: theme.TEXT_TERTIARY,
   },
@@ -172,12 +172,12 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl,
   },
   customerName: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontFamily: 'DMSans-SemiBold',
     fontSize: 16,
     color: theme.TEXT_PRIMARY,
   },
   customerMeta: {
-    fontFamily: 'PlusJakartaSans-Regular',
+    fontFamily: 'DMSans-Regular',
     fontSize: 14,
     color: theme.TEXT_TERTIARY,
     marginTop: 4,

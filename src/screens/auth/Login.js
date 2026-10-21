@@ -1,269 +1,174 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  StatusBar,
-  TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Dimensions,
-  ActivityIndicator,
-  Switch,
-} from 'react-native';
-import ScreenBackground from '../../components/layout/ScreenBackground';
-import { AppInput, PasswordInput, ErrorSheet } from '../../components/ui';
-import { useNavigation } from '@react-navigation/native';
-import { useDispatch, useSelector } from 'react-redux';
-import { theme } from '../../theme/colors';
-import { textStyles } from '../../theme/typography';
-import { spacing, radius } from '../../theme/spacing';
-import { login } from '../../actions/authActions';
+import React, {useState, useEffect} from 'react';
+import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
+import {useNavigation, useRoute} from '@react-navigation/native';
+import {useDispatch, useSelector} from 'react-redux';
+import FormLayout from '../../components/layout/FormLayout';
+import {AppInput, PasswordInput, PrimaryButton, ChoiceGrid} from '../../components/ui';
+import Icon from '../../components/icons/Icon';
+import {login} from '../../actions/authActions';
+import {colors, type} from '../../theme/tokens';
 
-const { height } = Dimensions.get('window');
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const Login = () => {
   const navigation = useNavigation();
+  const route = useRoute();
   const dispatch = useDispatch();
-  const { loading, error, isAuthenticated } = useSelector(state => state.auth);
-  const [showError, setShowError] = useState(false);
+  const {loading, error, isAuthenticated} = useSelector(state => state.auth);
+
+  const [role, setRole] = useState(route.params?.role || 'customer');
+  const [email, setEmail] = useState(route.params?.email || '');
+  const [password, setPassword] = useState('');
+  const [tried, setTried] = useState(false);
+
+  const isMerchant = role === 'merchant';
+  const emailValid = EMAIL_PATTERN.test(email.trim());
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigation.reset({ index: 0, routes: [{ name: 'TabsNavigation' }] });
+      navigation.reset({index: 0, routes: [{name: 'TabsNavigation'}]});
     }
   }, [isAuthenticated, navigation]);
 
-  useEffect(() => {
+  // Drop a stale server error once the user edits the form
+  const clearError = () => {
     if (error) {
-      setShowError(true);
+      dispatch({type: 'AUTH_CLEAR_ERROR'});
     }
-  }, [error]);
-
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isMerchant, setIsMerchant] = useState(false);
-
-  const handleCloseError = () => {
-    setShowError(false);
-    dispatch({ type: 'AUTH_CLEAR_ERROR' });
   };
 
-  const handleLogin = () => {
-    dispatch(login(email, password, isMerchant ? 'merchant' : 'customer'));
+  const handleLogin = async () => {
+    setTried(true);
+    if (!emailValid || !password) {
+      return;
+    }
+    try {
+      await dispatch(login(email.trim(), password, role));
+    } catch (e) {
+      // Shown from state.auth.error
+    }
   };
+
+  const roleOptions = [
+    {
+      id: 'customer',
+      label: 'Customer',
+      icon: <Icon name="profile" size={24} color={colors.text} />,
+    },
+    {
+      id: 'merchant',
+      label: 'Merchant',
+      icon: <Icon name="business" size={24} color={colors.text} />,
+    },
+  ];
 
   return (
-    <ScreenBackground>
-      <StatusBar
-        barStyle="light-content"
-        backgroundColor={theme.BACKGROUND_COLOR}
-      />
-
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView
-          contentContainerStyle={styles.scroll}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Logo */}
-          <View style={styles.header}>
-            <Text style={styles.logoText}>Arena</Text>
-            <Text style={styles.tagline}>Unified Loyalty Network</Text>
-          </View>
-
-          {/* Screen title block — matching Display/Display sm/SemiBold */}
-          <Text style={styles.screenTitle}>Sign In</Text>
-
-          <AppInput
-            label="Email"
-            value={email}
-            onChangeText={setEmail}
-            placeholder="Enter your email"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-
-          <View style={{ height: 20 }} />
-
-          <PasswordInput
-            label="Password"
-            value={password}
-            onChangeText={setPassword}
-            placeholder="Enter your password"
-          />
-
-          {/* User type */}
-          <View style={styles.merchantRow}>
-            <Text style={styles.merchantLabel}>Sign in as merchant</Text>
-            <Switch
-              value={isMerchant}
-              onValueChange={setIsMerchant}
-              trackColor={{ false: theme.SURFACE_ELEVATED, true: theme.PRIMARY_COLOR }}
-              thumbColor={theme.WHITE}
-              ios_backgroundColor={theme.SURFACE_ELEVATED}
-            />
-          </View>
-
-          {/* Forgot */}
-          <TouchableOpacity
-            style={styles.forgotRow}
-            onPress={() => navigation.navigate('ForgotPassword')}
-          >
-            <Text style={styles.forgotText}>Forgot PIN / Password?</Text>
-          </TouchableOpacity>
-
-          {/* CTA button — Brand/br500 glass fill, borderRadius 20 */}
-          <TouchableOpacity
-            style={[styles.ctaButton, loading && styles.ctaDisabled]}
+    <FormLayout
+      title="Sign in"
+      onBack={navigation.canGoBack() ? () => navigation.goBack() : undefined}
+      contentStyle={styles.content}
+      footer={
+        <>
+          {!!error && (
+            <Text style={styles.serverError} accessibilityRole="alert">
+              {error}
+            </Text>
+          )}
+          <PrimaryButton
+            title={isMerchant ? 'Sign in to business' : 'Sign in'}
             onPress={handleLogin}
-            disabled={loading}
-            activeOpacity={0.85}
-          >
-            {loading ? (
-              <ActivityIndicator color={theme.WHITE} />
-            ) : (
-              <Text style={styles.ctaText}>Sign In</Text>
-            )}
-          </TouchableOpacity>
-
-          {/* Divider */}
-          <View style={styles.dividerRow}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>or</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          {/* Sign up */}
-          <View style={styles.signupRow}>
-            <Text style={styles.signupPrompt}>Don't have an account? </Text>
-            <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
-              <Text style={styles.signupLink}>Create Account</Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-
-      <ErrorSheet
-        visible={showError}
-        message={error}
-        onClose={handleCloseError}
+            loading={loading}
+          />
+          <Text style={styles.footerText}>
+            New to Arena?{' '}
+            <Text
+              style={styles.link}
+              accessibilityRole="link"
+              onPress={() => navigation.navigate(isMerchant ? 'MerchantRegister' : 'SignUp')}>
+              {isMerchant ? 'Register your business' : 'Create an account'}
+            </Text>
+          </Text>
+        </>
+      }>
+      <ChoiceGrid
+        prompt="Choose account type"
+        options={roleOptions}
+        value={role}
+        onChange={id => {
+          setRole(id);
+          clearError();
+        }}
       />
-    </ScreenBackground>
+
+      <View style={styles.fields}>
+        <AppInput
+          label="Email address"
+          value={email}
+          onChangeText={value => {
+            setEmail(value);
+            clearError();
+          }}
+          placeholder="you@example.com"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoCorrect={false}
+          autoComplete="email"
+          textContentType="emailAddress"
+          error={tried && !emailValid ? 'Enter a valid email address.' : undefined}
+        />
+
+        <PasswordInput
+          label="Password"
+          value={password}
+          onChangeText={value => {
+            setPassword(value);
+            clearError();
+          }}
+          placeholder="Your password"
+          textContentType="password"
+          error={tried && !password ? 'Enter your password.' : undefined}
+        />
+      </View>
+
+      <TouchableOpacity
+        style={styles.forgot}
+        onPress={() => navigation.navigate('ForgotPassword', {email: emailValid ? email.trim() : ''})}
+        accessibilityRole="link"
+        hitSlop={{top: 8, bottom: 8, left: 12, right: 0}}>
+        <Text style={styles.link}>Forgot password?</Text>
+      </TouchableOpacity>
+    </FormLayout>
   );
 };
 
 const styles = StyleSheet.create({
-  flex: { flex: 1 },
-
-  scroll: {
-    flexGrow: 1,
-    paddingHorizontal: spacing.base, // 16px — matches Figma screen padding
-    paddingBottom: spacing.xl,
+  content: {
+    paddingTop: 22,
+    gap: 18,
   },
-
-  // Header / logo
-  header: {
-    alignItems: 'center',
-    paddingTop: height * 0.1,
-    paddingBottom: spacing.xl,
+  fields: {
+    marginTop: 6,
+    gap: 18,
   },
-  logoText: {
-    ...textStyles.displaySm,
-    fontSize: 40,
-    fontFamily: 'PlusJakartaSans-ExtraBold',
-    color: theme.TEXT_WHITE,
-    letterSpacing: 2,
-  },
-  tagline: {
-    ...textStyles.textMd,
-    color: theme.TEXT_TERTIARY,
-    marginTop: 4,
-    letterSpacing: 1,
-  },
-
-  // Screen title — Display/Display sm/SemiBold
-  screenTitle: {
-    ...textStyles.displaySm,
-    color: theme.TEXT_PRIMARY,
-    marginBottom: spacing.xl,
-  },
-
-  // User type
-  merchantRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: spacing.lg,
-  },
-  merchantLabel: {
-    ...textStyles.textMd,
-    color: theme.TEXT_SECONDARY,
-  },
-
-  // Forgot
-  forgotRow: {
+  forgot: {
     alignSelf: 'flex-end',
-    marginBottom: spacing.xl,
-    marginTop: 10,
+    paddingVertical: 6,
   },
-  forgotText: {
-    ...textStyles.textSm,
-    color: theme.PRIMARY_COLOR,
+  link: {
+    ...type.label,
+    fontFamily: type.bodyStrong.fontFamily,
+    color: colors.link,
   },
-
-  // CTA button — Brand/br500 rgba(152,96,240,0.52), borderRadius 20px, padding 12px 20px
-  ctaButton: {
-    backgroundColor: theme.PRIMARY_GLASS,
-    borderRadius: radius.xl, // 20px — exact from Figma
-    paddingVertical: 12,
-    paddingHorizontal: spacing.lg,
-    alignItems: 'center',
-    marginBottom: spacing.xl,
+  footerText: {
+    ...type.label,
+    color: colors.textMuted,
+    textAlign: 'center',
   },
-  ctaDisabled: {
-    opacity: 0.5,
-  },
-  // Button label — Text/Text lg/Bold
-  ctaText: {
-    ...textStyles.textLgBold,
-    color: theme.WHITE,
-  },
-
-  // Divider
-  dividerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.xl,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: theme.DIVIDER_COLOR,
-  },
-  dividerText: {
-    ...textStyles.textSm,
-    color: theme.TEXT_MUTED,
-    marginHorizontal: spacing.sm,
-  },
-
-  // Sign up
-  signupRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
-  signupPrompt: {
-    ...textStyles.textLg,
-    color: theme.TEXT_TERTIARY,
-  },
-  signupLink: {
-    ...textStyles.textLgBold,
-    color: theme.PRIMARY_COLOR,
+  serverError: {
+    ...type.captionStrong,
+    fontSize: 12,
+    color: colors.danger,
+    textAlign: 'center',
   },
 });
 

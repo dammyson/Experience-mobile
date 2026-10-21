@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Experience — Verify identity</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#B4A7FF;text-decoration:none}a:hover{color:#D3CBFF}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #0A0A0F; background-image: linear-gradient(180deg, #3A1A8F 0px, #1C0F4A 110px, #0A0A0F 240px); font-family: 'DM Sans', system-ui, sans-serif; color: #F4F4F7; font-variant-numeric: tabular-nums; display: flex; flex-direction: column">
+  <header style="padding: 56px 12px 14px; display: flex; align-items: center; gap: 4px; border-bottom: 1px solid rgba(255,255,255,0.08)">
+    <a href="Profile.dc.html" aria-label="Back" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #F4F4F7">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg>
+    </a>
+    <h1 style="margin: 0; font-weight: 600; font-size: 16px">Identity verification</h1>
+  </header>
+
+  <sc-if value="{{isForm}}" hint-placeholder-val="{{ true }}">
+    <div style="flex: 1; padding: 24px 20px 0; display: flex; flex-direction: column; gap: 18px">
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center">
+        <span style="width: 56px; height: 56px; border-radius: 28px; background: rgba(107,78,240,0.18); color: #B4A7FF; display: flex; align-items: center; justify-content: center">
+          <svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg>
+        </span>
+        <h2 style="margin: 0; font-weight: 700; font-size: 19px">Verify with your BVN</h2>
+        <p style="margin: 0; font-size: 12px; line-height: 1.5; color: #B9B9C6; max-width: 290px">We check your Bank Verification Number with Safe Haven to unlock your wallet account and bank transfers.</p>
+      </div>
+      <label style="display: flex; flex-direction: column; gap: 8px">
+        <span style="font-size: 12px; color: #B9B9C6">Bank Verification Number</span>
+        <input inputmode="numeric" maxlength="11" value="{{bvn}}" onChange="{{onBvn}}" placeholder="11 digits" style="height: 50px; border-radius: 12px; border: 1px solid {{border}}; background: #15151C; color: #F4F4F7; padding: 0 14px; font: inherit; font-size: 16px; font-weight: 600; letter-spacing: 0.12em; outline: none">
+        <span style="font-size: 11px; color: #9C9CAB">{{count}} / 11 · Dial *565*0# from your bank phone number to get it</span>
+      </label>
+      <ul style="margin: 0; padding: 14px 14px 14px 32px; border-radius: 14px; background: #15151C; border: 1px solid #24242E; display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: #D9D9E3">
+        <li>Your BVN doesn't give access to your bank account</li>
+        <li>The name must match your Experience profile</li>
+        <li>Usually done in under a minute</li>
+      </ul>
+    </div>
+    <div style="padding: 16px 20px 36px">
+      <button onClick="{{submit}}" aria-disabled="{{disabled}}" style="width: 100%; height: 52px; border-radius: 14px; border: 0; background: {{ctaBg}}; color: {{ctaFg}}; font: inherit; font-weight: 600; font-size: 14px; cursor: pointer">Verify</button>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{isResult}}" hint-placeholder-val="{{ false }}">
+    <div role="status" style="flex: 1; padding: 0 28px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center">
+      <span style="width: 64px; height: 64px; border-radius: 32px; background: {{r.ring}}; color: {{r.color}}; display: flex; align-items: center; justify-content: center">
+        <svg aria-hidden="true" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="{{r.icon}}"/></svg>
+      </span>
+      <h2 style="margin: 4px 0 0; font-weight: 700; font-size: 19px">{{r.title}}</h2>
+      <p style="margin: 0; font-size: 12px; line-height: 1.5; color: #B9B9C6">{{r.body}}</p>
+    </div>
+    <div style="padding: 16px 20px 36px">
+      <button onClick="{{reset}}" style="width: 100%; height: 52px; border-radius: 14px; border: 0; background: #6B4EF0; color: #FFFFFF; font: inherit; font-weight: 600; font-size: 14px; cursor: pointer">{{r.cta}}</button>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"outcome":{"editor":"enum","options":["verified","failed"],"default":"verified"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { bvn: '2234', done: false };
+  }
+  renderVals() {
+    const ok = this.state.bvn.length === 11;
+    const out = this.props.outcome ?? 'verified';
+    const results = {
+      verified: { title: 'Identity verified', body: 'Your wallet account is ready. You can now transfer to any Nigerian bank.', color: '#34D5A1', ring: 'rgba(52,213,161,0.14)', icon: 'm5 12 5 5 9-10', cta: 'Set up my account' },
+      failed: { title: 'We couldn’t verify this BVN', body: 'Check the number and that the name on it matches your profile, then try again.', color: '#F58E9B', ring: 'rgba(245,142,155,0.14)', icon: 'M6 6l12 12M18 6 6 18', cta: 'Try again' }
+    };
+    return {
+      isForm: !this.state.done,
+      isResult: this.state.done,
+      bvn: this.state.bvn,
+      count: this.state.bvn.length,
+      onBvn: (e) => this.setState({ bvn: String(e.target.value).replace(/[^0-9]/g, '').slice(0, 11) }),
+      border: ok ? '#6B4EF0' : '#2E2E3A',
+      disabled: ok ? 'false' : 'true',
+      ctaBg: ok ? '#6B4EF0' : '#2A2148', ctaFg: ok ? '#FFFFFF' : '#9C93C9',
+      submit: () => { if (ok) this.setState({ done: true }); },
+      reset: () => this.setState({ done: false }),
+      r: results[out] || results.verified
+    };
+  }
+}
+</script>
+</body>
+</html>

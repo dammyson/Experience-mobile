@@ -6,7 +6,7 @@ import {
   useBlurOnFulfill,
   useClearByFocusCell,
 } from 'react-native-confirmation-code-field';
-import {theme} from '../../theme/colors';
+import {colors, fonts, radii} from '../../theme/tokens';
 
 const CELL_COUNT = 6;
 
@@ -25,10 +25,12 @@ const OTPInput = ({value, onChange}) => {
       keyboardType="number-pad"
       textContentType="oneTimeCode"
       autoComplete="sms-otp"
+      accessibilityLabel="One-time code"
       renderCell={({index, symbol, isFocused}) => (
         <View
           key={index}
-          style={[styles.cell, isFocused && styles.cellFocused, symbol && styles.cellFilled]}
+          accessibilityLabel={`Digit ${index + 1}`}
+          style={[styles.cell, symbol && styles.cellFilled, isFocused && styles.cellFocused]}
           onLayout={getCellOnLayoutHandler(index)}>
           <Text style={styles.cellText}>
             {symbol || (isFocused ? <Cursor /> : null)}
@@ -43,29 +45,28 @@ const styles = StyleSheet.create({
   root: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: 10,
+    gap: 8,
   },
   cell: {
     flex: 1,
-    height: 56,
-    borderWidth: 1.5,
-    borderColor: theme.INPUT_BORDER,
-    borderRadius: 16,
-    backgroundColor: theme.INPUT_BACKGROUND,
+    height: 54,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.input,
+    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  cellFocused: {
-    borderColor: theme.INPUT_ACTIVE_BORDER,
-    backgroundColor: 'rgba(152, 96, 240, 0.08)',
-  },
   cellFilled: {
-    borderColor: theme.PRIMARY_COLOR,
+    borderColor: colors.sheetHandle,
+  },
+  cellFocused: {
+    borderColor: colors.primaryBorder,
   },
   cellText: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
-    fontSize: 22,
-    color: theme.TEXT_PRIMARY,
+    fontFamily: fonts.bold,
+    fontSize: 20,
+    color: colors.text,
     textAlign: 'center',
   },
 });

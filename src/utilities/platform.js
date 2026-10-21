@@ -9,3 +9,7 @@ export const isIOS26Plus =
   isIOS && parseInt(Platform.Version, 10) >= 26;
 
 export const canUseGlass = isIOS26Plus;
+
+// Bottom padding for scrolling tab screens: the iOS 26 glass tab bar floats
+// over content, the legacy bar sits below it.
+export const TAB_SCROLL_INSET = isIOS26Plus ? 120 : 24;

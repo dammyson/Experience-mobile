@@ -1,7 +1,6 @@
 import React, {useState, forwardRef} from 'react';
 import {View, Text, TextInput, StyleSheet} from 'react-native';
-import {theme} from '../../theme/colors';
-import {radius} from '../../theme/spacing';
+import {colors, type, radii} from '../../theme/tokens';
 
 /**
  * Base input — label + single-line TextInput.
@@ -13,6 +12,7 @@ import {radius} from '../../theme/spacing';
  *   leftElement    ReactNode  — rendered before the text input
  *   rightElement   ReactNode  — rendered after the text input
  *   containerStyle ViewStyle
+ *   boxStyle       ViewStyle  — the bordered input box
  *   inputStyle     TextStyle
  *   + all standard TextInput props
  */
@@ -22,6 +22,7 @@ const AppInput = forwardRef(({
   leftElement,
   rightElement,
   containerStyle,
+  boxStyle,
   inputStyle,
   ...textInputProps
 }, ref) => {
@@ -35,13 +36,15 @@ const AppInput = forwardRef(({
         styles.inputBox,
         focused && styles.inputBoxFocused,
         !!error && styles.inputBoxError,
+        boxStyle,
       ]}>
         {leftElement && <View style={styles.leftSlot}>{leftElement}</View>}
 
         <TextInput
           ref={ref}
           style={[styles.input, inputStyle]}
-          placeholderTextColor={theme.TEXT_TERTIARY}
+          placeholderTextColor={colors.textMuted}
+          accessibilityLabel={textInputProps.accessibilityLabel || label}
           onFocus={e => {
             setFocused(true);
             textInputProps.onFocus?.(e);
@@ -56,7 +59,11 @@ const AppInput = forwardRef(({
         {rightElement && <View style={styles.rightSlot}>{rightElement}</View>}
       </View>
 
-      {!!error && <Text style={styles.errorText}>{error}</Text>}
+      {!!error && (
+        <Text style={styles.errorText} accessibilityRole="alert">
+          {error}
+        </Text>
+      )}
     </View>
   );
 });
@@ -66,35 +73,31 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   label: {
-    fontFamily: 'Inter-Medium',
-    fontSize: 14,
-    lineHeight: 20,
-    color: theme.TEXT_SECONDARY,
+    ...type.label,
+    color: colors.textSecondary,
   },
   inputBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.INPUT_BACKGROUND,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: theme.INPUT_BORDER,
-    borderRadius: radius['2xl'],
+    borderColor: colors.border,
+    borderRadius: radii.input,
     paddingHorizontal: 14,
-    height: 52,
+    height: 48,
     gap: 10,
   },
   inputBoxFocused: {
-    borderColor: theme.INPUT_ACTIVE_BORDER,
-    backgroundColor: 'rgba(152, 96, 240, 0.08)',
+    borderColor: colors.primary,
   },
   inputBoxError: {
-    borderColor: theme.ERROR_COLOR,
+    borderWidth: 1.5,
+    borderColor: colors.danger,
   },
   input: {
+    ...type.input,
     flex: 1,
-    fontFamily: 'Inter-Regular',
-    fontSize: 16,
-    lineHeight: 24,
-    color: theme.TEXT_PRIMARY,
+    color: colors.text,
     paddingVertical: 0,
   },
   leftSlot: {
@@ -104,9 +107,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   errorText: {
-    fontFamily: 'Inter-Regular',
-    fontSize: 12,
-    color: theme.ERROR_COLOR,
+    ...type.captionStrong,
+    color: colors.danger,
   },
 });
 

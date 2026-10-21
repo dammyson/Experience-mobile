@@ -131,13 +131,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   sectionTitle: {
-    fontFamily: 'PlusJakartaSans-Medium',
+    fontFamily: 'DMSans-Medium',
     fontSize: 16,
     lineHeight: 24,
     color: theme.WHITE,
   },
   seeAllText: {
-    fontFamily: 'Inter-Light',
+    fontFamily: 'DMSans-Regular',
     fontSize: 14,
     lineHeight: 27,
     color: '#00D9C0',
@@ -186,13 +186,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   merchantName: {
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'DMSans-Medium',
     fontSize: 13,
     lineHeight: 27,
     color: theme.WHITE,
   },
   progressText: {
-    fontFamily: 'Inter-Light',
+    fontFamily: 'DMSans-Regular',
     fontSize: 10,
     lineHeight: 26,
     color: theme.WHITE,
@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#00D9C0',
   },
   redeemButtonText: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontFamily: 'DMSans-SemiBold',
     fontSize: 11,
     lineHeight: 24,
     color: '#1B1B1E',
@@ -243,14 +243,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   emptyText: {
-    fontFamily: 'PlusJakartaSans-Medium',
+    fontFamily: 'DMSans-Medium',
     fontSize: 14,
     color: theme.TEXT_SECONDARY,
     marginTop: 12,
     marginBottom: 4,
   },
   emptySubtext: {
-    fontFamily: 'PlusJakartaSans-Regular',
+    fontFamily: 'DMSans-Regular',
     fontSize: 12,
     color: theme.TEXT_TERTIARY,
   },

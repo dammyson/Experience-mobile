@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerTitle: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontFamily: 'DMSans-SemiBold',
     fontSize: 18,
     color: theme.TEXT_PRIMARY,
   },
@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
     paddingTop: spacing.xl,
   },
   name: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontFamily: 'DMSans-SemiBold',
     fontSize: 20,
     color: theme.TEXT_PRIMARY,
     textAlign: 'center',
@@ -118,13 +118,13 @@ const styles = StyleSheet.create({
     marginTop: 32,
   },
   idLabel: {
-    fontFamily: 'PlusJakartaSans-Regular',
+    fontFamily: 'DMSans-Regular',
     fontSize: 13,
     color: theme.TEXT_TERTIARY,
     marginTop: 28,
   },
   idValue: {
-    fontFamily: 'PlusJakartaSans-Medium',
+    fontFamily: 'DMSans-Medium',
     fontSize: 14,
     color: theme.TEXT_PRIMARY,
     marginTop: 4,

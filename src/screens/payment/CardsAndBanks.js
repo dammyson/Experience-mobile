@@ -278,7 +278,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerTitle: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontFamily: 'DMSans-SemiBold',
     fontSize: 18,
     color: theme.TEXT_PRIMARY,
   },
@@ -290,7 +290,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl,
   },
   sectionTitle: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontFamily: 'DMSans-SemiBold',
     fontSize: 16,
     color: theme.TEXT_PRIMARY,
     marginBottom: 16,
@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   itemText: {
-    fontFamily: 'PlusJakartaSans-Medium',
+    fontFamily: 'DMSans-Medium',
     fontSize: 15,
     color: theme.TEXT_PRIMARY,
     flex: 1,
@@ -349,7 +349,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   addBtnText: {
-    fontFamily: 'PlusJakartaSans-Medium',
+    fontFamily: 'DMSans-Medium',
     fontSize: 15,
     color: '#6715EA',
   },

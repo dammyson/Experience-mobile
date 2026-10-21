@@ -154,17 +154,17 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   merchant: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontFamily: 'DMSans-SemiBold',
     fontSize: 16,
     color: theme.TEXT_PRIMARY,
     flex: 1,
   },
   status: {
-    fontFamily: 'PlusJakartaSans-Medium',
+    fontFamily: 'DMSans-Medium',
     fontSize: 14,
   },
   amount: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontFamily: 'DMSans-SemiBold',
     fontSize: 22,
     color: theme.TEXT_PRIMARY,
   },
@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   metaText: {
-    fontFamily: 'Inter-Regular',
+    fontFamily: 'DMSans-Regular',
     fontSize: 13,
     color: theme.TEXT_TERTIARY,
   },
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   payBtnText: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontFamily: 'DMSans-SemiBold',
     fontSize: 14,
     color: theme.WHITE,
   },

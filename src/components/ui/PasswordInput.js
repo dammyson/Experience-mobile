@@ -1,10 +1,7 @@
 import React, {useState} from 'react';
 import {TouchableOpacity, Text, StyleSheet} from 'react-native';
 import AppInput from './AppInput';
-
-const EyeIcon = ({visible}) => (
-  <Text style={styles.eye}>{visible ? '🙈' : '👁'}</Text>
-);
+import {colors, type} from '../../theme/tokens';
 
 /**
  * Password input with built-in show/hide toggle.
@@ -24,8 +21,10 @@ const PasswordInput = (props) => {
       rightElement={
         <TouchableOpacity
           onPress={() => setVisible(v => !v)}
-          hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}>
-          <EyeIcon visible={visible} />
+          accessibilityRole="button"
+          accessibilityLabel={visible ? 'Hide password' : 'Show password'}
+          hitSlop={{top: 12, bottom: 12, left: 12, right: 12}}>
+          <Text style={styles.toggle}>{visible ? 'Hide' : 'Show'}</Text>
         </TouchableOpacity>
       }
     />
@@ -33,7 +32,11 @@ const PasswordInput = (props) => {
 };
 
 const styles = StyleSheet.create({
-  eye: {fontSize: 16},
+  toggle: {
+    ...type.captionStrong,
+    fontSize: 12,
+    color: colors.link,
+  },
 });
 
 export default PasswordInput;

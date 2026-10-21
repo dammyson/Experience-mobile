@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Experience — Transfer status</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#B4A7FF;text-decoration:none}a:hover{color:#D3CBFF}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #0A0A0F; background-image: linear-gradient(180deg, #3A1A8F 0px, #1C0F4A 110px, #0A0A0F 240px); font-family: 'DM Sans', system-ui, sans-serif; color: #F4F4F7; font-variant-numeric: tabular-nums; display: flex; flex-direction: column">
+  <header style="padding: 56px 12px 14px; display: flex; align-items: center; justify-content: center; min-height: 44px; border-bottom: 1px solid rgba(255,255,255,0.08)">
+    <h1 style="margin: 0; font-weight: 600; font-size: 16px; line-height: 44px">Transfer status</h1>
+  </header>
+
+  <div style="flex: 1; padding: 28px 20px 0; display: flex; flex-direction: column; gap: 22px">
+    <section role="status" style="display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center">
+      <div style="width: 64px; height: 64px; border-radius: 32px; background: {{s.ring}}; display: flex; align-items: center; justify-content: center; color: {{s.color}}">
+        <svg aria-hidden="true" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="{{s.icon}}"/></svg>
+      </div>
+      <h2 style="margin: 4px 0 0; font-weight: 700; font-size: 19px">{{s.title}}</h2>
+      <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #B9B9C6; max-width: 300px">{{s.body}}</p>
+    </section>
+
+    <sc-if value="{{s.showBar}}" hint-placeholder-val="{{ true }}">
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <div aria-hidden="true" style="height: 8px; border-radius: 4px; background: #1F1F29; overflow: hidden"><div style="height: 8px; width: 45%; border-radius: 4px; background: linear-gradient(90deg, #6B4EF0, #A595FF)"></div></div>
+        <span style="font-size: 11px; font-weight: 600; color: #B9B9C6">Sent to bank · waiting for confirmation</span>
+      </div>
+    </sc-if>
+
+    <dl style="margin: 0; display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: 16px; background: #15151C; border: 1px solid #24242E; font-size: 12px">
+      <div style="display: flex; justify-content: space-between"><dt style="color: #9C9CAB">Amount</dt><dd style="margin: 0; font-weight: 600; font-size: 14px">₦25,000.00</dd></div>
+      <div style="display: flex; justify-content: space-between"><dt style="color: #9C9CAB">To</dt><dd style="margin: 0; font-weight: 600">Chinedu Eze · GTBank •••4821</dd></div>
+      <div style="display: flex; justify-content: space-between"><dt style="color: #9C9CAB">Reference</dt><dd style="margin: 0; font-weight: 600">TRF-1792445350</dd></div>
+      <div style="display: flex; justify-content: space-between"><dt style="color: #9C9CAB">Status</dt><dd style="margin: 0; font-weight: 600; color: {{s.color}}">{{s.label}}</dd></div>
+    </dl>
+
+    <section aria-label="Progress" style="display: flex; flex-direction: column; gap: 12px">
+      <h3 style="margin: 0; font-size: 13px; font-weight: 600">Progress</h3>
+      <ol style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px">
+        <sc-for list="{{s.steps}}" as="st" hint-placeholder-count="4">
+          <li style="display: flex; align-items: center; gap: 12px; font-size: 12px; color: {{st.text}}">
+            <span style="width: 22px; height: 22px; border-radius: 11px; background: {{st.bg}}; border: 1px solid {{st.border}}; display: flex; align-items: center; justify-content: center; color: #FFFFFF">
+              <svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="{{st.tick}}"><path d="{{st.mark}}"/></svg>
+            </span>{{st.label}}</li>
+        </sc-for>
+      </ol>
+    </section>
+  </div>
+
+  <div style="padding: 16px 20px 36px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px">
+    <a href="Main.dc.html" style="height: 50px; border-radius: 14px; background: #1F1F29; border: 1px solid #2E2E3A; color: #F4F4F7; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 13px">Back to home</a>
+    <a href="{{s.primaryHref}}" style="height: 50px; border-radius: 14px; background: #6B4EF0; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 13px">{{s.primary}}</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"status":{"editor":"enum","options":["processing","success","failed"],"default":"processing"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const status = this.props.status ?? 'processing';
+    const tick = 'm5 12 5 5 9-10';
+    const x = 'M6 6l12 12M18 6 6 18';
+    const step = (label, state) => ({
+      label,
+      mark: state === 'fail' ? x : tick,
+      tick: state === 'todo' ? '0' : '1',
+      bg: state === 'done' ? '#6B4EF0' : state === 'fail' ? '#C2334A' : 'transparent',
+      border: state === 'done' ? '#8B74F7' : state === 'fail' ? '#F58E9B' : '#3A3A48',
+      text: state === 'todo' ? '#8A8A99' : '#F4F4F7'
+    });
+    const map = {
+      processing: { title: 'Transfer processing', body: 'The bank accepted the request but hasn’t confirmed it yet. Check your wallet activity for the final status.', label: 'Pending', color: '#F5B740', ring: 'rgba(245,183,64,0.14)', icon: 'M6 3h12M6 21h12M7 3c0 5 10 5 10 9s-10 4-10 9M17 3c0 5-10 5-10 9s10 4 10 9', showBar: true, primary: 'View wallet', primaryHref: 'Wallet.dc.html',
+        steps: [step('Request received', 'done'), step('Name verified', 'done'), step('Sent to bank', 'done'), step('Bank confirmation', 'todo')] },
+      success: { title: 'Transfer successful', body: 'The bank confirmed ₦25,000 reached Chinedu Eze.', label: 'Completed', color: '#34D5A1', ring: 'rgba(52,213,161,0.14)', icon: tick, showBar: false, primary: 'View wallet', primaryHref: 'Wallet.dc.html',
+        steps: [step('Request received', 'done'), step('Name verified', 'done'), step('Sent to bank', 'done'), step('Bank confirmation', 'done')] },
+      failed: { title: 'Transfer not completed', body: 'The bank declined this transfer. Your ₦25,000 is back in your wallet.', label: 'Failed · reversed', color: '#F58E9B', ring: 'rgba(245,142,155,0.14)', icon: x, showBar: false, primary: 'Try again', primaryHref: 'Transfer.dc.html',
+        steps: [step('Request received', 'done'), step('Name verified', 'done'), step('Declined by bank', 'fail'), step('Refunded to wallet', 'done')] }
+    };
+    return { s: map[status] || map.processing };
+  }
+}
+</script>
+</body>
+</html>

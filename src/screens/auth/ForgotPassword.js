@@ -1,149 +1,72 @@
 import React, {useState} from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  StatusBar,
-  TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  ActivityIndicator,
-} from 'react-native';
-import ScreenBackground from '../../components/layout/ScreenBackground';
-import BackIcon from '../../components/icons/BackIcon';
-import {AppInput} from '../../components/ui';
-import {useNavigation} from '@react-navigation/native';
-import {theme} from '../../theme/colors';
-import {textStyles} from '../../theme/typography';
-import {spacing, radius} from '../../theme/spacing';
+import {Text, StyleSheet} from 'react-native';
+import {useNavigation, useRoute} from '@react-navigation/native';
+import FormLayout from '../../components/layout/FormLayout';
+import {AppInput, PrimaryButton} from '../../components/ui';
 import {authAPI} from '../../services/api';
+import {colors, type} from '../../theme/tokens';
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Step 1 of 3 of the reset flow: ForgotPassword → VerifyOTP → ResetPassword
 const ForgotPassword = () => {
   const navigation = useNavigation();
-  const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
+  const route = useRoute();
+  const [email, setEmail] = useState(route.params?.email || '');
   const [error, setError] = useState('');
 
+  const emailValid = EMAIL_PATTERN.test(email.trim());
+
   const handleSend = async () => {
-    if (!email) return;
-
     setError('');
-    setLoading(true);
-
     try {
-      await authAPI.forgotPassword({email});
-      navigation.navigate('VerifyOTP', {email});
+      await authAPI.forgotPassword({email: email.trim()});
+      navigation.navigate('VerifyOTP', {email: email.trim()});
     } catch (err) {
       setError(err.message || 'Failed to send reset code. Please try again.');
-    } finally {
-      setLoading(false);
     }
   };
 
   return (
-    <ScreenBackground>
-      <StatusBar barStyle="light-content" backgroundColor={theme.BACKGROUND_COLOR} />
+    <FormLayout
+      title="Forgot password"
+      onBack={() => navigation.goBack()}
+      step={{current: 1, total: 3}}
+      contentStyle={styles.content}
+      footer={<PrimaryButton title="Send code" onPress={handleSend} disabled={!emailValid} />}>
+      <Text style={styles.instruction}>
+        Enter the email on your account. If it exists, we'll send a 6-digit code.
+      </Text>
 
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled">
-          <View style={styles.header}>
-            <TouchableOpacity
-              onPress={() => navigation.goBack()}
-              style={styles.backBtn}
-              hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}>
-              <BackIcon />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Forgot Password</Text>
-          </View>
-
-          <View style={styles.formContainer}>
-            <Text style={styles.instruction}>
-              Enter your email and we'll send you an OTP to reset your password.
-            </Text>
-
-            <AppInput
-              label="Email"
-              value={email}
-              onChangeText={setEmail}
-              placeholder="Enter your email"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-
-            <TouchableOpacity onPress={() => navigation.navigate('ForgotPin')}>
-              <Text style={styles.pinLink}>Forgot PIN instead?</Text>
-            </TouchableOpacity>
-
-            {!!error && <Text style={styles.errorText}>{error}</Text>}
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-
-      <View style={styles.bottomContainer}>
-        <TouchableOpacity
-          style={[styles.ctaButton, (!email || loading) && styles.ctaDisabled]}
-          onPress={handleSend}
-          disabled={!email || loading}
-          activeOpacity={0.85}
-        >
-          {loading ? (
-            <ActivityIndicator color={theme.WHITE} />
-          ) : (
-            <Text style={styles.ctaText}>Send Reset Code</Text>
-          )}
-        </TouchableOpacity>
-      </View>
-    </ScreenBackground>
+      <AppInput
+        label="Email address"
+        value={email}
+        onChangeText={value => {
+          setEmail(value);
+          setError('');
+        }}
+        placeholder="you@example.com"
+        keyboardType="email-address"
+        autoCapitalize="none"
+        autoCorrect={false}
+        autoComplete="email"
+        textContentType="emailAddress"
+        error={error || undefined}
+      />
+    </FormLayout>
   );
 };
 
 const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: spacing.base,
-    paddingVertical: spacing.lg,
-    paddingTop: 64,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.BORDER_COLOR,
+  content: {
+    paddingTop: 22,
   },
-  backBtn: {
-    width: 32,
-    height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
+  instruction: {
+    ...type.body,
+    fontFamily: type.label.fontFamily,
+    lineHeight: 20,
+    color: colors.textSecondary,
   },
-  headerTitle: { ...textStyles.displaySm, color: theme.TEXT_PRIMARY },
-  formContainer: {
-    paddingHorizontal: spacing.base,
-    paddingTop: spacing.xl,
-    gap: spacing.xl,
-  },
-  instruction: { ...textStyles.textXl, color: theme.WHITE },
-  pinLink: { ...textStyles.textSm, color: theme.PRIMARY_COLOR },
-  errorText: {
-    ...textStyles.textSm,
-    color: theme.ERROR_COLOR,
-    textAlign: 'center',
-  },
-  bottomContainer: { padding: spacing.base, paddingBottom: 24 },
-  ctaButton: {
-    backgroundColor: theme.PRIMARY_GLASS,
-    borderRadius: radius.xl,
-    paddingVertical: 12,
-    paddingHorizontal: spacing.lg,
-    alignItems: 'center',
-  },
-  ctaDisabled: { opacity: 0.5 },
-  ctaText: { ...textStyles.textLgBold, color: theme.WHITE },
 });
 
 export default ForgotPassword;

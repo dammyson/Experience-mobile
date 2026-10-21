@@ -37,3 +37,20 @@ export const getSpendableSummary = data => {
     programs,
   };
 };
+
+// Naira value of one point at this merchant, from the spendable totals
+// (null when the response has no value to derive it from)
+export const pointValue = summary =>
+  summary?.value != null && summary.points > 0 ? summary.value / summary.points : null;
+
+// Points needed to cover `amount`, or null when the point value is unknown
+export const pointsForAmount = (summary, amount) => {
+  const value = pointValue(summary);
+  return value ? Math.ceil((Number(amount) || 0) / value) : null;
+};
+
+// Estimated naira value of `points`, or null when the point value is unknown
+export const valueOfPoints = (summary, points) => {
+  const value = pointValue(summary);
+  return value != null ? (Number(points) || 0) * value : null;
+};

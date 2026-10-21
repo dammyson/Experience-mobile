@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Experience — Send points</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#B4A7FF;text-decoration:none}a:hover{color:#D3CBFF}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #0A0A0F; background-image: linear-gradient(180deg, #3A1A8F 0px, #1C0F4A 110px, #0A0A0F 240px); font-family: 'DM Sans', system-ui, sans-serif; color: #F4F4F7; font-variant-numeric: tabular-nums; display: flex; flex-direction: column">
+  <header style="padding: 56px 12px 14px; display: flex; align-items: center; gap: 4px; border-bottom: 1px solid rgba(255,255,255,0.08)">
+    <a href="Main.dc.html" aria-label="Back" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #F4F4F7">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg>
+    </a>
+    <h1 style="margin: 0; font-weight: 600; font-size: 16px">Send points</h1>
+  </header>
+
+  <div style="flex: 1; padding: 20px 20px 0; display: flex; flex-direction: column; gap: 18px">
+    <a href="Explore.dc.html" style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 14px; background: #15151C; border: 1px solid #24242E; color: #F4F4F7">
+      <span style="width: 40px; height: 40px; border-radius: 12px; background: #24242E; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px">KH</span>
+      <span style="flex: 1; display: flex; flex-direction: column; gap: 2px">
+        <span style="font-weight: 600; font-size: 13px">Kopi House</span>
+        <span style="font-size: 11px; color: #9C9CAB">4,200 pts eligible here</span>
+      </span>
+      <span style="font-size: 12px; font-weight: 600; color: #B4A7FF">Change</span>
+    </a>
+
+    <div style="display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 14px 10px; align-items: center">
+      <label for="pts" style="font-size: 12px; color: #B9B9C6">Points:</label>
+      <input id="pts" inputmode="numeric" value="{{ptsText}}" onChange="{{onPts}}" placeholder="0" aria-invalid="{{invalid}}" style="height: 44px; border-radius: 12px; border: {{border}}; background: #15151C; color: #F4F4F7; padding: 0 14px; font: inherit; font-size: 14px; font-weight: 700; outline: none">
+      <label for="note" style="font-size: 12px; color: #B9B9C6">Note:</label>
+      <input id="note" placeholder="Optional" value="Thanks for the coffee" style="height: 44px; border-radius: 12px; border: 1px solid #2E2E3A; background: #15151C; color: #F4F4F7; padding: 0 14px; font: inherit; font-size: 13px; outline: none">
+    </div>
+    <sc-if value="{{over}}" hint-placeholder-val="{{ false }}">
+      <span role="alert" style="font-size: 11px; font-weight: 600; color: #F58E9B; margin-top: -8px">You have 4,200 pts eligible at Kopi House.</span>
+    </sc-if>
+
+    <div role="group" aria-label="Quick amounts" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px">
+      <sc-for list="{{quick}}" as="q" hint-placeholder-count="4">
+        <button onClick="{{q.pick}}" aria-pressed="{{q.on}}" style="height: 36px; border-radius: 999px; border: 1px solid {{q.border}}; background: {{q.bg}}; color: #F4F4F7; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer">{{q.label}}</button>
+      </sc-for>
+    </div>
+
+    <dl style="margin: 0; display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: 14px; background: #15151C; border: 1px solid #24242E; font-size: 12px">
+      <div style="display: flex; justify-content: space-between"><dt style="color: #9C9CAB">You send</dt><dd style="margin: 0; font-weight: 600; color: #C9BFFF">{{ptsLabel}}</dd></div>
+      <div style="display: flex; justify-content: space-between"><dt style="color: #9C9CAB">Value to merchant</dt><dd style="margin: 0; font-weight: 600; color: #34D5A1">≈ {{valueLabel}}</dd></div>
+      <div style="display: flex; justify-content: space-between"><dt style="color: #9C9CAB">Left at Kopi House</dt><dd style="margin: 0; font-weight: 600">{{leftLabel}}</dd></div>
+    </dl>
+  </div>
+
+  <div style="padding: 16px 20px 36px">
+    <button onClick="{{open}}" aria-disabled="{{disabled}}" style="width: 100%; height: 52px; border-radius: 14px; border: 0; background: {{ctaBg}}; color: {{ctaFg}}; font: inherit; font-weight: 600; font-size: 14px; cursor: pointer">Review</button>
+  </div>
+
+  <sc-if value="{{sheet}}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{close}}" aria-hidden="true" style="position: absolute; inset: 0; background: rgba(0,0,0,0.6)"></div>
+    <section role="dialog" aria-modal="true" aria-label="Confirm send" style="position: absolute; left: 0; right: 0; bottom: 0; background: #15151C; border-top: 1px solid #2E2E3A; border-radius: 28px 28px 0 0; padding: 12px 20px 36px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center">
+      <div aria-hidden="true" style="width: 40px; height: 5px; border-radius: 3px; background: #3A3A48"></div>
+      <span style="font-size: 12px; color: #B9B9C6">Send to Kopi House</span>
+      <span style="font-weight: 700; font-size: 30px; color: #C9BFFF">{{ptsLabel}}</span>
+      <span style="font-size: 11px; color: #9C9CAB">Points sent to a merchant can't be taken back.</span>
+      <div style="width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; margin-top: 6px">
+        <button onClick="{{close}}" style="height: 50px; border-radius: 14px; border: 1px solid #2E2E3A; background: #1F1F29; color: #F4F4F7; font: inherit; font-weight: 600; font-size: 13px; cursor: pointer">Edit</button>
+        <button style="height: 50px; border-radius: 14px; border: 0; background: #6B4EF0; color: #FFFFFF; font: inherit; font-weight: 600; font-size: 13px; cursor: pointer">Send points</button>
+      </div>
+    </section>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { pts: 500, sheet: false };
+  }
+  renderVals() {
+    const max = 4200;
+    const p = this.state.pts;
+    const f = (n) => n.toLocaleString('en-US');
+    const over = p > max;
+    const ok = p > 0 && !over;
+    return {
+      ptsText: p ? f(p) : '',
+      onPts: (e) => this.setState({ pts: Number(String(e.target.value).replace(/[^0-9]/g, '')) || 0 }),
+      over, invalid: over ? 'true' : 'false',
+      border: over ? '1.5px solid #F58E9B' : '1px solid #6B4EF0',
+      quick: [[100, '100'], [500, '500'], [1000, '1,000'], [max, 'Max']].map(([v, l]) => ({ label: l, on: p === v ? 'true' : 'false', bg: p === v ? '#6B4EF0' : '#15151C', border: p === v ? '#8B74F7' : '#2E2E3A', pick: () => this.setState({ pts: v }) })),
+      ptsLabel: f(p) + ' pts',
+      valueLabel: '₦' + f(p / 2),
+      leftLabel: over ? '—' : f(max - p) + ' pts',
+      disabled: ok ? 'false' : 'true',
+      ctaBg: ok ? '#6B4EF0' : '#2A2148', ctaFg: ok ? '#FFFFFF' : '#9C93C9',
+      sheet: this.state.sheet,
+      open: () => { if (ok) this.setState({ sheet: true }); },
+      close: () => this.setState({ sheet: false })
+    };
+  }
+}
+</script>
+</body>
+</html>

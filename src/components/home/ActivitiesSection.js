@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.12)',
   },
   sectionTitle: {
-    fontFamily: 'PlusJakartaSans-Medium',
+    fontFamily: 'DMSans-Medium',
     fontSize: 16,
     lineHeight: 24,
     color: theme.WHITE,
@@ -110,13 +110,13 @@ const styles = StyleSheet.create({
     paddingTop: 8,
   },
   merchantName: {
-    fontFamily: 'Inter-Light',
+    fontFamily: 'DMSans-Regular',
     fontSize: 14,
     lineHeight: 27,
     color: theme.WHITE,
   },
   pointsText: {
-    fontFamily: 'Inter-SemiBold',
+    fontFamily: 'DMSans-SemiBold',
     fontSize: 14,
     lineHeight: 26,
     color: theme.WHITE,
@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
     paddingTop: 8,
   },
   statusText: {
-    fontFamily: 'Inter-Regular',
+    fontFamily: 'DMSans-Regular',
     fontSize: 12,
     lineHeight: 24,
   },
@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
     color: theme.WHITE,
   },
   epvText: {
-    fontFamily: 'Inter-SemiBold',
+    fontFamily: 'DMSans-SemiBold',
     fontSize: 12,
     lineHeight: 24,
     color: theme.WHITE,
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
     borderTopColor: '#424242',
   },
   seeAllText: {
-    fontFamily: 'Inter-Light',
+    fontFamily: 'DMSans-Regular',
     fontSize: 14,
     lineHeight: 27,
     color: '#00D9C0',
@@ -159,14 +159,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyText: {
-    fontFamily: 'PlusJakartaSans-Medium',
+    fontFamily: 'DMSans-Medium',
     fontSize: 14,
     color: theme.TEXT_SECONDARY,
     marginTop: 12,
     marginBottom: 4,
   },
   emptySubtext: {
-    fontFamily: 'PlusJakartaSans-Regular',
+    fontFamily: 'DMSans-Regular',
     fontSize: 12,
     color: theme.TEXT_TERTIARY,
   },

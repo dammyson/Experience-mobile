@@ -1,24 +1,17 @@
 import React, {useState, useEffect} from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  ActivityIndicator,
-} from 'react-native';
+import {View, Text, StyleSheet} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {useDispatch, useSelector} from 'react-redux';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import ScreenBackground from '../../components/layout/ScreenBackground';
-import {AppInput, PasswordInput} from '../../components/ui';
-import {BackIcon} from '../../components/icons';
-import {theme} from '../../theme/colors';
-import {spacing} from '../../theme/spacing';
+import FormLayout from '../../components/layout/FormLayout';
+import {AppInput, PasswordInput, PrimaryButton} from '../../components/ui';
+import PasswordRules, {isStrongPassword} from '../../components/ui/PasswordRules';
+import PhoneField from '../../components/ui/PhoneField';
+import {toNigerianPhone, isNigerianPhone} from '../../utilities/format';
 import {authAPI} from '../../services/api';
+import {colors, type} from '../../theme/tokens';
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const SignUp = () => {
   const navigation = useNavigation();
@@ -31,10 +24,8 @@ const SignUp = () => {
     phoneNumber: '',
     email: '',
     password: '',
-    confirmPassword: '',
   });
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -42,34 +33,33 @@ const SignUp = () => {
     }
   }, [isAuthenticated, navigation]);
 
-  const set = field => value => setForm(prev => ({...prev, [field]: value}));
+  const set = field => value => {
+    setError('');
+    setForm(prev => ({...prev, [field]: value}));
+  };
+
+  const emailValid = EMAIL_PATTERN.test(form.email.trim());
+  const phoneValid = isNigerianPhone(form.phoneNumber);
+  const isValid =
+    !!form.firstName.trim() &&
+    !!form.lastName.trim() &&
+    emailValid &&
+    phoneValid &&
+    isStrongPassword(form.password);
 
   const handleSignUp = async () => {
-    const {firstName, lastName, phoneNumber, email, password, confirmPassword} = form;
-
-    if (!firstName || !lastName || !phoneNumber || !email || !password || !confirmPassword) {
-      setError('Please fill in all fields');
+    if (!isValid) {
       return;
     }
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters');
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-
     setError('');
-    setLoading(true);
 
     try {
       const response = await authAPI.register({
-        firstName,
-        lastName,
-        email,
-        phoneNumber,
-        password,
+        firstName: form.firstName.trim(),
+        lastName: form.lastName.trim(),
+        email: form.email.trim(),
+        phoneNumber: toNigerianPhone(form.phoneNumber),
+        password: form.password,
       });
 
       const {user, token, refresh_token} = response.data;
@@ -87,177 +77,123 @@ const SignUp = () => {
       dispatch({type: 'AUTH_SUCCESS', payload: {user, token, userType: 'customer'}});
     } catch (err) {
       setError(err.message || 'Registration failed. Please try again.');
-      setLoading(false);
     }
   };
 
-  const isValid =
-    form.firstName &&
-    form.lastName &&
-    form.phoneNumber &&
-    form.email &&
-    form.password.length >= 8 &&
-    form.password === form.confirmPassword;
-
   return (
-    <ScreenBackground>
-      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView
-          contentContainerStyle={styles.scroll}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}>
+    <FormLayout
+      title="Create account"
+      onBack={() => navigation.goBack()}
+      contentStyle={styles.content}
+      footer={
+        <>
+          {!!error && (
+            <Text style={styles.serverError} accessibilityRole="alert">
+              {error}
+            </Text>
+          )}
+          {/* TODO: link Terms and Privacy Policy once their URLs exist */}
+          <Text style={styles.legal}>
+            By continuing you agree to the Terms and Privacy Policy.
+          </Text>
+          <PrimaryButton title="Create account" onPress={handleSignUp} disabled={!isValid} />
+          <Text style={styles.footerText}>
+            Have a business?{' '}
+            <Text
+              style={styles.link}
+              accessibilityRole="link"
+              onPress={() => navigation.navigate('MerchantRegister')}>
+              Register it instead
+            </Text>
+          </Text>
+        </>
+      }>
+      <Text style={styles.intro}>Start collecting points from your favourite places.</Text>
 
-          {/* Header */}
-          <View style={styles.header}>
-            <TouchableOpacity
-              onPress={() => navigation.goBack()}
-              style={styles.backBtn}
-              activeOpacity={0.7}>
-              <BackIcon size={24} />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Sign Up Account</Text>
-            <View style={styles.headerSpacer} />
-          </View>
+      <View style={styles.nameRow}>
+        <AppInput
+          label="First name"
+          value={form.firstName}
+          onChangeText={set('firstName')}
+          autoCapitalize="words"
+          autoComplete="given-name"
+          textContentType="givenName"
+          containerStyle={styles.nameField}
+        />
+        <AppInput
+          label="Last name"
+          value={form.lastName}
+          onChangeText={set('lastName')}
+          autoCapitalize="words"
+          autoComplete="family-name"
+          textContentType="familyName"
+          containerStyle={styles.nameField}
+        />
+      </View>
 
-          {/* Form */}
-          <View style={styles.form}>
-            <AppInput
-              label="First Name"
-              value={form.firstName}
-              onChangeText={set('firstName')}
-              placeholder="Enter First Name"
-              autoCapitalize="words"
-            />
+      <AppInput
+        label="Email address"
+        value={form.email}
+        onChangeText={set('email')}
+        placeholder="you@example.com"
+        keyboardType="email-address"
+        autoCapitalize="none"
+        autoCorrect={false}
+        autoComplete="email"
+        textContentType="emailAddress"
+        error={form.email && !emailValid ? 'Enter a valid email address.' : undefined}
+      />
 
-            <AppInput
-              label="Last Name"
-              value={form.lastName}
-              onChangeText={set('lastName')}
-              placeholder="Enter Last Name"
-              autoCapitalize="words"
-            />
+      <PhoneField value={form.phoneNumber} onChangeText={set('phoneNumber')} />
 
-            <AppInput
-              label="Phone Number"
-              value={form.phoneNumber}
-              onChangeText={set('phoneNumber')}
-              placeholder="Enter Phone Number"
-              keyboardType="phone-pad"
-              maxLength={15}
-            />
-
-            <AppInput
-              label="Email"
-              value={form.email}
-              onChangeText={set('email')}
-              placeholder="Enter Email Address"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-
-            <PasswordInput
-              label="Password"
-              value={form.password}
-              onChangeText={set('password')}
-              placeholder="Enter Password (min 8 characters)"
-            />
-
-            <PasswordInput
-              label="Confirm Password"
-              value={form.confirmPassword}
-              onChangeText={set('confirmPassword')}
-              placeholder="Re-enter Password"
-            />
-          </View>
-
-          {!!error && <Text style={styles.errorText}>{error}</Text>}
-
-        </ScrollView>
-
-        {/* Bottom Button */}
-        <View style={styles.bottomContainer}>
-          <TouchableOpacity
-            style={[styles.ctaButton, (!isValid || loading) && styles.ctaDisabled]}
-            onPress={handleSignUp}
-            disabled={!isValid || loading}
-            activeOpacity={0.85}>
-            {loading ? (
-              <ActivityIndicator color={theme.WHITE} />
-            ) : (
-              <Text style={styles.ctaText}>Create Account</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      </KeyboardAvoidingView>
-    </ScreenBackground>
+      <PasswordInput
+        label="Password"
+        value={form.password}
+        onChangeText={set('password')}
+        textContentType="newPassword"
+      />
+      <PasswordRules password={form.password} />
+    </FormLayout>
   );
 };
 
 const styles = StyleSheet.create({
-  flex: {flex: 1},
-  scroll: {
-    flexGrow: 1,
-    paddingHorizontal: spacing.base,
-    paddingBottom: 100,
+  content: {
+    gap: 14,
   },
-  header: {
+  intro: {
+    ...type.body,
+    fontFamily: type.label.fontFamily,
+    color: colors.textSecondary,
+    marginBottom: 4,
+  },
+  nameRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: 60,
-    paddingBottom: 32,
+    gap: 10,
   },
-  backBtn: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
+  nameField: {
+    flex: 1,
   },
-  headerTitle: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
-    fontSize: 18,
-    color: theme.TEXT_PRIMARY,
-  },
-  headerSpacer: {
-    width: 40,
-  },
-  form: {
-    gap: 20,
-  },
-  errorText: {
-    fontFamily: 'PlusJakartaSans-Medium',
-    fontSize: 14,
-    color: theme.ERROR_COLOR,
+  legal: {
+    ...type.caption,
+    color: colors.textMuted,
     textAlign: 'center',
-    marginTop: 16,
   },
-  bottomContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    paddingHorizontal: spacing.base,
-    paddingVertical: 16,
-    paddingBottom: 40,
-    backgroundColor: theme.BACKGROUND_COLOR,
+  link: {
+    ...type.label,
+    fontFamily: type.bodyStrong.fontFamily,
+    color: colors.link,
   },
-  ctaButton: {
-    backgroundColor: '#6715EA',
-    borderRadius: 28,
-    paddingVertical: 16,
-    alignItems: 'center',
+  footerText: {
+    ...type.label,
+    color: colors.textMuted,
+    textAlign: 'center',
   },
-  ctaDisabled: {
-    opacity: 0.5,
-  },
-  ctaText: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
-    fontSize: 16,
-    color: theme.WHITE,
+  serverError: {
+    ...type.captionStrong,
+    fontSize: 12,
+    color: colors.danger,
+    textAlign: 'center',
   },
 });
 

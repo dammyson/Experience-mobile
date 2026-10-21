@@ -139,12 +139,12 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl,
   },
   summaryLabel: {
-    fontFamily: 'PlusJakartaSans-Medium',
+    fontFamily: 'DMSans-Medium',
     fontSize: 14,
     color: theme.TEXT_PRIMARY,
   },
   summaryValue: {
-    fontFamily: 'PlusJakartaSans-Bold',
+    fontFamily: 'DMSans-Bold',
     fontSize: 32,
     color: theme.WHITE,
     marginTop: 8,
@@ -155,12 +155,12 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   summaryMeta: {
-    fontFamily: 'PlusJakartaSans-Regular',
+    fontFamily: 'DMSans-Regular',
     fontSize: 13,
     color: theme.TEXT_PRIMARY,
   },
   sectionTitle: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontFamily: 'DMSans-SemiBold',
     fontSize: 16,
     color: theme.TEXT_PRIMARY,
     marginBottom: 12,
@@ -180,18 +180,18 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   merchantName: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontFamily: 'DMSans-SemiBold',
     fontSize: 16,
     color: theme.TEXT_PRIMARY,
     flex: 1,
   },
   merchantPoints: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontFamily: 'DMSans-SemiBold',
     fontSize: 16,
     color: theme.TEXT_PRIMARY,
   },
   merchantValue: {
-    fontFamily: 'PlusJakartaSans-Regular',
+    fontFamily: 'DMSans-Regular',
     fontSize: 13,
     color: theme.TEXT_TERTIARY,
     marginTop: 4,
@@ -218,17 +218,17 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   programName: {
-    fontFamily: 'PlusJakartaSans-Medium',
+    fontFamily: 'DMSans-Medium',
     fontSize: 14,
     color: theme.TEXT_PRIMARY,
   },
   programPoints: {
-    fontFamily: 'PlusJakartaSans-Medium',
+    fontFamily: 'DMSans-Medium',
     fontSize: 14,
     color: theme.TEXT_PRIMARY,
   },
   programMeta: {
-    fontFamily: 'PlusJakartaSans-Regular',
+    fontFamily: 'DMSans-Regular',
     fontSize: 12,
     color: theme.TEXT_TERTIARY,
     marginTop: 2,

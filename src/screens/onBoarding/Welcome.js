@@ -186,13 +186,13 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   title: {
-    fontFamily: 'PlusJakartaSans-Bold',
+    fontFamily: 'DMSans-Bold',
     fontSize: 28,
     color: theme.TEXT_PRIMARY,
     marginBottom: 8,
   },
   subtitle: {
-    fontFamily: 'PlusJakartaSans-Regular',
+    fontFamily: 'DMSans-Regular',
     fontSize: 16,
     color: theme.TEXT_SECONDARY,
     lineHeight: 24,
@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   appleBtnText: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontFamily: 'DMSans-SemiBold',
     fontSize: 16,
     color: '#000000',
   },
@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   googleBtnText: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontFamily: 'DMSans-SemiBold',
     fontSize: 16,
     color: '#000000',
   },
@@ -234,17 +234,17 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   signUpText: {
-    fontFamily: 'PlusJakartaSans-Regular',
+    fontFamily: 'DMSans-Regular',
     fontSize: 14,
     color: theme.TEXT_SECONDARY,
   },
   signUpLink: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontFamily: 'DMSans-SemiBold',
     fontSize: 14,
     color: '#8B5CF6',
   },
   terms: {
-    fontFamily: 'PlusJakartaSans-Regular',
+    fontFamily: 'DMSans-Regular',
     fontSize: 12,
     color: theme.TEXT_TERTIARY,
     textAlign: 'center',
@@ -260,12 +260,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   supportText: {
-    fontFamily: 'PlusJakartaSans-Regular',
+    fontFamily: 'DMSans-Regular',
     fontSize: 14,
     color: theme.TEXT_TERTIARY,
   },
   supportLink: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontFamily: 'DMSans-SemiBold',
     fontSize: 14,
     color: '#8B5CF6',
   },

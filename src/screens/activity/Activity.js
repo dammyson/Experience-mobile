@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
     borderColor: theme.PRIMARY_COLOR,
   },
   chipText: {
-    fontFamily: 'PlusJakartaSans-Medium',
+    fontFamily: 'DMSans-Medium',
     fontSize: 14,
     color: theme.TEXT_TERTIARY,
   },
@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   dateLabel: {
-    fontFamily: 'PlusJakartaSans-Regular',
+    fontFamily: 'DMSans-Regular',
     fontSize: 13,
     color: theme.TEXT_TERTIARY,
     marginBottom: 2,
@@ -297,13 +297,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   txMerchant: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontFamily: 'DMSans-SemiBold',
     fontSize: 16,
     color: theme.TEXT_PRIMARY,
     flex: 1,
   },
   txStatus: {
-    fontFamily: 'PlusJakartaSans-Medium',
+    fontFamily: 'DMSans-Medium',
     fontSize: 14,
   },
   txEarned: {
@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
     color: theme.WARNING_COLOR,
   },
   txAmount: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontFamily: 'DMSans-SemiBold',
     fontSize: 22,
     color: theme.TEXT_PRIMARY,
   },
@@ -331,12 +331,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   txId: {
-    fontFamily: 'Inter-Regular',
+    fontFamily: 'DMSans-Regular',
     fontSize: 13,
     color: theme.TEXT_TERTIARY,
   },
   txType: {
-    fontFamily: 'Inter-Regular',
+    fontFamily: 'DMSans-Regular',
     fontSize: 13,
     color: theme.TEXT_TERTIARY,
   },
@@ -347,7 +347,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   detailsBtnText: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
+    fontFamily: 'DMSans-SemiBold',
     fontSize: 14,
     color: theme.WHITE,
   },

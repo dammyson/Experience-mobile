@@ -1,7 +1,6 @@
 import React, {useState} from 'react';
 import {View, Text, TextInput, StyleSheet} from 'react-native';
-import {theme} from '../../theme/colors';
-import {radius} from '../../theme/spacing';
+import {colors, type, radii} from '../../theme/tokens';
 
 /**
  * Multi-line textarea with label, character counter, and error state.
@@ -24,7 +23,7 @@ const TextArea = ({
   ...textInputProps
 }) => {
   const [focused, setFocused] = useState(false);
-  const minHeight = numberOfLines * 24 + 20;
+  const minHeight = numberOfLines * 20 + 24;
 
   return (
     <View style={[styles.group, containerStyle]}>
@@ -48,7 +47,8 @@ const TextArea = ({
         <TextInput
           style={[styles.input, {minHeight: minHeight - 24}]}
           value={value}
-          placeholderTextColor={theme.TEXT_TERTIARY}
+          placeholderTextColor={colors.textMuted}
+          accessibilityLabel={textInputProps.accessibilityLabel || label}
           multiline
           textAlignVertical="top"
           maxLength={maxLength}
@@ -64,7 +64,11 @@ const TextArea = ({
         />
       </View>
 
-      {!!error && <Text style={styles.errorText}>{error}</Text>}
+      {!!error && (
+        <Text style={styles.errorText} accessibilityRole="alert">
+          {error}
+        </Text>
+      )}
     </View>
   );
 };
@@ -79,42 +83,36 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   label: {
-    fontFamily: 'Inter-Medium',
-    fontSize: 14,
-    lineHeight: 20,
-    color: theme.TEXT_SECONDARY,
+    ...type.label,
+    color: colors.textSecondary,
   },
   counter: {
-    fontFamily: 'Inter-Regular',
-    fontSize: 12,
-    color: theme.TEXT_MUTED,
+    ...type.caption,
+    color: colors.textMuted,
   },
   inputBox: {
-    backgroundColor: theme.INPUT_BACKGROUND,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: theme.INPUT_BORDER,
-    borderRadius: radius.lg,
+    borderColor: colors.border,
+    borderRadius: radii.input,
     paddingHorizontal: 14,
     paddingVertical: 12,
   },
   inputBoxFocused: {
-    borderColor: theme.INPUT_ACTIVE_BORDER,
-    backgroundColor: 'rgba(152, 96, 240, 0.08)',
+    borderColor: colors.primary,
   },
   inputBoxError: {
-    borderColor: theme.ERROR_COLOR,
+    borderWidth: 1.5,
+    borderColor: colors.danger,
   },
   input: {
-    fontFamily: 'Inter-Regular',
-    fontSize: 16,
-    lineHeight: 24,
-    color: theme.TEXT_PRIMARY,
+    ...type.input,
+    color: colors.text,
     padding: 0,
   },
   errorText: {
-    fontFamily: 'Inter-Regular',
-    fontSize: 12,
-    color: theme.ERROR_COLOR,
+    ...type.captionStrong,
+    color: colors.danger,
   },
 });
 

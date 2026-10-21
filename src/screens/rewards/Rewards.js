@@ -1,173 +1,351 @@
-import React from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  ImageBackground,
-  StatusBar,
-  StyleSheet,
-} from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
+import React, {useMemo, useState} from 'react';
+import {View, Text, TextInput, ScrollView, RefreshControl, StatusBar, StyleSheet} from 'react-native';
+import dayjs from 'dayjs';
 import ScreenBackground from '../../components/layout/ScreenBackground';
-import AppHeader from '../../components/layout/AppHeader';
-import {theme} from '../../theme/colors';
-import {spacing, radius} from '../../theme/spacing';
+import ScreenHeader from '../../components/layout/ScreenHeader';
+import RequestState from '../../components/layout/RequestState';
+import {Button, EmptyState, Skeleton} from '../../components/ui';
+import {customerAPI} from '../../services/api';
+import useRequest from '../../utilities/useRequest';
+import {toList, getMerchantId, getMerchantName, redemptionNote} from '../../utilities/customerData';
+import {formatNumber, formatEstimate} from '../../utilities/format';
+import {TAB_SCROLL_INSET} from '../../utilities/platform';
+import {colors, type, radii, layout} from '../../theme/tokens';
 
-// ── Mock promo data ────────────────────────────────────────────────────────
-// Drop in additional images to src/assets/images/ and add entries here
-const PROMOS = [
-  {
-    id: '1',
-    image: require('../../assets/images/promo.jpg'),
-    label: 'Discount up to',
-    value: '25%',
-    description: 'minimum transaction $500 in IKEA\nwith Credit Card',
-    dates: '25 – 29 Nov 2025',
-  },
-  {
-    id: '2',
-    image: require('../../assets/images/apple.jpg'),
-    label: 'Save on',
-    value: '15%',
-    description: 'on electronics purchases over\n$300 with Store Card',
-    dates: '1 – 5 Dec 2025',
-  },
-  {
-    id: '3',
-    image: require('../../assets/images/travel.jpg'),
-    label: 'Cashback of',
-    value: '10%',
-    description: 'on travel bookings above $200\nvia App',
-    dates: '10 – 15 Dec 2025',
-  },
-];
+const SEGMENT_COLORS = [colors.primaryBorder, colors.success, colors.pending];
+const OTHER_COLOR = colors.sheetHandle;
+const SHOWN_MERCHANTS = 3;
 
-// ── Sub-components ─────────────────────────────────────────────────────────
-const PromoCard = ({item}) => (
-  <ImageBackground
-    source={item.image}
-    style={styles.card}
-    imageStyle={styles.cardImage}
-    resizeMode="cover">
-    <LinearGradient
-      colors={['rgba(0,0,0,0.85)', 'rgba(0,0,0,0.55)', 'rgba(0,0,0,0.3)']}
-      start={{x: 0, y: 0}}
-      end={{x: 1, y: 0}}
-      style={StyleSheet.absoluteFill}
-    />
-    <View style={styles.cardContent}>
-      <View style={styles.cardBody}>
-        <Text style={styles.cardLabel}>{item.label}</Text>
-        <Text style={styles.cardValue}>{item.value}</Text>
-        <Text style={styles.cardDesc}>{item.description}</Text>
-        <Text style={styles.cardDates}>{item.dates}</Text>
-      </View>
-      <View style={styles.cardFooter}>
-        <TouchableOpacity activeOpacity={0.8}>
-          <Text style={styles.tnc}>Term of Condition</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.detailsBtn} activeOpacity={0.8}>
-          <Text style={styles.detailsBtnText}>See Details</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  </ImageBackground>
-);
+// "Expires 31 Dec · Pay up to 50%" from the merchant's first program, else a program count
+const merchantNote = merchant => {
+  const programs = merchant.programs || [];
+  const program = programs[0];
+  const expires = program?.expires_at || program?.expiry_date;
+  const parts = [
+    expires && dayjs(expires).isValid() ? `Expires ${dayjs(expires).format('D MMM')}` : null,
+    redemptionNote(program),
+  ].filter(Boolean);
+  if (parts.length) {
+    return parts.join(' · ');
+  }
+  return programs.length ? `${programs.length} program${programs.length === 1 ? '' : 's'}` : '';
+};
 
-// ── Screen ─────────────────────────────────────────────────────────────────
-const Rewards = () => (
-  <ScreenBackground>
-    <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
-    <ScrollView
-      style={styles.scroll}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}>
-      <AppHeader
-        title="Promo & Rewards"
-        showCard
-        onCard={() => {}}
-      />
-      <View style={styles.list}>
-        {PROMOS.map(item => (
-          <PromoCard key={item.id} item={item} />
-        ))}
-      </View>
-    </ScrollView>
-  </ScreenBackground>
-);
+const Rewards = () => {
+  const points = useRequest(() => customerAPI.getPointsByMerchant(), []);
+  const [code, setCode] = useState('');
+  const [claim, setClaim] = useState({status: 'idle', message: ''});
+
+  const currency = points.data?.currency || 'NGN';
+
+  const rows = useMemo(() => {
+    const merchants = toList(points.data, 'merchants')
+      .map(m => ({
+        id: getMerchantId(m),
+        name: getMerchantName(m),
+        points: Number(m.points) || 0,
+        value: m.estimated_value != null ? Number(m.estimated_value) : null,
+        note: merchantNote(m),
+      }))
+      .sort((a, b) => b.points - a.points);
+
+    const top = merchants.slice(0, SHOWN_MERCHANTS).map((m, i) => ({...m, color: SEGMENT_COLORS[i]}));
+    const rest = merchants.slice(SHOWN_MERCHANTS);
+    if (rest.length) {
+      top.push({
+        id: 'others',
+        name: `${rest.length} more merchant${rest.length === 1 ? '' : 's'}`,
+        note: rest.map(m => m.name).join(', '),
+        points: rest.reduce((sum, m) => sum + m.points, 0),
+        value: rest.some(m => m.value != null) ? rest.reduce((sum, m) => sum + (m.value || 0), 0) : null,
+        color: OTHER_COLOR,
+      });
+    }
+    return top;
+  }, [points.data]);
+
+  const totalPoints = points.data?.total_points ?? rows.reduce((sum, r) => sum + r.points, 0);
+  const totalValue = points.data?.total_estimated_value;
+
+  const handleClaim = async () => {
+    setClaim({status: 'idle', message: ''});
+    try {
+      await customerAPI.claimGiveaway(code.trim().toUpperCase());
+      setClaim({status: 'submitted', message: 'Claim submitted — points show once the server confirms.'});
+      setCode('');
+      points.refresh();
+    } catch (err) {
+      setClaim({status: 'error', message: err.message || "We couldn't claim that code."});
+    }
+  };
+
+  return (
+    <ScreenBackground>
+      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+      <ScreenHeader title="Rewards" root />
+      <ScrollView
+        contentContainerStyle={[styles.content, {paddingBottom: TAB_SCROLL_INSET}]}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={points.refreshing} onRefresh={points.refresh} tintColor={colors.link} />
+        }>
+        {points.loading ? (
+          <Skeleton height={104} radius={18} />
+        ) : points.error ? (
+          <RequestState error={points.error} onRetry={points.reload} />
+        ) : (
+          <>
+            <View style={styles.summary}>
+              <View style={styles.summaryRow}>
+                <View style={styles.summaryBlock} accessible accessibilityLabel={`Total points ${formatNumber(totalPoints)}`}>
+                  <Text style={styles.summaryLabel}>Total points</Text>
+                  <Text style={styles.summaryValue}>
+                    {formatNumber(totalPoints)} <Text style={styles.summarySuffix}>pts</Text>
+                  </Text>
+                </View>
+                {totalValue != null && (
+                  <View style={[styles.summaryBlock, styles.summaryRight]}>
+                    <Text style={styles.summaryLabel}>Spendable value</Text>
+                    <Text style={styles.estimate}>{formatEstimate(totalValue, {currency})}</Text>
+                  </View>
+                )}
+              </View>
+              {totalPoints > 0 && (
+                <View style={styles.bar} importantForAccessibility="no-hide-descendants">
+                  {rows
+                    .filter(r => r.points > 0)
+                    .map(r => (
+                      <View key={r.id} style={{flex: r.points, backgroundColor: r.color}} />
+                    ))}
+                </View>
+              )}
+            </View>
+
+            <View>
+              <Text style={styles.sectionTitle} accessibilityRole="header">
+                By merchant
+              </Text>
+              {rows.length === 0 ? (
+                <EmptyState
+                  title="No points yet"
+                  hint="Earn points at partner merchants and they'll show up here."
+                  style={styles.emptyTop}
+                />
+              ) : (
+                rows.map(r => (
+                  <View
+                    key={r.id}
+                    style={styles.merchantRow}
+                    accessible
+                    accessibilityLabel={`${r.name}, ${formatNumber(r.points)} points`}>
+                    <View style={[styles.dot, {backgroundColor: r.color}]} />
+                    <View style={styles.merchantText}>
+                      <Text style={styles.merchantName} numberOfLines={1}>
+                        {r.name}
+                      </Text>
+                      {!!r.note && (
+                        <Text style={styles.merchantNote} numberOfLines={1}>
+                          {r.note}
+                        </Text>
+                      )}
+                    </View>
+                    <View style={styles.merchantAmounts}>
+                      <Text style={styles.merchantPts}>{formatNumber(r.points)} pts</Text>
+                      {r.value != null && (
+                        <Text style={styles.merchantNote}>{formatEstimate(r.value, {currency})}</Text>
+                      )}
+                    </View>
+                  </View>
+                ))
+              )}
+            </View>
+          </>
+        )}
+
+        <View style={styles.giveaway}>
+          <View style={styles.giveawayText}>
+            <Text style={styles.sectionTitleFlat} accessibilityRole="header">
+              Have a giveaway code?
+            </Text>
+            <Text style={styles.giveawayHint}>Enter it to claim points from a merchant campaign.</Text>
+          </View>
+          <View style={styles.codeRow}>
+            <Text style={styles.codeLabel}>Code:</Text>
+            <TextInput
+              value={code}
+              onChangeText={value => {
+                setCode(value.toUpperCase());
+                setClaim({status: 'idle', message: ''});
+              }}
+              placeholder="KOPI-7Q2X"
+              placeholderTextColor={colors.textMuted}
+              autoCapitalize="characters"
+              autoCorrect={false}
+              accessibilityLabel="Giveaway code"
+              style={styles.codeInput}
+            />
+          </View>
+          <Button title="Claim points" size="md" onPress={handleClaim} disabled={!code.trim()} />
+          {claim.status !== 'idle' && (
+            <Text
+              style={[styles.claimMessage, claim.status === 'error' && styles.claimError]}
+              accessibilityRole="alert">
+              {claim.message}
+            </Text>
+          )}
+        </View>
+
+        {/* README gap 1: no customer-facing reward catalog endpoint yet */}
+        <EmptyState title="Reward catalog coming soon" hint="Until then, spend points with Pay with points." />
+      </ScrollView>
+    </ScreenBackground>
+  );
+};
 
 const styles = StyleSheet.create({
-  scroll: {flex: 1},
-  content: {paddingBottom: 110},
-
-  list: {
-    paddingHorizontal: spacing.base,
-    gap: 16,
+  content: {
+    paddingTop: 18,
+    paddingHorizontal: layout.screenPadding,
+    gap: 18,
   },
-
-  // Promo card
-  card: {
-    height: 220,
-    borderRadius: 20,
-    overflow: 'hidden',
+  summary: {
+    borderRadius: 18,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.borderCard,
+    padding: 16,
+    gap: 14,
   },
-  cardImage: {
-    borderRadius: 20,
-  },
-  cardContent: {
-    flex: 1,
-    padding: 20,
-    justifyContent: 'space-between',
-  },
-  cardBody: {
-    gap: 4,
-  },
-  cardLabel: {
-    fontFamily: 'PlusJakartaSans-Regular',
-    fontSize: 14,
-    color: theme.TEXT_PRIMARY,
-    opacity: 0.85,
-  },
-  cardValue: {
-    fontFamily: 'PlusJakartaSans-Bold',
-    fontSize: 40,
-    lineHeight: 46,
-    color: theme.TEXT_WHITE,
-  },
-  cardDesc: {
-    fontFamily: 'PlusJakartaSans-Regular',
-    fontSize: 13,
-    color: theme.TEXT_PRIMARY,
-    lineHeight: 19,
-  },
-  cardDates: {
-    fontFamily: 'PlusJakartaSans-Regular',
-    fontSize: 12,
-    color: theme.TEXT_TERTIARY,
-    marginTop: 2,
-  },
-  cardFooter: {
+  summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-end',
   },
-  tnc: {
-    fontFamily: 'PlusJakartaSans-Regular',
-    fontSize: 12,
-    color: theme.TEXT_TERTIARY,
-    textDecorationLine: 'underline',
+  summaryBlock: {
+    gap: 2,
   },
-  detailsBtn: {
-    backgroundColor: theme.PRIMARY_COLOR,
-    borderRadius: 20,
-    paddingHorizontal: 18,
-    paddingVertical: 8,
+  summaryRight: {
+    alignItems: 'flex-end',
   },
-  detailsBtnText: {
-    fontFamily: 'PlusJakartaSans-SemiBold',
+  summaryLabel: {
+    ...type.caption,
+    color: colors.textMuted,
+  },
+  summaryValue: {
+    ...type.balance,
+    fontSize: 26,
+    lineHeight: 32,
+    color: colors.text,
+  },
+  summarySuffix: {
+    ...type.bodyStrong,
+    color: colors.link,
+  },
+  estimate: {
+    ...type.amount,
+    fontFamily: type.balance.fontFamily,
     fontSize: 14,
-    color: theme.WHITE,
+    color: colors.success,
+  },
+  bar: {
+    flexDirection: 'row',
+    height: 8,
+    borderRadius: 4,
+    overflow: 'hidden',
+    gap: 2,
+  },
+  sectionTitle: {
+    ...type.sectionHeading,
+    color: colors.text,
+    marginBottom: 4,
+  },
+  sectionTitleFlat: {
+    ...type.sectionHeading,
+    color: colors.text,
+  },
+  emptyTop: {
+    marginTop: 8,
+  },
+  merchantRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.divider,
+  },
+  dot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  merchantText: {
+    flex: 1,
+    gap: 2,
+  },
+  merchantName: {
+    ...type.bodyStrong,
+    color: colors.text,
+  },
+  merchantNote: {
+    ...type.caption,
+    color: colors.textMuted,
+  },
+  merchantAmounts: {
+    alignItems: 'flex-end',
+    gap: 2,
+  },
+  merchantPts: {
+    ...type.amount,
+    fontFamily: type.balance.fontFamily,
+    color: colors.points,
+  },
+  giveaway: {
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#3A2E6E',
+    backgroundColor: '#2B1F5C',
+    padding: 16,
+    gap: 12,
+  },
+  giveawayText: {
+    gap: 4,
+  },
+  giveawayHint: {
+    ...type.caption,
+    color: colors.textSecondary,
+  },
+  codeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  codeLabel: {
+    ...type.label,
+    width: 76,
+    color: colors.textSecondary,
+  },
+  codeInput: {
+    flex: 1,
+    height: 44,
+    borderRadius: radii.input,
+    borderWidth: 1,
+    borderColor: '#3A2E6E',
+    backgroundColor: colors.tabBar,
+    paddingHorizontal: 14,
+    paddingVertical: 0,
+    fontFamily: type.bodyStrong.fontFamily,
+    fontSize: 13,
+    letterSpacing: 1,
+    color: colors.text,
+  },
+  claimMessage: {
+    ...type.captionStrong,
+    color: colors.success,
+  },
+  claimError: {
+    color: colors.danger,
   },
 });
 

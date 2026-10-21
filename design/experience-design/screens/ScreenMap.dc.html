@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Experience — Screen map</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&amp;family=DM+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#B4A7FF}a:hover{color:#D3CBFF}
+</style>
+</helmet>
+<div style="width: 2400px; height: 844px; box-sizing: border-box; padding: 40px 48px; background: #0A0A0F; background-image: linear-gradient(180deg, #2A1470 0px, #140B35 120px, #0A0A0F 280px); font-family: 'DM Sans', system-ui, sans-serif; color: #F4F4F7; display: flex; flex-direction: column; gap: 22px">
+  <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 24px">
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <h1 style="margin: 0; font-weight: 700; font-size: 24px; letter-spacing: -0.02em">Screen map &amp; API coverage</h1>
+      <span style="font-size: 13px; color: #B9B9C6">Mapped from the “Experience API - Complete” Postman collection. Paths are under /api/v1. [M] = Bearer merchant token + X-Merchant-Id.</span>
+    </div>
+    <div style="display: flex; gap: 8px">
+      <span style="padding: 5px 10px; border-radius: 999px; background: rgba(165,149,255,0.16); color: #C9BFFF; font-size: 11px; font-weight: 600">GET</span>
+      <span style="padding: 5px 10px; border-radius: 999px; background: rgba(52,213,161,0.14); color: #5EE6B6; font-size: 11px; font-weight: 600">POST · PUT</span>
+      <span style="padding: 5px 10px; border-radius: 999px; background: rgba(245,142,155,0.14); color: #F58E9B; font-size: 11px; font-weight: 600">DELETE</span>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; flex: 1; min-height: 0">
+    <sc-for list="{{cols}}" as="col" hint-placeholder-count="3">
+      <section style="display: flex; flex-direction: column; gap: 8px; min-width: 0">
+        <h2 style="margin: 0 0 2px; font-weight: 600; font-size: 15px">{{col.title}}</h2>
+        <sc-for list="{{col.rows}}" as="r" hint-placeholder-count="6">
+          <div style="padding: 9px 12px; border-radius: 12px; background: #15151C; border: 1px solid #24242E; display: flex; flex-direction: column; gap: 5px">
+            <span style="font-weight: 600; font-size: 12px">{{r.screen}}</span>
+            <sc-for list="{{r.eps}}" as="e" hint-placeholder-count="2">
+              <span style="display: flex; gap: 6px; align-items: baseline; font-family: 'DM Mono', ui-monospace, monospace; font-size: 11px; color: #D9D9E3; line-height: 1.35">
+                <span style="flex-shrink: 0; width: 44px; font-weight: 500; color: {{e.color}}">{{e.m}}</span><span style="min-width: 0; overflow-wrap: anywhere">{{e.p}}</span>
+              </span>
+            </sc-for>
+          </div>
+        </sc-for>
+      </section>
+    </sc-for>
+
+    <section style="display: flex; flex-direction: column; gap: 8px; min-width: 0">
+      <h2 style="margin: 0 0 2px; font-weight: 600; font-size: 15px; color: #F5B740">Backend gaps &amp; rules</h2>
+      <sc-for list="{{gaps}}" as="g" hint-placeholder-count="8">
+        <div style="padding: 9px 12px; border-radius: 12px; background: rgba(245,183,64,0.06); border: 1px solid #4A3A1C; display: flex; flex-direction: column; gap: 3px">
+          <span style="font-weight: 600; font-size: 12px; color: #F5D08A">{{g.t}}</span>
+          <span style="font-size: 11px; line-height: 1.4; color: #D9D9E3">{{g.d}}</span>
+        </div>
+      </sc-for>
+    </section>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":2400,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const C = { GET: '#C9BFFF', POST: '#5EE6B6', PUT: '#5EE6B6', DELETE: '#F58E9B' };
+    const row = (screen, list) => ({ screen, eps: list.map(([m, p]) => ({ m, p, color: C[m] })) });
+    return {
+      cols: [
+        { title: 'Access & customer', rows: [
+          row('Sign in · Register · Business register', [['POST', '/auth/login'], ['POST', '/auth/login/merchant'], ['POST', '/auth/register/customer'], ['POST', '/merchant/register']]),
+          row('Session', [['POST', '/auth/refresh — customer & merchant tokens kept separately']]),
+          row('Forgot password → OTP → reset', [['POST', '/auth/forgot-password'], ['POST', '/auth/verify-otp'], ['POST', '/auth/reset-password']]),
+          row('Home', [['GET', '/customer/dashboard'], ['GET', '/customer/favorites/merchants'], ['GET', '/customer/promos']]),
+          row('Explore', [['GET', '/customer/merchants'], ['POST', '/customer/merchants/{id}/favorite'], ['DELETE', '/customer/merchants/{id}/favorite']]),
+          row('Rewards', [['GET', '/customer/points/merchants'], ['POST', '/customer/giveaways/claim'], ['POST', '/customer/programs/{id}/redeem · Idempotency-Key']]),
+          row('Profile', [['GET', '/customer/profile — read-only']])
+        ]},
+        { title: 'Customer money', rows: [
+          row('Wallet', [['GET', '/customer/wallet'], ['GET', '/customer/transactions'], ['GET', '/safehaven/customer/account-balance'], ['POST', '/customer/wallet · /customer/bank-account (setup)']]),
+          row('Pay with points — choose purchase', [['GET', '/customer/purchases?status=OPEN&merchant_id'], ['GET', '/customer/merchant/{id}/spendable']]),
+          row('Pay with points — confirm', [['POST', '/customer/merchant/{id}/pay-with-points {purchase_id}']]),
+          row('Send points to merchant', [['GET', '/customer/merchant/{id}/spendable'], ['POST', '/customer/merchant/{id}/send-points {points_to_use, note}']]),
+          row('Bank transfer', [['GET', '/safehaven/banks'], ['POST', '/safehaven/name-enquiry → sessionId'], ['POST', '/safehaven/transfers/external']]),
+          row('Verify identity', [['POST', '/safehaven/identity/verify {type: BVN, number}']])
+        ]},
+        { title: 'Merchant  [M]', rows: [
+          row('Overview', [['GET', '/merchant/profile'], ['GET', '/merchant/wallet'], ['GET', '/merchant/programs'], ['GET', '/merchant/activities?limit=5']]),
+          row('Programs', [['GET', '/merchant/programs/{id}/balance'], ['GET', '/merchant/programs/{id}/redemption-policy'], ['POST', '/merchant/programs/{id}/close · /settle']]),
+          row('Create program · Create reward', [['POST', '/merchant/programs (PREPAID | POSTPAID)'], ['POST', '/merchant/programs/{id}/rewards']]),
+          row('Find customer · Award', [['GET', '/merchant/customers/lookup (one identifier)'], ['POST', '/merchant/programs/{id}/customers/{cid}/award'], ['POST', '/merchant/programs/{id}/award (by identifier)']]),
+          row('Reverse award', [['POST', '/merchant/programs/{id}/awards/{ledger_entry_id}/reverse']]),
+          row('Giveaways · Promotions · Purchases', [['POST', '/merchant/giveaways · GET …/{id}/status · POST …/close'], ['GET', '/merchant/promos · /promos/{id}'], ['POST', '/merchant/promos · PUT · DELETE /promos/{id}'], ['POST', '/merchant/purchases']]),
+          row('Activity · Business', [['GET', '/merchant/activities (type, program, customer, dates, limit/offset)'], ['POST', '/merchant/wallet/fund · /merchant/verification/company'], ['GET', '/safehaven/merchant/account-balance']])
+        ]}
+      ],
+      gaps: [
+        { t: 'No reward catalog for customers', d: 'Merchants can create rewards, but no endpoint lists them to customers, so redeem has no reward_id to send. Catalog stays “coming soon”.' },
+        { t: 'Profile is read-only', d: 'Only GET /customer/profile exists. No edit, no change-password while signed in.' },
+        { t: 'No transfer status or fee', d: 'The transfer response is the only outcome. No polling endpoint, no fee quote — the result screen shows what the API returned.' },
+        { t: 'No customer top-up endpoint', d: '“Add money” shows the Safe Haven account number to pay into.' },
+        { t: 'No list endpoints for giveaways, rewards or merchant purchases', d: 'Only create + status by id. The app can show items created on this device, or the backend adds list routes.' },
+        { t: 'No sign-up OTP · no notifications', d: 'OTP exists only for password reset. Bell icon removed until a notifications route exists.' },
+        { t: 'Award by identifier creates customers', d: 'If nothing matches, POST …/award creates a new customer. The UI says so before confirming.' },
+        { t: 'Server-only', d: 'SafeHaven token, account listing and subaccount creation stay on the server — never called from the app.' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

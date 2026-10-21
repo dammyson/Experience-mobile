@@ -21,7 +21,7 @@ const Splash = () => {
         dispatch(loadUserFromStorage());
         navigation.replace('TabsNavigation');
       } else if (hasSeenOnboarding) {
-        navigation.replace('Welcome');
+        navigation.replace('Login');
       } else {
         navigation.replace('Onboarding');
       }
@@ -62,7 +62,7 @@ const styles = StyleSheet.create({
     height: 50,
   },
   logoText: {
-    fontFamily: 'PlusJakartaSans-Bold',
+    fontFamily: 'DMSans-Bold',
     fontSize: 40,
     color: theme.TEXT_PRIMARY,
     letterSpacing: 2,

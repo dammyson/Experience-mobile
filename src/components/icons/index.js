@@ -18,3 +18,4 @@ export {default as TopUpIcon} from './TopUpIcon';
 export {default as TransferIcon} from './TransferIcon';
 export {default as WalletIcon} from './WalletIcon';
 export {default as WithdrawIcon} from './WithdrawIcon';
+export {default as Icon} from './Icon';
