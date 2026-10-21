@@ -1,6 +1,5 @@
 import React, {useEffect} from 'react';
 import {View, Text, ScrollView, RefreshControl, StatusBar, TouchableOpacity, StyleSheet} from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
 import {useDispatch, useSelector} from 'react-redux';
 import {useNavigation} from '@react-navigation/native';
 import ScreenBackground from '../../components/layout/ScreenBackground';
@@ -104,21 +103,16 @@ const CustomerProfile = () => {
             onPress={() => navigation.navigate('VerifyIdentity')}
             accessibilityRole="button"
             accessibilityLabel="Verify your identity. Unlock bank transfers, takes about 2 minutes."
-            activeOpacity={0.85}>
-            <LinearGradient
-              colors={['#2B1F5C', colors.surface]}
-              start={{x: 0, y: 0}}
-              end={{x: 1, y: 1}}
-              style={styles.verify}>
-              <View style={styles.verifyIcon}>
-                <Icon name="shield" size={22} color={colors.pending} />
-              </View>
-              <View style={styles.verifyText}>
-                <Text style={styles.verifyTitle}>Verify your identity</Text>
-                <Text style={styles.verifySub}>Unlock bank transfers · takes about 2 minutes</Text>
-              </View>
-              <Icon name="chevronRight" size={18} color={colors.textMuted} />
-            </LinearGradient>
+            activeOpacity={0.85}
+            style={styles.verify}>
+            <View style={styles.verifyIcon}>
+              <Icon name="shield" size={22} color={colors.pending} />
+            </View>
+            <View style={styles.verifyText}>
+              <Text style={styles.verifyTitle}>Verify your identity</Text>
+              <Text style={styles.verifySub}>Unlock bank transfers · takes about 2 minutes</Text>
+            </View>
+            <Icon name="chevronRight" size={18} color={colors.textMuted} />
           </TouchableOpacity>
         )}
 
@@ -210,6 +204,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.card,
     borderWidth: 1,
     borderColor: '#3A2E6E',
+    backgroundColor: '#2B1F5C',
   },
   verifyIcon: {
     width: 42,

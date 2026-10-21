@@ -1,6 +1,5 @@
 import React, {useMemo, useState} from 'react';
 import {View, Text, TextInput, ScrollView, RefreshControl, StatusBar, StyleSheet} from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
 import dayjs from 'dayjs';
 import ScreenBackground from '../../components/layout/ScreenBackground';
 import ScreenHeader from '../../components/layout/ScreenHeader';
@@ -164,7 +163,7 @@ const Rewards = () => {
           </>
         )}
 
-        <LinearGradient colors={['#2B1F5C', colors.surface]} start={{x: 0, y: 0}} end={{x: 1, y: 1}} style={styles.giveaway}>
+        <View style={styles.giveaway}>
           <View style={styles.giveawayText}>
             <Text style={styles.sectionTitleFlat} accessibilityRole="header">
               Have a giveaway code?
@@ -195,7 +194,7 @@ const Rewards = () => {
               {claim.message}
             </Text>
           )}
-        </LinearGradient>
+        </View>
 
         {/* README gap 1: no customer-facing reward catalog endpoint yet */}
         <EmptyState title="Reward catalog coming soon" hint="Until then, spend points with Pay with points." />
@@ -306,6 +305,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     borderWidth: 1,
     borderColor: '#3A2E6E',
+    backgroundColor: '#2B1F5C',
     padding: 16,
     gap: 12,
   },

@@ -53,6 +53,7 @@ const ICONS = {
   // Status
   check: ['m5 12 5 5 9-10'],
   dot: [{circle: {cx: 12, cy: 12, r: 6}}],
+  sync: ['M3 12a9 9 0 0 1 15-6.7L21 3M21 12a9 9 0 0 1-15 6.7L3 21'],
   pending: ['M6 3h12M6 21h12M7 3c0 5 10 5 10 9s-10 4-10 9M17 3c0 5-10 5-10 9s10 4 10 9'],
   failed: ['M6 6l12 12M18 6 6 18'],
 };

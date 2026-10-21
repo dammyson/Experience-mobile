@@ -1,11 +1,10 @@
 import React from 'react';
 import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
 import Clipboard from '@react-native-clipboard/clipboard';
 import {showMessage} from 'react-native-flash-message';
 import Icon from '../icons/Icon';
 import {formatNaira, formatNumber} from '../../utilities/format';
-import {colors, gradients, type, radii} from '../../theme/tokens';
+import {colors, type, radii} from '../../theme/tokens';
 
 /**
  * Brand gradient card with a large balance.
@@ -55,13 +54,7 @@ const BalanceCard = ({
   }
 
   return (
-    <LinearGradient
-      colors={gradients.brandCard.colors}
-      locations={gradients.brandCard.locations}
-      start={gradients.brandCard.start}
-      end={gradients.brandCard.end}
-      style={[styles.card, style]}>
-      <View style={styles.ring} pointerEvents="none" />
+    <View style={[styles.card, style]}>
       <View style={styles.top}>
         <View style={styles.labelBlock}>
           <Text style={styles.label}>{label}</Text>
@@ -91,7 +84,7 @@ const BalanceCard = ({
       )}
 
       {children}
-    </LinearGradient>
+    </View>
   );
 };
 
@@ -99,18 +92,9 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: radii.balance,
     padding: 18,
-    gap: 18,
     overflow: 'hidden',
-  },
-  ring: {
-    position: 'absolute',
-    right: -40,
-    top: -50,
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    borderWidth: 28,
-    borderColor: 'rgba(255,255,255,0.08)',
+    gap: 16,
+    backgroundColor: '#5B3FD9',
   },
   top: {
     flexDirection: 'row',

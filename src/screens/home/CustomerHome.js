@@ -1,5 +1,5 @@
 import React, {useCallback, useEffect, useMemo} from 'react';
-import {View, Text, Image, ScrollView, RefreshControl, StatusBar, TouchableOpacity, StyleSheet} from 'react-native';
+import {View, Text, ScrollView, RefreshControl, StatusBar, TouchableOpacity, StyleSheet} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {useNavigation} from '@react-navigation/native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
@@ -112,15 +112,7 @@ const CustomerHome = () => {
             label="Total loyalty points"
             amount={totalPoints}
             kind="points"
-            caption={`across ${merchantCount} merchant${merchantCount === 1 ? '' : 's'}`}
-            right={
-              <Image
-                source={require('../../assets/images/arena_logo.png')}
-                style={styles.cardLogo}
-                resizeMode="contain"
-                accessibilityIgnoresInvertColors
-              />
-            }>
+            caption={`across ${merchantCount} merchant${merchantCount === 1 ? '' : 's'}`}>
             <TouchableOpacity
               style={styles.walletRow}
               onPress={() => switchTab('Wallet')}
@@ -284,10 +276,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.text,
   },
-  cardLogo: {
-    width: 24,
-    height: 30,
-  },
   walletRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -298,6 +286,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(10,10,15,0.35)',
   },
   walletText: {
+    flex: 1,
     gap: 2,
   },
   walletLabel: {
