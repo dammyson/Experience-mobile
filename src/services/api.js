@@ -359,6 +359,9 @@ const merchantRequest = (merchantId, endpoint, options = {}) =>
   });
 
 export const merchantAPI = {
+  // There's no merchant-side directory endpoint; this is the customer one
+  listMerchants: () => authenticatedRequest('/customer/merchants', {method: 'GET'}),
+
   getWallet: merchantId => merchantRequest(merchantId, '/merchant/wallet', {method: 'GET'}),
 
   getProfile: merchantId => merchantRequest(merchantId, '/merchant/profile', {method: 'GET'}),
@@ -410,8 +413,10 @@ export const merchantAPI = {
       method: 'POST',
       body: JSON.stringify({
         name: program.name,
+        description: program.description || null,
         billing_type: program.billingType,
         ...(program.billingType === 'PREPAID' ? {funding_amount: program.fundingAmount} : {}),
+        currency: program.currency,
         earning_type: 'FIXED_RATE',
         points_per_currency_unit: program.pointsPerCurrencyUnit,
         point_value: program.pointValue,
@@ -487,15 +492,21 @@ export const merchantAPI = {
       body: JSON.stringify({amount}),
     }),
 
-  verifyCompany: (merchantId, {registrationNumber, companyName}) =>
+  // registrationType: 'CAC' | 'BVN' | …
+  verifyCompany: (merchantId, {registrationType = 'CAC', registrationNumber, companyName}) =>
     merchantRequest(merchantId, '/merchant/verification/company', {
       method: 'POST',
       body: JSON.stringify({
-        registration_type: 'CAC',
+        registration_type: registrationType,
         registration_number: registrationNumber,
         company_name: companyName,
+        async_flag: false,
       }),
     }),
+
+  // First-time wallet setup after company verification.
+  createWallet: merchantId =>
+    merchantRequest(merchantId, '/merchant/wallet', {method: 'POST', body: JSON.stringify({})}),
 
   getAccountBalance: merchantId =>
     merchantRequest(merchantId, '/safehaven/merchant/account-balance', {method: 'GET'}),

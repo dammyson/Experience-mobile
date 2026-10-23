@@ -1,13 +1,23 @@
-import React, {useEffect, useState} from 'react';
-import {View, Text, StyleSheet} from 'react-native';
+import React, {useEffect, useMemo, useState} from 'react';
+import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {useDispatch, useSelector} from 'react-redux';
 import FormLayout from '../../components/layout/FormLayout';
-import {ChoiceGrid, ChipGroup, InlineField, KeyValueCard, PrimaryButton, StatusScreen} from '../../components/ui';
+import {
+  ChoiceGrid,
+  ChipGroup,
+  InlineField,
+  KeyValueCard,
+  PickerSheet,
+  PrimaryButton,
+  StatusScreen,
+} from '../../components/ui';
 import Icon from '../../components/icons/Icon';
 import {getMerchantPrograms, getMerchantWallet} from '../../actions/merchantActions';
 import {merchantAPI} from '../../services/api';
 import {useMerchantId, readMerchantProfile} from '../../utilities/merchantData';
+import {toList, getMerchantId, getMerchantName} from '../../utilities/customerData';
+import useRequest from '../../utilities/useRequest';
 import {parseAmount, formatAmountInput} from '../../utilities/transfer';
 import {formatNaira} from '../../utilities/format';
 import {colors, type, radii} from '../../theme/tokens';
@@ -27,10 +37,16 @@ const CreateProgram = () => {
   const merchantId = useMerchantId();
   const {wallet, profile} = useSelector(state => state.merchant);
   const business = readMerchantProfile(profile);
+  const currency = profile?.merchant?.currency || wallet?.currency || 'NGN';
+  // If the directory can't be loaded, points stay redeemable at this business only
+  const directory = useRequest(() => merchantAPI.listMerchants(), []);
 
   const [step, setStep] = useState(1);
   const [billingType, setBillingType] = useState('PREPAID');
   const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [otherMerchantIds, setOtherMerchantIds] = useState([]);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [fundingText, setFundingText] = useState('');
   const [earnText, setEarnText] = useState('1');
   const [valueText, setValueText] = useState('');
@@ -63,6 +79,22 @@ const CreateProgram = () => {
   const available = wallet?.available_balance != null ? Number(wallet.available_balance) : null;
   const overFunding = prepaid && available != null && funding > available;
 
+  // This business is always included and can't be unticked
+  const merchantOptions = useMemo(() => {
+    const others = toList(directory.data, 'merchants')
+      .map(m => ({id: String(getMerchantId(m)), label: getMerchantName(m)}))
+      .filter(m => m.id && m.id !== String(merchantId));
+    return [{id: String(merchantId), label: `${business.name} (you)`, disabled: true}, ...others];
+  }, [directory.data, merchantId, business.name]);
+
+  const redeemableIds = [String(merchantId), ...otherMerchantIds];
+  const otherNames = merchantOptions.filter(m => otherMerchantIds.includes(m.id)).map(m => m.label);
+
+  const toggleMerchant = option =>
+    setOtherMerchantIds(prev =>
+      prev.includes(option.id) ? prev.filter(id => id !== option.id) : [...prev, option.id],
+    );
+
   const step1Valid = !!name.trim() && earn > 0 && pointValue > 0 && (!prepaid || funding > 0);
 
   const handleCreate = async () => {
@@ -70,12 +102,14 @@ const CreateProgram = () => {
     try {
       const response = await merchantAPI.createProgram(merchantId, {
         name: name.trim(),
+        description: description.trim(),
         billingType,
+        currency,
         fundingAmount: funding,
         pointsPerCurrencyUnit: earn,
         pointValue,
         maxRedemptionPercentage: cap,
-        redeemableMerchantIds: [merchantId],
+        redeemableMerchantIds: redeemableIds,
       });
       setCreated(response.data?.program ?? response.data ?? {});
       dispatch(getMerchantPrograms(merchantId, true)).catch(() => {});
@@ -137,10 +171,28 @@ const CreateProgram = () => {
         <Text style={styles.heading} accessibilityRole="header">
           Where and when
         </Text>
+        <View style={styles.merchantCard}>
+          <View style={styles.merchantText}>
+            <Text style={styles.label}>Where points can be spent</Text>
+            <Text style={styles.merchantValue}>
+              {otherNames.length ? `${business.name} + ${otherNames.join(', ')}` : `Only at ${business.name}`}
+            </Text>
+            {!!directory.error && <Text style={styles.merchantHint}>Other merchants couldn't be loaded.</Text>}
+          </View>
+          <TouchableOpacity
+            onPress={() => setPickerOpen(true)}
+            disabled={directory.loading || !!directory.error}
+            accessibilityRole="button"
+            accessibilityLabel="Choose merchants"
+            hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+            <Text style={[styles.link, (directory.loading || !!directory.error) && styles.linkDisabled]}>
+              {directory.loading ? 'Loading…' : 'Choose'}
+            </Text>
+          </TouchableOpacity>
+        </View>
         {/* Only these values are documented today (README gap 8); offer choices once the API supports them */}
         <KeyValueCard
           rows={[
-            {label: 'Where points can be spent', value: `Only at ${business.name}`},
             {label: 'Who can redeem', value: 'Private · your customers'},
             {label: 'Expiry', value: 'Never'},
           ]}
@@ -155,6 +207,17 @@ const CreateProgram = () => {
             </Text>
           </View>
         )}
+        <PickerSheet
+          visible={pickerOpen}
+          title="Where points can be spent"
+          options={merchantOptions}
+          value={redeemableIds}
+          onSelect={toggleMerchant}
+          onClose={() => setPickerOpen(false)}
+          multiple
+          searchPlaceholder="Search merchants"
+          emptyText="No merchants found"
+        />
       </FormLayout>
     );
   }
@@ -185,6 +248,14 @@ const CreateProgram = () => {
 
       <View style={styles.fields}>
         <InlineField label="Program name:" labelWidth={LABEL_WIDTH} value={name} onChangeText={setName} maxLength={60} />
+        <InlineField
+          label="Description:"
+          labelWidth={LABEL_WIDTH}
+          value={description}
+          onChangeText={setDescription}
+          placeholder="Optional"
+          maxLength={160}
+        />
         {prepaid && (
           <InlineField
             label="Funding:"
@@ -281,6 +352,36 @@ const styles = StyleSheet.create({
     flex: 1,
     lineHeight: 18,
     color: '#F7C4CB',
+  },
+  merchantCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 14,
+    borderRadius: radii.card,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.borderCard,
+  },
+  merchantText: {
+    flex: 1,
+    gap: 4,
+  },
+  merchantValue: {
+    ...type.bodyStrong,
+    color: colors.text,
+  },
+  merchantHint: {
+    ...type.caption,
+    color: colors.textMuted,
+  },
+  link: {
+    ...type.label,
+    fontFamily: type.bodyStrong.fontFamily,
+    color: colors.link,
+  },
+  linkDisabled: {
+    color: colors.textMuted,
   },
   error: {
     ...type.captionStrong,

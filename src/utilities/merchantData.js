@@ -182,6 +182,35 @@ export const isPromoActive = promo => String(promo?.status || PROMO_ACTIVE).toUp
 
 // ── Business ───────────────────────────────────────────────────────────────
 
+// GET /merchant/profile: verified means merchant.company_verified plus a
+// latest_verified_company_record
+export const isCompanyVerified = profile =>
+  profile?.merchant?.company_verified === true && profile?.latest_verified_company_record != null;
+
+// The wallet is created alongside the Safe Haven bank account
+export const hasMerchantWallet = profile =>
+  !!profile?.latest_active_bank_account?.wallet_id ||
+  (profile?.bank_accounts ?? []).some(account => account?.wallet_id);
+
+// The active Safe Haven account from GET /merchant/profile, or null
+export const readMerchantBankAccount = profile => {
+  const account =
+    profile?.latest_active_bank_account ??
+    (profile?.bank_accounts ?? []).find(a => a?.is_active) ??
+    null;
+  if (!account?.account_number) {
+    return null;
+  }
+  return {
+    bank: account.bank_name || 'Safe Haven MFB',
+    name: account.account_name || null,
+    number: String(account.account_number),
+    currency: account.currency || 'NGN',
+    status: account.status || (account.is_active ? 'Active' : 'Inactive'),
+    active: account.is_active !== false,
+  };
+};
+
 export const readMerchantProfile = data => {
   const merchant = data?.merchant ?? data ?? {};
   const verification = merchant.verification ?? data?.verification ?? {};
@@ -191,10 +220,13 @@ export const readMerchantProfile = data => {
   return {
     name: merchant.name || 'Your business',
     verified:
+      isCompanyVerified(data) ||
       merchant.is_verified === true ||
       merchant.verified === true ||
       ['VERIFIED', 'APPROVED', 'SUCCESS', 'COMPLETED'].includes(status),
-    registrationNumber: verification.registration_number ?? merchant.registration_number ?? null,
+    registrationType: merchant.company_registration_type ?? null,
+    registrationNumber:
+      merchant.company_registration_number ?? verification.registration_number ?? merchant.registration_number ?? null,
     companyName: verification.company_name ?? merchant.company_name ?? null,
   };
 };

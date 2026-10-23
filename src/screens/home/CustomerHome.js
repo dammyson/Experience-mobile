@@ -112,7 +112,10 @@ const CustomerHome = () => {
             label="Total loyalty points"
             amount={totalPoints}
             kind="points"
-            caption={`across ${merchantCount} merchant${merchantCount === 1 ? '' : 's'}`}>
+            caption={`across ${merchantCount} merchant${merchantCount === 1 ? '' : 's'}`}
+            onRefresh={() =>
+              Promise.all([dispatch(getDashboard(true)).catch(() => {}), points.refresh(), wallet.refresh()])
+            }>
             <TouchableOpacity
               style={styles.walletRow}
               onPress={() => switchTab('Wallet')}

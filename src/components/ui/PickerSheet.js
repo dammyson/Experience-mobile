@@ -2,6 +2,7 @@ import React, {useMemo, useState} from 'react';
 import {Modal, View, Text, FlatList, Pressable, TouchableOpacity, StyleSheet} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import SearchInput from './SearchInput';
+import PrimaryButton from './PrimaryButton';
 import Icon from '../icons/Icon';
 import {colors, type, radii, layout} from '../../theme/tokens';
 
@@ -11,14 +12,25 @@ import {colors, type, radii, layout} from '../../theme/tokens';
  * Props:
  *   visible     boolean
  *   title       string
- *   options     [{id, label}]
- *   value       selected id
- *   onSelect    (option) => void
+ *   options     [{id, label, disabled?}]
+ *   value       selected id, or an array of ids when `multiple`
+ *   onSelect    (option) => void — in `multiple` mode, called on each toggle
+ *   multiple    boolean — keep the sheet open and check several; adds a Done button
  *   onClose     () => void
  *   searchPlaceholder string
  *   emptyText   string
  */
-const PickerSheet = ({visible, title, options, value, onSelect, onClose, searchPlaceholder = 'Search', emptyText = 'No matches'}) => {
+const PickerSheet = ({
+  visible,
+  title,
+  options,
+  value,
+  onSelect,
+  onClose,
+  multiple = false,
+  searchPlaceholder = 'Search',
+  emptyText = 'No matches',
+}) => {
   const insets = useSafeAreaInsets();
   const [query, setQuery] = useState('');
 
@@ -52,16 +64,19 @@ const PickerSheet = ({visible, title, options, value, onSelect, onClose, searchP
             keyExtractor={item => String(item.id)}
             keyboardShouldPersistTaps="handled"
             renderItem={({item}) => {
-              const selected = item.id === value;
+              const selected = multiple ? value.includes(item.id) : item.id === value;
               return (
                 <TouchableOpacity
                   style={styles.option}
                   onPress={() => {
-                    setQuery('');
+                    if (!multiple) {
+                      setQuery('');
+                    }
                     onSelect(item);
                   }}
-                  accessibilityRole="button"
-                  accessibilityState={{selected}}
+                  disabled={item.disabled}
+                  accessibilityRole={multiple ? 'checkbox' : 'button'}
+                  accessibilityState={multiple ? {checked: selected, disabled: !!item.disabled} : {selected}}
                   activeOpacity={0.7}>
                   <Text style={[styles.optionLabel, selected && styles.optionSelected]}>{item.label}</Text>
                   {selected && <Icon name="check" size={18} color={colors.link} strokeWidth={2.4} />}
@@ -70,6 +85,7 @@ const PickerSheet = ({visible, title, options, value, onSelect, onClose, searchP
             }}
             ListEmptyComponent={<Text style={styles.empty}>{emptyText}</Text>}
           />
+          {multiple && <PrimaryButton title="Done" onPress={close} />}
         </View>
       </View>
     </Modal>

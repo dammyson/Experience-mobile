@@ -151,6 +151,7 @@ const Wallet = () => {
               amount={account.balance ?? 0}
               currency={account.currency}
               account={account.number ? {bank: account.bank, name: account.name, number: account.number} : null}
+              onRefresh={wallet.refresh}
             />
             <View style={styles.actions}>
               <View style={styles.action}>

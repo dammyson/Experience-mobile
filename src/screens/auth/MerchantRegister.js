@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {View, Text, StyleSheet} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
+import {useDispatch} from 'react-redux';
 import FormLayout from '../../components/layout/FormLayout';
 import {
   AppInput,
@@ -13,6 +14,7 @@ import {
 } from '../../components/ui';
 import {toNigerianPhone, isNigerianPhone} from '../../utilities/format';
 import {authAPI} from '../../services/api';
+import {login} from '../../actions/authActions';
 import {colors, type, radii} from '../../theme/tokens';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -39,6 +41,7 @@ const ReadOnlyField = ({label, value}) => (
 
 const MerchantRegister = () => {
   const navigation = useNavigation();
+  const dispatch = useDispatch();
   const [step, setStep] = useState(1);
   const [done, setDone] = useState(false);
   const [error, setError] = useState('');
@@ -63,7 +66,8 @@ const MerchantRegister = () => {
   useEffect(
     () =>
       navigation.addListener('beforeRemove', e => {
-        if (step === 2 && !done) {
+        // A RESET is the post-registration hand-off, not the user going back
+        if (step === 2 && !done && e.data.action.type !== 'RESET') {
           e.preventDefault();
           setStep(1);
         }
@@ -120,9 +124,21 @@ const MerchantRegister = () => {
           password: admin.password,
         },
       });
-      setDone(true);
     } catch (err) {
       setError(err.message || 'Registration failed. Please try again.');
+      return;
+    }
+
+    // Sign the admin straight in so they can verify the business; if that
+    // fails, fall back to the "sign in" success screen
+    try {
+      await dispatch(login(admin.email.trim(), admin.password, 'merchant'));
+      navigation.reset({
+        index: 0,
+        routes: [{name: 'MerchantVerification', params: {businessName: business.name.trim()}}],
+      });
+    } catch (err) {
+      setDone(true);
     }
   };
 
