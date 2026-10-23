@@ -156,9 +156,9 @@ export const dayLabel = value => {
 
 export const readGiveaway = data => {
   const g = data?.giveaway ?? data ?? {};
-  const maxClaims = num(g.max_claims ?? g.maximum_claims ?? g.limit);
-  const claims = num(g.claims_count ?? g.claimed_count ?? g.total_claims ?? g.claims) ?? 0;
-  const perClaim = num(g.points_per_claim ?? g.points);
+  const maxClaims = num(g.max_beneficiaries ?? g.max_claims ?? g.maximum_claims ?? g.limit);
+  const claims = num(g.beneficiaries_count ?? g.claims_count ?? g.claimed_count ?? g.total_claims ?? g.claims) ?? 0;
+  const perClaim = num(g.points_per_customer ?? g.points_per_claim ?? g.points);
   return {
     id: g.id ?? g.giveaway_id,
     name: g.name || g.title || 'Giveaway',
@@ -172,6 +172,8 @@ export const readGiveaway = data => {
     expiry: g.expires_at ?? null,
   };
 };
+
+export const readGiveaways = data => toList(data, 'giveaways').map(g => ({...readGiveaway(g), raw: g}));
 
 export const readPromos = data => toList(data, 'promos');
 

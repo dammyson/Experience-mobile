@@ -9,8 +9,15 @@ import {ChoiceTile, ConfirmSheet, EmptyState, SkeletonList} from '../../componen
 import Icon from '../../components/icons/Icon';
 import {merchantAPI} from '../../services/api';
 import useRequest from '../../utilities/useRequest';
-import {useMerchantId, readPromos, isPromoActive, PROMO_ACTIVE, PROMO_INACTIVE} from '../../utilities/merchantData';
-import {getLocalGiveaways} from '../../utilities/localGiveaways';
+import {
+  useMerchantId,
+  readPromos,
+  readGiveaways,
+  isPromoActive,
+  PROMO_ACTIVE,
+  PROMO_INACTIVE,
+} from '../../utilities/merchantData';
+import {formatPts} from '../../utilities/format';
 import {colors, type, radii, layout} from '../../theme/tokens';
 
 const SmallButton = ({label, onPress, accessibilityLabel, children}) => (
@@ -29,23 +36,29 @@ const Promotions = () => {
   const navigation = useNavigation();
   const merchantId = useMerchantId();
   const promosReq = useRequest(() => merchantAPI.getPromos(merchantId), [merchantId]);
-  const [giveaways, setGiveaways] = useState([]);
+  const giveawaysReq = useRequest(() => merchantAPI.getGiveaways(merchantId), [merchantId]);
   const [deleting, setDeleting] = useState(null);
 
   // Reload after creating / editing on the next screens
   const hasFocused = useRef(false);
   const {reload} = promosReq;
+  const {reload: reloadGiveaways} = giveawaysReq;
   useFocusEffect(
     useCallback(() => {
-      getLocalGiveaways(merchantId).then(setGiveaways);
       if (hasFocused.current) {
         reload();
+        reloadGiveaways();
       }
       hasFocused.current = true;
-    }, [merchantId, reload]),
+    }, [reload, reloadGiveaways]),
   );
 
   const promos = readPromos(promosReq.data);
+  const giveaways = readGiveaways(giveawaysReq.data);
+  const refresh = () => {
+    promosReq.refresh();
+    giveawaysReq.refresh();
+  };
 
   // One status change per promo at a time
   const toggling = useRef(new Set());
@@ -86,7 +99,13 @@ const Promotions = () => {
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={promosReq.refreshing} onRefresh={promosReq.refresh} tintColor={colors.link} />}>
+        refreshControl={
+          <RefreshControl
+            refreshing={promosReq.refreshing || giveawaysReq.refreshing}
+            onRefresh={refresh}
+            tintColor={colors.link}
+          />
+        }>
         <View style={styles.actions}>
           <View style={styles.action}>
             <ChoiceTile
@@ -156,28 +175,41 @@ const Promotions = () => {
           <Text style={styles.sectionTitle} accessibilityRole="header">
             Giveaways
           </Text>
-          {/* README gap 5: no list endpoint, so only giveaways created on this device are shown */}
-          {giveaways.length === 0 ? (
-            <EmptyState title="No giveaways on this device" hint="Giveaways you create here show up in this list." />
+          {giveawaysReq.loading ? (
+            <SkeletonList rows={2} />
+          ) : giveawaysReq.error ? (
+            <RequestState error={giveawaysReq.error} onRetry={reloadGiveaways} />
+          ) : giveaways.length === 0 ? (
+            <EmptyState title="No giveaways yet" hint="Create a giveaway code for customers to claim points with." />
           ) : (
             giveaways.map(g => (
               <TouchableOpacity
                 key={g.id}
                 style={styles.giveaway}
-                onPress={() => navigation.navigate('Giveaway', {giveawayId: g.id, name: g.name})}
+                onPress={() => navigation.navigate('Giveaway', {giveawayId: g.id, name: g.name, initial: g.raw})}
                 accessibilityRole="button"
                 activeOpacity={0.8}>
-                <Icon name="ticket" size={18} color={colors.points} />
+                <Icon name="ticket" size={18} color={g.active ? colors.points : colors.textMuted} />
                 <View style={styles.promoText}>
                   <Text style={styles.promoTitle}>{g.name}</Text>
-                  {!!g.code && <Text style={styles.promoDesc}>{g.code}</Text>}
+                  <Text style={styles.promoDesc} numberOfLines={1}>
+                    {[
+                      g.code,
+                      g.perClaim != null && `${formatPts(g.perClaim)} each`,
+                      g.maxClaims != null && `${g.claims} / ${g.maxClaims} claimed`,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </Text>
+                </View>
+                <View style={[styles.status, g.active ? styles.statusOn : styles.statusOff]}>
+                  <Text style={[styles.statusText, {color: g.active ? colors.successText : colors.textSecondary}]}>
+                    {g.active ? 'Active' : 'Closed'}
+                  </Text>
                 </View>
                 <Icon name="chevronRight" size={16} color={colors.textMuted} />
               </TouchableOpacity>
             ))
-          )}
-          {giveaways.length > 0 && (
-            <Text style={styles.footnote}>Only giveaways created on this device are listed.</Text>
           )}
         </View>
       </ScrollView>
@@ -286,10 +318,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.borderCard,
-  },
-  footnote: {
-    ...type.caption,
-    color: colors.textMuted,
   },
 });
 

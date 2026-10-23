@@ -450,16 +450,42 @@ export const merchantAPI = {
     }),
 
   // TODO: confirm the giveaway body with the backend — the README only names the route.
-  createGiveaway: (merchantId, {programId, name, pointsPerClaim, maxClaims}) =>
+  // giveawayCode is optional; the server generates one when it's null
+  createGiveaway: (
+    merchantId,
+    {name, description, currency, pointsPerCurrencyUnit, pointsPerCustomer, maxBeneficiaries, giveawayCode, redeemableMerchantIds},
+  ) =>
     merchantRequest(merchantId, '/merchant/giveaways', {
       method: 'POST',
       body: JSON.stringify({
-        program_id: programId,
         name,
-        points_per_claim: pointsPerClaim,
-        max_claims: maxClaims,
+        description: description || null,
+        currency,
+        points_per_currency_unit: pointsPerCurrencyUnit,
+        points_per_customer: pointsPerCustomer,
+        max_beneficiaries: maxBeneficiaries,
+        giveaway_code: giveawayCode || null,
+        redeemable_merchant_ids: redeemableMerchantIds,
+        expiration_type: 'NEVER',
+        redemption_mode: 'PRIVATE',
       }),
     }),
+
+  // Points come from the program's funding; expirationDays is optional
+  createProgramGiveaway: (merchantId, programId, {name, description, pointsPerCustomer, maxBeneficiaries, giveawayCode, expirationDays}) =>
+    merchantRequest(merchantId, `/merchant/programs/${programId}/giveaways`, {
+      method: 'POST',
+      body: JSON.stringify({
+        name,
+        description: description || null,
+        points_per_customer: pointsPerCustomer,
+        max_beneficiaries: maxBeneficiaries,
+        giveaway_code: giveawayCode || null,
+        ...(expirationDays ? {expiration_days: expirationDays} : {}),
+      }),
+    }),
+
+  getGiveaways: merchantId => merchantRequest(merchantId, '/merchant/giveaways', {method: 'GET'}),
 
   getGiveawayStatus: (merchantId, giveawayId) =>
     merchantRequest(merchantId, `/merchant/giveaways/${giveawayId}/status`, {method: 'GET'}),
