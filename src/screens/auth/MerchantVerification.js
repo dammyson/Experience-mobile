@@ -33,7 +33,7 @@ const MerchantVerification = () => {
   const dispatch = useDispatch();
   const merchantId = useMerchantId();
 
-  const [registrationType, setRegistrationType] = useState('CAC');
+  const [registrationType, setRegistrationType] = useState(REGISTRATION_TYPES[0].id);
   const [registrationNumber, setRegistrationNumber] = useState('');
   const [companyName, setCompanyName] = useState(route.params?.businessName || '');
   const [error, setError] = useState('');
