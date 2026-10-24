@@ -98,7 +98,7 @@ const CustomerProfile = () => {
           </View>
         </View>
 
-        {!verified && (
+        {/* {!verified && (
           <TouchableOpacity
             onPress={() => navigation.navigate('VerifyIdentity')}
             accessibilityRole="button"
@@ -114,19 +114,19 @@ const CustomerProfile = () => {
             </View>
             <Icon name="chevronRight" size={18} color={colors.textMuted} />
           </TouchableOpacity>
-        )}
+        )} */}
 
         {/* README gap 2: profile is read-only, so no edit screen */}
         <SettingsGroup
           title="Account"
           rows={[
             {label: 'Personal details', value: 'View only', icon: 'profile'},
-            {
-              label: 'Bank account',
-              value: bank?.bank_name || 'Safe Haven',
-              icon: 'bank',
-              onPress: () => switchTab('Wallet'),
-            },
+            // {
+            //   label: 'Bank account',
+            //   value: bank?.bank_name || 'Safe Haven',
+            //   icon: 'bank',
+            //   onPress: () => switchTab('Wallet'),
+            // },
             {
               label: 'Favorite merchants',
               value: favoriteCount,

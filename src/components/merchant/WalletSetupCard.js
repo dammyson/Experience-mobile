@@ -46,7 +46,14 @@ const WalletSetupCard = ({mode, businessName}) => {
       await dispatch(getMerchantProfile(merchantId, true));
       await dispatch(getMerchantWallet(merchantId, true));
     } catch (err) {
-      setError(err.message || "We couldn't create your wallet. Try again.");
+      const msg = err.message || '';
+      if (/director.*match|match.*director/i.test(msg)) {
+        setError('Business verification failed. Please check your company details match official records.');
+      } else if (/subaccount|safehaven/i.test(msg)) {
+        setError('Unable to create wallet account. Please try again or contact support.');
+      } else {
+        setError(msg || "We couldn't create your wallet. Try again.");
+      }
     }
   };
 
