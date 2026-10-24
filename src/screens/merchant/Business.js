@@ -1,21 +1,27 @@
 import React, {useCallback, useEffect, useState} from 'react';
 import {View, Text, ScrollView, RefreshControl, StatusBar, TouchableOpacity, StyleSheet} from 'react-native';
+import Clipboard from '@react-native-clipboard/clipboard';
 import {useDispatch, useSelector} from 'react-redux';
 import {useNavigation} from '@react-navigation/native';
 import {showMessage} from 'react-native-flash-message';
 import ScreenBackground from '../../components/layout/ScreenBackground';
 import ScreenHeader from '../../components/layout/ScreenHeader';
 import RequestState from '../../components/layout/RequestState';
-import {BalanceCard, Button, ConfirmSheet, InlineField, KeyValueList, SkeletonCard} from '../../components/ui';
+import {BalanceCard, Button, InlineField, KeyValueList, SkeletonCard} from '../../components/ui';
 import Icon from '../../components/icons/Icon';
+import WalletSetupCard from '../../components/merchant/WalletSetupCard';
 import {getMerchantProfile, getMerchantWallet} from '../../actions/merchantActions';
 import {logout} from '../../actions/authActions';
 import {merchantAPI} from '../../services/api';
 import useRequest from '../../utilities/useRequest';
 import {readWalletAccount} from '../../utilities/customerData';
-import {useMerchantId, readMerchantProfile} from '../../utilities/merchantData';
-import {parseAmount, formatAmountInput} from '../../utilities/transfer';
-import {formatNaira} from '../../utilities/format';
+import {
+  useMerchantId,
+  readMerchantProfile,
+  readMerchantBankAccount,
+  isCompanyVerified,
+  hasMerchantWallet,
+} from '../../utilities/merchantData';
 import {TAB_SCROLL_INSET} from '../../utilities/platform';
 import {colors, type, radii, layout} from '../../theme/tokens';
 
@@ -40,14 +46,15 @@ const Business = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const merchantId = useMerchantId();
-  const {wallet, walletLoading, profile, error} = useSelector(state => state.merchant);
+  const {wallet, walletLoading, profile, profileLoading, error} = useSelector(state => state.merchant);
+  const companyVerified = isCompanyVerified(profile);
+  const hasWallet = hasMerchantWallet(profile);
   const safeHaven = useRequest(
-    () => (merchantId ? merchantAPI.getAccountBalance(merchantId) : Promise.resolve({data: null})),
-    [merchantId],
+    () =>
+      merchantId && companyVerified ? merchantAPI.getAccountBalance(merchantId) : Promise.resolve({data: null}),
+    [merchantId, companyVerified],
   );
 
-  const [fundOpen, setFundOpen] = useState(false);
-  const [fundText, setFundText] = useState('');
   const [rcNumber, setRcNumber] = useState('');
   const [companyName, setCompanyName] = useState('');
   const [verification, setVerification] = useState(null); // {status: 'verified' | 'failed', message}
@@ -66,25 +73,17 @@ const Business = () => {
     load();
   }, [load]);
 
+  // getMerchantWallet skips the call until the profile says the company is verified
+  useEffect(() => {
+    if (merchantId && companyVerified && hasWallet) {
+      dispatch(getMerchantWallet(merchantId)).catch(() => {});
+    }
+  }, [dispatch, merchantId, companyVerified, hasWallet]);
+
   const business = readMerchantProfile(profile);
   const account = readWalletAccount(wallet, safeHaven.data);
-  const verified = business.verified || verification?.status === 'verified';
-  const fundAmount = parseAmount(fundText);
-
-  const handleFund = async () => {
-    try {
-      await merchantAPI.fundWallet(merchantId, {amount: fundAmount});
-      setFundOpen(false);
-      setFundText('');
-      // The fund response doesn't say whether money has settled, so don't claim it has
-      showMessage({message: `Funding of ${formatNaira(fundAmount)} submitted`, type: 'success'});
-      load(true);
-      safeHaven.refresh();
-    } catch (err) {
-      setFundOpen(false);
-      showMessage({message: err.message || "The wallet couldn't be funded.", type: 'danger'});
-    }
-  };
+  const bankAccount = readMerchantBankAccount(profile);
+  const verified = business.verified || companyVerified || verification?.status === 'verified';
 
   const handleVerify = async () => {
     try {
@@ -105,6 +104,18 @@ const Business = () => {
     } catch (err) {
       setVerification({status: 'failed', message: err.message || 'Verification failed. Check the details and try again.'});
     }
+  };
+
+  // Balance card refresh: profile first, since it gates the wallet call
+  const refreshWallet = () =>
+    Promise.all([
+      dispatch(getMerchantProfile(merchantId, true)).then(() => dispatch(getMerchantWallet(merchantId, true))),
+      safeHaven.refresh(),
+    ]);
+
+  const copyAccountNumber = () => {
+    Clipboard.setString(bankAccount.number);
+    showMessage({message: 'Account number copied', type: 'success'});
   };
 
   const handleSignOut = async () => {
@@ -130,8 +141,14 @@ const Business = () => {
             tintColor={colors.link}
           />
         }>
-        {walletLoading && !wallet ? (
+        {(profileLoading && !profile) || (walletLoading && !wallet) ? (
           <SkeletonCard height={190} />
+        ) : !profile && error ? (
+          <RequestState error={error} onRetry={() => load(true)} />
+        ) : !companyVerified ? (
+          <WalletSetupCard mode="verify" businessName={business.name} />
+        ) : !hasWallet ? (
+          <WalletSetupCard mode="create" />
         ) : !wallet && error ? (
           <RequestState error={error} onRetry={() => load(true)} />
         ) : (
@@ -146,16 +163,48 @@ const Business = () => {
                 </View>
               )
             }
-            account={account.number ? {bank: account.bank, name: account.name || business.name, number: account.number} : null}>
-            <TouchableOpacity
-              style={styles.fundBtn}
-              onPress={() => setFundOpen(true)}
-              accessibilityRole="button"
-              activeOpacity={0.85}>
-              <Icon name="plus" size={16} color={colors.white} strokeWidth={2.2} />
-              <Text style={styles.fundText}>Fund wallet</Text>
-            </TouchableOpacity>
-          </BalanceCard>
+            account={account.number ? {bank: account.bank, name: account.name || business.name, number: account.number} : null}
+            onRefresh={refreshWallet}
+          />
+        )}
+
+        {!!bankAccount && (
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <Text style={styles.cardTitle} accessibilityRole="header">
+                Bank account
+              </Text>
+              <View style={[styles.verifiedChip, !bankAccount.active && styles.inactiveChip]}>
+                <Text style={[styles.verifiedText, !bankAccount.active && styles.inactiveText]}>
+                  {bankAccount.status}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.accountRow}>
+              <View style={styles.accountText}>
+                <Text style={styles.cardHint}>Account number</Text>
+                <Text style={styles.accountNumber} selectable>
+                  {bankAccount.number.replace(/(\d{4})(\d{3})(\d+)/, '$1 $2 $3')}
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={copyAccountNumber}
+                style={styles.copyBtn}
+                accessibilityRole="button"
+                accessibilityLabel="Copy account number"
+                hitSlop={{top: 6, bottom: 6, left: 6, right: 6}}>
+                <Icon name="copy" size={18} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+            <KeyValueList
+              rows={[
+                {label: 'Bank', value: bankAccount.bank},
+                bankAccount.name && {label: 'Account name', value: bankAccount.name},
+                {label: 'Currency', value: bankAccount.currency},
+              ]}
+            />
+            <Text style={styles.cardHint}>Transfer to this account to fund your business wallet.</Text>
+          </View>
         )}
 
         <View style={styles.card}>
@@ -174,7 +223,7 @@ const Business = () => {
           {verified ? (
             <KeyValueList
               rows={[
-                {label: 'Registration type', value: 'CAC'},
+                {label: 'Registration type', value: business.registrationType || 'CAC'},
                 (business.registrationNumber || rcNumber) && {
                   label: 'RC number',
                   value: business.registrationNumber || rcNumber,
@@ -210,29 +259,6 @@ const Business = () => {
           <LinkRow label="Sign out" danger onPress={handleSignOut} />
         </View>
       </ScrollView>
-
-      <ConfirmSheet
-        visible={fundOpen}
-        title="Fund wallet"
-        hero={
-          <InlineField
-            label="Amount:"
-            labelWidth={76}
-            value={fundText}
-            onChangeText={text => setFundText(formatAmountInput(text))}
-            placeholder="₦0"
-            keyboardType="decimal-pad"
-            strong
-            valid={fundAmount > 0}
-          />
-        }
-        note="Your balance updates once the funding is confirmed."
-        editLabel="Cancel"
-        confirmLabel={fundAmount > 0 ? `Fund ${formatNaira(fundAmount)}` : 'Fund'}
-        confirmDisabled={!(fundAmount > 0)}
-        onConfirm={handleFund}
-        onClose={() => setFundOpen(false)}
-      />
     </ScreenBackground>
   );
 };
@@ -252,19 +278,6 @@ const styles = StyleSheet.create({
   activeText: {
     ...type.captionStrong,
     color: '#7FF0C8',
-  },
-  fundBtn: {
-    height: 44,
-    borderRadius: radii.input,
-    backgroundColor: 'rgba(10,10,15,0.3)',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  fundText: {
-    ...type.bodyStrong,
-    color: colors.white,
   },
   card: {
     padding: 16,
@@ -299,6 +312,37 @@ const styles = StyleSheet.create({
   verifiedText: {
     ...type.captionStrong,
     color: colors.successText,
+  },
+  inactiveChip: {
+    backgroundColor: colors.surfaceRaised,
+  },
+  inactiveText: {
+    color: colors.textMuted,
+  },
+  accountRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  accountText: {
+    flex: 1,
+    gap: 4,
+  },
+  accountNumber: {
+    fontFamily: type.balance.fontFamily,
+    fontSize: 20,
+    letterSpacing: 0.5,
+    color: colors.text,
+  },
+  copyBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: radii.input,
+    backgroundColor: colors.surfaceRaised,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   error: {
     ...type.captionStrong,

@@ -8,12 +8,20 @@ import RequestState from '../../components/layout/RequestState';
 import {BalanceCard, ChoiceTile, EmptyState, SkeletonCard, SkeletonList} from '../../components/ui';
 import Icon from '../../components/icons/Icon';
 import ProgramCard from '../../components/merchant/ProgramCard';
+import WalletSetupCard from '../../components/merchant/WalletSetupCard';
 import {useTabContext} from '../../navigations/TabContext';
 import {getMerchantProfile, getMerchantPrograms, getMerchantWallet} from '../../actions/merchantActions';
 import {merchantAPI} from '../../services/api';
 import useRequest from '../../utilities/useRequest';
 import useProgramBalances from '../../utilities/useProgramBalances';
-import {useMerchantId, readPrograms, readMerchantProfile, isOpen} from '../../utilities/merchantData';
+import {
+  useMerchantId,
+  readPrograms,
+  readMerchantProfile,
+  isOpen,
+  isCompanyVerified,
+  hasMerchantWallet,
+} from '../../utilities/merchantData';
 import {initials} from '../../utilities/format';
 import {TAB_SCROLL_INSET} from '../../utilities/platform';
 import {colors, type, layout} from '../../theme/tokens';
@@ -32,11 +40,15 @@ const Overview = () => {
   const {switchTab} = useTabContext();
   const merchantId = useMerchantId();
   const user = useSelector(state => state.auth.user);
-  const {wallet, walletLoading, profile, programs, programsLoading, error} = useSelector(state => state.merchant);
+  const {wallet, walletLoading, profile, profileLoading, programs, programsLoading, error} = useSelector(
+    state => state.merchant,
+  );
+  const verified = isCompanyVerified(profile);
+  const hasWallet = hasMerchantWallet(profile);
 
   const safeHaven = useRequest(
-    () => (merchantId ? merchantAPI.getAccountBalance(merchantId) : Promise.resolve({data: null})),
-    [merchantId],
+    () => (merchantId && verified ? merchantAPI.getAccountBalance(merchantId) : Promise.resolve({data: null})),
+    [merchantId, verified],
   );
 
   const load = useCallback(
@@ -45,8 +57,11 @@ const Overview = () => {
         return;
       }
       dispatch(getMerchantProfile(merchantId, force)).catch(() => {});
-      dispatch(getMerchantWallet(merchantId, force)).catch(() => {});
       dispatch(getMerchantPrograms(merchantId, force)).catch(() => {});
+      // On first load the effect below fetches the wallet once the profile says verified
+      if (force) {
+        dispatch(getMerchantWallet(merchantId, true)).catch(() => {});
+      }
     },
     [dispatch, merchantId],
   );
@@ -54,6 +69,14 @@ const Overview = () => {
   useEffect(() => {
     load();
   }, [load]);
+
+  // The wallet is only fetched once the company is verified, which can also
+  // happen on another screen
+  useEffect(() => {
+    if (merchantId && verified && hasWallet) {
+      dispatch(getMerchantWallet(merchantId)).catch(() => {});
+    }
+  }, [dispatch, merchantId, verified, hasWallet]);
 
   const programList = useMemo(() => readPrograms(programs).filter(isOpen).slice(0, 3), [programs]);
   const {balances, reload: reloadBalances} = useProgramBalances(merchantId, programList);
@@ -66,6 +89,13 @@ const Overview = () => {
   );
 
   const business = readMerchantProfile(profile);
+  // Balance card refresh: profile first, since it gates the wallet call
+  const refreshWallet = () =>
+    Promise.all([
+      dispatch(getMerchantProfile(merchantId, true)).then(() => dispatch(getMerchantWallet(merchantId, true))),
+      safeHaven.refresh(),
+    ]);
+
   const refresh = () => {
     load(true);
     safeHaven.refresh();
@@ -92,12 +122,22 @@ const Overview = () => {
           </View>
         </View>
 
-        {walletLoading && !wallet ? (
+        {(profileLoading && !profile) || (walletLoading && !wallet) ? (
           <SkeletonCard height={120} />
+        ) : !profile && error ? (
+          <RequestState error={error} onRetry={() => load(true)} />
+        ) : !verified ? (
+          <WalletSetupCard mode="verify" businessName={business.name} />
+        ) : !hasWallet ? (
+          <WalletSetupCard mode="create" />
         ) : !wallet && error ? (
           <RequestState error={error} onRetry={() => load(true)} />
         ) : (
-          <BalanceCard label="Business wallet" amount={wallet?.available_balance ?? 0} currency={wallet?.currency}>
+          <BalanceCard
+            label="Business wallet"
+            amount={wallet?.available_balance ?? 0}
+            currency={wallet?.currency}
+            onRefresh={refreshWallet}>
             {!safeHaven.loading && (
               <View style={styles.statusRow}>
                 <View style={[styles.statusDot, safeHaven.error && styles.statusDotOff]} />

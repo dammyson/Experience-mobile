@@ -1,5 +1,5 @@
-import React from 'react';
-import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
+import React, {useEffect, useRef, useState} from 'react';
+import {View, Text, TouchableOpacity, ActivityIndicator, StyleSheet} from 'react-native';
 import Clipboard from '@react-native-clipboard/clipboard';
 import {showMessage} from 'react-native-flash-message';
 import Icon from '../icons/Icon';
@@ -17,6 +17,8 @@ import {colors, type, radii} from '../../theme/tokens';
  *   caption   string — small line under the amount ("across 6 merchants")
  *   account   {bank, name, number} — inner account row with a copy button
  *   right     ReactNode — top-right slot (e.g. the logo)
+ *   onRefresh () => void | Promise — shows a small refresh icon by the label;
+ *             a spinner replaces it until a returned promise settles
  *   children  ReactNode — extra content at the bottom (e.g. a link row)
  *   style     extra style
  */
@@ -28,9 +30,33 @@ const BalanceCard = ({
   caption,
   account,
   right,
+  onRefresh,
   children,
   style,
 }) => {
+  const [refreshing, setRefreshing] = useState(false);
+  const mounted = useRef(true);
+
+  useEffect(() => () => {
+    mounted.current = false;
+  }, []);
+
+  const handleRefresh = async () => {
+    if (refreshing) {
+      return;
+    }
+    setRefreshing(true);
+    try {
+      await onRefresh();
+    } catch (e) {
+      // Screens show their own errors
+    } finally {
+      if (mounted.current) {
+        setRefreshing(false);
+      }
+    }
+  };
+
   const copyAccount = () => {
     Clipboard.setString(account.number);
     showMessage({message: 'Account number copied', type: 'success'});
@@ -57,7 +83,25 @@ const BalanceCard = ({
     <View style={[styles.card, style]}>
       <View style={styles.top}>
         <View style={styles.labelBlock}>
-          <Text style={styles.label}>{label}</Text>
+          <View style={styles.labelRow}>
+            <Text style={styles.label}>{label}</Text>
+            {!!onRefresh && (
+              <TouchableOpacity
+                onPress={handleRefresh}
+                disabled={refreshing}
+                accessibilityRole="button"
+                accessibilityLabel={`Refresh ${label}`}
+                accessibilityState={{busy: refreshing}}
+                hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+                activeOpacity={0.7}>
+                {refreshing ? (
+                  <ActivityIndicator size="small" color={colors.textOnBrand} style={styles.refreshIcon} />
+                ) : (
+                  <Icon name="sync" size={14} color={colors.textOnBrand} strokeWidth={2.2} />
+                )}
+              </TouchableOpacity>
+            )}
+          </View>
           {display}
           {!!caption && <Text style={styles.caption}>{caption}</Text>}
         </View>
@@ -105,9 +149,19 @@ const styles = StyleSheet.create({
     gap: 4,
     flexShrink: 1,
   },
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   label: {
     ...type.label,
     color: colors.textOnBrand,
+  },
+  refreshIcon: {
+    width: 14,
+    height: 14,
+    transform: [{scale: 0.7}],
   },
   amount: {
     ...type.balance,

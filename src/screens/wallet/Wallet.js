@@ -13,7 +13,6 @@ import {
   ChipGroup,
   ConfirmSheet,
   EmptyState,
-  SkeletonCard,
   SkeletonList,
 } from '../../components/ui';
 import Icon from '../../components/icons/Icon';
@@ -63,9 +62,12 @@ const TransactionCard = ({item, onDetails}) => (
 const Wallet = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const {transactions, transactionsLoading} = useSelector(state => state.customer);
+  const {dashboard, transactions, transactionsLoading} = useSelector(state => state.customer);
   const wallet = useWalletAccount();
   const pointsReq = useRequest(() => customerAPI.getPointsByMerchant(), []);
+
+  const totalPoints = dashboard?.wallet_summary?.total_points ?? pointsReq.data?.total_points ?? 0;
+  const programCount = dashboard?.wallet_summary?.program_count ?? pointsReq.data?.merchant_count ?? 0;
   const [filter, setFilter] = useState('all');
   const [txError, setTxError] = useState(null);
   const [addMoneyOpen, setAddMoneyOpen] = useState(false);
@@ -140,47 +142,44 @@ const Wallet = () => {
         refreshControl={
           <RefreshControl refreshing={wallet.refreshing} onRefresh={refresh} tintColor={colors.link} />
         }>
-        {wallet.loading ? (
-          <SkeletonCard height={150} />
-        ) : wallet.error ? (
-          <RequestState error={wallet.error} onRetry={wallet.reload} />
-        ) : account.exists ? (
-          <>
-            <BalanceCard
-              label="Available balance"
-              amount={account.balance ?? 0}
-              currency={account.currency}
-              account={account.number ? {bank: account.bank, name: account.name, number: account.number} : null}
-            />
-            <View style={styles.actions}>
-              <View style={styles.action}>
-                <Button
-                  title="Transfer"
-                  size="md"
-                  icon={<Icon name="send" size={17} color={colors.white} strokeWidth={2} />}
-                  onPress={() => navigation.navigate('Transfer')}
-                  disabled={!account.number}
-                />
-              </View>
-              <View style={styles.action}>
-                <Button
-                  title="Add money"
-                  variant="secondary"
-                  size="md"
-                  icon={<Icon name="plus" size={17} color={colors.text} strokeWidth={2} />}
-                  onPress={() => setAddMoneyOpen(true)}
-                  disabled={!account.number}
-                />
-              </View>
+        <BalanceCard
+          label="Total points"
+          amount={totalPoints}
+          kind="points"
+          caption={`across ${programCount} program${programCount === 1 ? '' : 's'}`}
+          onRefresh={() => Promise.all([pointsReq.refresh(), wallet.refresh()])}
+        />
+
+        {/* Wallet account actions - only show if account exists */}
+        {/* {account.exists && (
+          <View style={styles.actions}>
+            <View style={styles.action}>
+              <Button
+                title="Transfer"
+                size="md"
+                icon={<Icon name="send" size={17} color={colors.white} strokeWidth={2} />}
+                onPress={() => navigation.navigate('Transfer')}
+                disabled={!account.number}
+              />
             </View>
-          </>
-        ) : (
-          <EmptyState
-            title="Open your wallet account"
-            hint="Verify your identity with your BVN to get an account number for transfers and top-ups."
-            action={{label: 'Verify identity', onPress: () => navigation.navigate('VerifyIdentity')}}
-          />
-        )}
+            <View style={styles.action}>
+              <Button
+                title="Add money"
+                variant="secondary"
+                size="md"
+                icon={<Icon name="plus" size={17} color={colors.text} strokeWidth={2} />}
+                onPress={() => setAddMoneyOpen(true)}
+                disabled={!account.number}
+              />
+            </View>
+          </View>
+        )} */}
+
+        {/* <EmptyState
+          title="Open your wallet account"
+          hint="Verify your identity with your BVN to get an account number for transfers and top-ups."
+          action={{label: 'Verify identity', onPress: () => navigation.navigate('VerifyIdentity')}}
+        /> */}
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle} accessibilityRole="header">

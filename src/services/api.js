@@ -359,6 +359,9 @@ const merchantRequest = (merchantId, endpoint, options = {}) =>
   });
 
 export const merchantAPI = {
+  // There's no merchant-side directory endpoint; this is the customer one
+  listMerchants: () => authenticatedRequest('/customer/merchants', {method: 'GET'}),
+
   getWallet: merchantId => merchantRequest(merchantId, '/merchant/wallet', {method: 'GET'}),
 
   getProfile: merchantId => merchantRequest(merchantId, '/merchant/profile', {method: 'GET'}),
@@ -410,8 +413,10 @@ export const merchantAPI = {
       method: 'POST',
       body: JSON.stringify({
         name: program.name,
+        description: program.description || null,
         billing_type: program.billingType,
         ...(program.billingType === 'PREPAID' ? {funding_amount: program.fundingAmount} : {}),
+        currency: program.currency,
         earning_type: 'FIXED_RATE',
         points_per_currency_unit: program.pointsPerCurrencyUnit,
         point_value: program.pointValue,
@@ -445,16 +450,42 @@ export const merchantAPI = {
     }),
 
   // TODO: confirm the giveaway body with the backend — the README only names the route.
-  createGiveaway: (merchantId, {programId, name, pointsPerClaim, maxClaims}) =>
+  // giveawayCode is optional; the server generates one when it's null
+  createGiveaway: (
+    merchantId,
+    {name, description, currency, pointsPerCurrencyUnit, pointsPerCustomer, maxBeneficiaries, giveawayCode, redeemableMerchantIds},
+  ) =>
     merchantRequest(merchantId, '/merchant/giveaways', {
       method: 'POST',
       body: JSON.stringify({
-        program_id: programId,
         name,
-        points_per_claim: pointsPerClaim,
-        max_claims: maxClaims,
+        description: description || null,
+        currency,
+        points_per_currency_unit: pointsPerCurrencyUnit,
+        points_per_customer: pointsPerCustomer,
+        max_beneficiaries: maxBeneficiaries,
+        giveaway_code: giveawayCode || null,
+        redeemable_merchant_ids: redeemableMerchantIds,
+        expiration_type: 'NEVER',
+        redemption_mode: 'PRIVATE',
       }),
     }),
+
+  // Points come from the program's funding; expirationDays is optional
+  createProgramGiveaway: (merchantId, programId, {name, description, pointsPerCustomer, maxBeneficiaries, giveawayCode, expirationDays}) =>
+    merchantRequest(merchantId, `/merchant/programs/${programId}/giveaways`, {
+      method: 'POST',
+      body: JSON.stringify({
+        name,
+        description: description || null,
+        points_per_customer: pointsPerCustomer,
+        max_beneficiaries: maxBeneficiaries,
+        giveaway_code: giveawayCode || null,
+        ...(expirationDays ? {expiration_days: expirationDays} : {}),
+      }),
+    }),
+
+  getGiveaways: merchantId => merchantRequest(merchantId, '/merchant/giveaways', {method: 'GET'}),
 
   getGiveawayStatus: (merchantId, giveawayId) =>
     merchantRequest(merchantId, `/merchant/giveaways/${giveawayId}/status`, {method: 'GET'}),
@@ -487,15 +518,21 @@ export const merchantAPI = {
       body: JSON.stringify({amount}),
     }),
 
-  verifyCompany: (merchantId, {registrationNumber, companyName}) =>
+  // registrationType: 'CAC' | 'BVN' | …
+  verifyCompany: (merchantId, {registrationType = 'CAC', registrationNumber, companyName}) =>
     merchantRequest(merchantId, '/merchant/verification/company', {
       method: 'POST',
       body: JSON.stringify({
-        registration_type: 'CAC',
+        registration_type: registrationType,
         registration_number: registrationNumber,
         company_name: companyName,
+        async_flag: false,
       }),
     }),
+
+  // First-time wallet setup after company verification.
+  createWallet: merchantId =>
+    merchantRequest(merchantId, '/merchant/wallet', {method: 'POST', body: JSON.stringify({})}),
 
   getAccountBalance: merchantId =>
     merchantRequest(merchantId, '/safehaven/merchant/account-balance', {method: 'GET'}),

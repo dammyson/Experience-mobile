@@ -82,14 +82,24 @@ const Giveaway = () => {
           <RequestState error={statusReq.error} onRetry={statusReq.reload} />
         ) : (
           <>
-            <LinearGradient
-              colors={gradients.brandCard.colors}
-              locations={gradients.brandCard.locations}
-              start={gradients.brandCard.start}
-              end={gradients.brandCard.end}
-              style={styles.codeCard}>
+            <View style={styles.codeCard}>
+              {/* The gradient is a background layer: padding and gap on LinearGradient
+                  itself lay out wrongly on the new architecture */}
+              <LinearGradient
+                colors={gradients.brandCard.colors}
+                locations={gradients.brandCard.locations}
+                start={gradients.brandCard.start}
+                end={gradients.brandCard.end}
+                style={StyleSheet.absoluteFill}
+              />
               <Text style={styles.codeLabel}>Share this code with customers</Text>
-              <Text style={styles.code} selectable accessibilityLabel={`Code ${g.code.split('').join(' ')}`}>
+              <Text
+                style={styles.code}
+                selectable
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.6}
+                accessibilityLabel={`Code ${g.code.split('').join(' ')}`}>
                 {g.code || '—'}
               </Text>
               <Text style={styles.codeSub}>
@@ -103,7 +113,7 @@ const Giveaway = () => {
                   <Text style={styles.copyText}>Copy code</Text>
                 </TouchableOpacity>
               )}
-            </LinearGradient>
+            </View>
 
             <View style={styles.card}>
               <View style={styles.claimsTop}>
@@ -171,8 +181,10 @@ const styles = StyleSheet.create({
     ...type.captionStrong,
   },
   codeCard: {
+    alignSelf: 'stretch',
     borderRadius: radii.balance,
-    padding: 20,
+    paddingVertical: 22,
+    paddingHorizontal: 20,
     alignItems: 'center',
     gap: 10,
     overflow: 'hidden',
@@ -182,6 +194,7 @@ const styles = StyleSheet.create({
     color: colors.textOnBrand,
   },
   code: {
+    alignSelf: 'stretch',
     fontFamily: type.balance.fontFamily,
     fontSize: 24,
     letterSpacing: 2,

@@ -48,6 +48,7 @@ const VerifyIdentity = () => {
       setOutcome(verified ? 'verified' : 'failed');
       if (verified) {
         dispatch(getProfile(true)).catch(() => {});
+        await wallet.reload();
       }
     } catch (err) {
       setError(err.message || "We couldn't reach the verification service. Try again.");
@@ -62,12 +63,36 @@ const VerifyIdentity = () => {
       }
       goToTab(navigation, 'Wallet');
     } catch (err) {
-      setSetupError(err.message || "We couldn't set up your wallet account. Try again.");
+      const msg = err.message || '';
+      // If wallet already exists, just go to home - it's already set up
+      if (/already exists/i.test(msg)) {
+        goToTab(navigation, 'Home');
+        return;
+      }
+      setSetupError(msg || "We couldn't set up your wallet account. Try again.");
     }
+  };
+
+  const handleGoHome = () => {
+    goToTab(navigation, 'Home');
   };
 
   if (outcome) {
     const verified = outcome === 'verified';
+    const walletExists = wallet.account.exists;
+
+    const getButtonConfig = () => {
+      if (!verified) {
+        return {title: 'Try again', onPress: () => setOutcome(null)};
+      }
+      if (walletExists) {
+        return {title: 'Go to Home', onPress: handleGoHome};
+      }
+      return {title: 'Set up my account', onPress: handleSetup};
+    };
+
+    const buttonConfig = getButtonConfig();
+
     return (
       <FormLayout
         title="Identity verification"
@@ -80,10 +105,7 @@ const VerifyIdentity = () => {
                 {setupError}
               </Text>
             )}
-            <PrimaryButton
-              title={verified ? 'Set up my account' : 'Try again'}
-              onPress={verified ? handleSetup : () => setOutcome(null)}
-            />
+            <PrimaryButton title={buttonConfig.title} onPress={buttonConfig.onPress} />
           </>
         }>
         <View style={styles.result} accessibilityRole="alert" accessibilityLiveRegion="polite">
@@ -91,7 +113,9 @@ const VerifyIdentity = () => {
           <Text style={styles.resultTitle}>{verified ? 'Identity verified' : "We couldn't verify this BVN"}</Text>
           <Text style={styles.resultBody}>
             {verified
-              ? 'You can now open your wallet account and transfer to any Nigerian bank.'
+              ? walletExists
+                ? 'Your wallet is ready. You can now transfer to any Nigerian bank.'
+                : 'You can now open your wallet account and transfer to any Nigerian bank.'
               : 'Check the number and that the name on it matches your profile, then try again.'}
           </Text>
         </View>

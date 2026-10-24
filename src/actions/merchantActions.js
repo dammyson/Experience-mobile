@@ -1,7 +1,13 @@
 import {merchantAPI} from '../services/api';
 import cache, {CACHE_KEYS} from '../services/cache';
+import {isCompanyVerified, hasMerchantWallet} from '../utilities/merchantData';
 
-export const getMerchantWallet = (merchantId, forceRefresh = false) => async dispatch => {
+// Skip the call until the loaded profile shows a verified company with a wallet
+export const getMerchantWallet = (merchantId, forceRefresh = false) => async (dispatch, getState) => {
+  const {profile} = getState().merchant;
+  if (!isCompanyVerified(profile) || !hasMerchantWallet(profile)) {
+    return null;
+  }
   dispatch({type: 'MERCHANT_WALLET_LOADING'});
   try {
     const cacheKey = `${CACHE_KEYS.WALLET}_merchant_${merchantId}`;

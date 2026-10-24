@@ -112,8 +112,11 @@ const CustomerHome = () => {
             label="Total loyalty points"
             amount={totalPoints}
             kind="points"
-            caption={`across ${merchantCount} merchant${merchantCount === 1 ? '' : 's'}`}>
-            <TouchableOpacity
+            caption={`across ${merchantCount} merchant${merchantCount === 1 ? '' : 's'}`}
+            onRefresh={() =>
+              Promise.all([dispatch(getDashboard(true)).catch(() => {}), points.refresh(), wallet.refresh()])
+            }>
+            {/* <TouchableOpacity
               style={styles.walletRow}
               onPress={() => switchTab('Wallet')}
               accessibilityRole="button"
@@ -136,7 +139,7 @@ const CustomerHome = () => {
                 </Text>
               </View>
               <Icon name="chevronRight" size={20} color={colors.textOnBrand} />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </BalanceCard>
         )}
 
