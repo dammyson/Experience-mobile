@@ -49,6 +49,7 @@ const ICONS = {
   idCard: ['M4 5h16v14H4zM8 10h4M8 14h8'],
   trash: ['M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13'],
   alert: [{circle: {cx: 12, cy: 12, r: 9}}, 'M12 8v5M12 16h.01'],
+  info: [{circle: {cx: 12, cy: 12, r: 9}}, 'M12 11v5M12 8h.01'],
 
   // Status
   check: ['m5 12 5 5 9-10'],
