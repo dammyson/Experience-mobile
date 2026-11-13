@@ -75,14 +75,36 @@ const refreshAccessToken = async () => {
   return newToken;
 };
 
+// Passwords and one-time codes must never reach the logs
+const redactSecrets = (key, value) => (/password|^otp$/i.test(key) ? '[redacted]' : value);
+
 const logRequest = (endpoint, method, body) => {
   const payload = body ? JSON.parse(body) : null;
-  console.log(`[API ${method}] ${endpoint}`, payload ? JSON.stringify(payload, null, 2) : '');
+  console.log(`[API ${method}] ${endpoint}`, payload ? JSON.stringify(payload, redactSecrets, 2) : '');
 };
 
 const logResponse = (endpoint, data, isError = false) => {
   const prefix = isError ? '[API Error]' : '[API Response]';
   console.log(`${prefix} ${endpoint}:`, JSON.stringify(data, null, 2));
+};
+
+// FastAPI validation errors (422) have an array in `detail`; every other error
+// has a string. Only loc and msg are read because `input` can echo the password.
+const buildApiError = (data, status) => {
+  const issues = Array.isArray(data.detail)
+    ? data.detail.map(({loc, msg}) => ({field: loc?.[1], message: String(msg ?? '').replace(/^Value error, /, '')}))
+    : [];
+  const detail = Array.isArray(data.detail) ? issues[0]?.message : data.detail;
+
+  const error = new Error(detail || data.message || data.error || 'Something went wrong');
+  error.status = status;
+  error.fieldErrors = {};
+  issues.forEach(({field, message}) => {
+    if (field && !error.fieldErrors[field]) {
+      error.fieldErrors[field] = message;
+    }
+  });
+  return error;
 };
 
 const handleResponse = async (response, endpoint, retryFn) => {
@@ -125,9 +147,9 @@ const handleResponse = async (response, endpoint, retryFn) => {
   const data = await response.json();
 
   if (!response.ok || data.success === false) {
-    const errorMessage = data.detail || data.message || data.error || 'Something went wrong';
-    logResponse(endpoint, {error: errorMessage, status: response.status}, true);
-    throw new Error(errorMessage);
+    const error = buildApiError(data, response.status);
+    logResponse(endpoint, {error: error.message, status: response.status}, true);
+    throw error;
   }
 
   logResponse(endpoint, data);
@@ -172,17 +194,27 @@ const authenticatedRequest = async (endpoint, options = {}) => {
   return handleResponse(response, endpoint, retryFn);
 };
 
+const customerRegistrationFields = ({firstName, lastName, email, phoneNumber, password}) => ({
+  first_name: firstName,
+  last_name: lastName,
+  email,
+  phone_number: phoneNumber,
+  password,
+});
+
 export const authAPI = {
-  register: ({firstName, lastName, email, phoneNumber, password}) =>
+  // 201 returns tokens. 202 means a merchant already registered this customer:
+  // there are no tokens and the data is {verification_required, channel}.
+  register: details =>
     request('/auth/register/customer', {
       method: 'POST',
-      body: JSON.stringify({
-        first_name: firstName,
-        last_name: lastName,
-        email,
-        phone_number: phoneNumber,
-        password,
-      }),
+      body: JSON.stringify(customerRegistrationFields(details)),
+    }),
+
+  verifyRegistration: ({otp, ...details}) =>
+    request('/auth/register/customer/verify', {
+      method: 'POST',
+      body: JSON.stringify({...customerRegistrationFields(details), otp}),
     }),
 
   login: ({email, phoneNumber, password, userType = 'customer'}) => {

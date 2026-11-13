@@ -25,6 +25,7 @@ import MerchantRegister from '../screens/auth/MerchantRegister';
 import MerchantVerification from '../screens/auth/MerchantVerification';
 import ForgotPassword from '../screens/auth/ForgotPassword';
 import VerifyOTP from '../screens/auth/VerifyOTP';
+import VerifyRegistration from '../screens/auth/VerifyRegistration';
 import ResetPassword from '../screens/auth/ResetPassword';
 import ForgotPin from '../screens/auth/ForgotPin';
 import ChangePin from '../screens/auth/ChangePin';
@@ -125,6 +126,7 @@ const Route = () => {
         {/* Auth */}
         <Stack.Screen name="Login" component={Login} />
         <Stack.Screen name="SignUp" component={SignUp} />
+        <Stack.Screen name="VerifyRegistration" component={VerifyRegistration} />
         <Stack.Screen name="MerchantRegister" component={MerchantRegister} />
         <Stack.Screen
           name="MerchantVerification"

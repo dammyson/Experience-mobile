@@ -58,6 +58,19 @@ export const register = ({firstName, lastName, email, phoneNumber, password}) =>
   }
 };
 
+// Signs the customer in from a registration response that has tokens
+export const completeRegistration = ({user, token, refresh_token}) => async dispatch => {
+  await AsyncStorage.setItem('token', token);
+  if (refresh_token) {
+    await AsyncStorage.setItem('refreshToken', refresh_token);
+  }
+  await AsyncStorage.setItem('user', JSON.stringify(user));
+  await AsyncStorage.setItem('userType', 'customer');
+  await AsyncStorage.setItem('hasSeenOnboarding', 'true');
+
+  dispatch({type: 'AUTH_SUCCESS', payload: {user, token, userType: 'customer'}});
+};
+
 export const getProfile = (forceRefresh = false) => async dispatch => {
   dispatch({type: 'PROFILE_LOADING'});
 

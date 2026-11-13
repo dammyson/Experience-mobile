@@ -7,8 +7,8 @@ import {readWalletAccount} from './customerData';
  * Loads the customer's wallet and Safe Haven balance together.
  * A customer without a wallet yet gets `account.exists === false` rather than
  * an error. `error` is set only when both requests fail for a network or
- * expired-session reason (the API layer doesn't expose status codes, so a
- * "no wallet" failure can't be told apart from other server errors).
+ * expired-session reason (status codes aren't checked here, so a "no wallet"
+ * failure isn't told apart from other server errors).
  *
  *   const {account, loading, refreshing, error, reload, refresh} = useWalletAccount();
  */
