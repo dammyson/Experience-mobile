@@ -12,11 +12,23 @@ import {colors, type} from '../../theme/tokens';
  * more — there's no status endpoint to poll (README gap 3).
  *
  * Params: {status: 'success' | 'pending' | 'failed' | 'unknown', amount, currency,
- *          name, bankName, accountNumber, narration, reference, message}
+ *          name, bankName, accountNumber, narration, reference, message,
+ *          retryRoute (default 'Transfer'), doneTab (default 'Wallet')}
  */
 const TransferStatus = () => {
   const navigation = useNavigation();
-  const {status, amount, currency, name, bankName, accountNumber, reference, message} = useRoute().params;
+  const {
+    status,
+    amount,
+    currency,
+    name,
+    bankName,
+    accountNumber,
+    reference,
+    message,
+    retryRoute = 'Transfer',
+    doneTab = 'Wallet',
+  } = useRoute().params;
   const amountLabel = formatNaira(amount, {currency});
 
   const step = (label, state) => ({label, state});
@@ -83,8 +95,8 @@ const TransferStatus = () => {
       secondary={{title: 'Back to home', onPress: () => goToTab(navigation, 'Home')}}
       primary={
         failed
-          ? {title: 'Try again', onPress: () => navigation.replace('Transfer')}
-          : {title: 'View wallet', onPress: () => goToTab(navigation, 'Wallet')}
+          ? {title: 'Try again', onPress: () => navigation.replace(retryRoute)}
+          : {title: 'View wallet', onPress: () => goToTab(navigation, doneTab)}
       }>
       {status === 'pending' && (
         <View style={styles.progress}>

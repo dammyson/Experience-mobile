@@ -70,6 +70,7 @@ import SendPoints from '../screens/customer/SendPoints';
 
 // Bank transfer
 import Transfer from '../screens/transfer/Transfer';
+import MerchantWithdraw from '../screens/transfer/MerchantWithdraw';
 import TransferStatus from '../screens/transfer/TransferStatus';
 import VerifyIdentity from '../screens/auth/VerifyIdentity';
 
@@ -185,6 +186,7 @@ const Route = () => {
         {/* Bank transfer */}
         <Stack.Screen name="VerifyIdentity" component={VerifyIdentity} />
         <Stack.Screen name="Transfer" component={Transfer} />
+        <Stack.Screen name="MerchantWithdraw" component={MerchantWithdraw} />
         <Stack.Screen
           name="TransferStatus"
           component={TransferStatus}

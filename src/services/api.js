@@ -569,6 +569,22 @@ export const merchantAPI = {
   getAccountBalance: merchantId =>
     merchantRequest(merchantId, '/safehaven/merchant/account-balance', {method: 'GET'}),
 
+  // Withdraw from the business wallet to any bank. The server picks the debit
+  // account and re-checks the name; a wrong password is a 403.
+  // Returns {status: 'success' | 'pending', wallet_transaction, wallet_balance}
+  withdraw: (merchantId, {bankCode, bankName, accountNumber, amount, narration, password}) =>
+    merchantRequest(merchantId, '/merchant/wallet/withdraw', {
+      method: 'POST',
+      body: JSON.stringify({
+        bank_code: bankCode,
+        bank_name: bankName,
+        account_number: accountNumber,
+        amount,
+        narration: narration || undefined,
+        password,
+      }),
+    }),
+
   awardPoints: (merchantId, programId, customerId, {points, reason}) =>
     merchantRequest(merchantId, `/merchant/programs/${programId}/customers/${customerId}/award`, {
       method: 'POST',
