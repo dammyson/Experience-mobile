@@ -232,9 +232,11 @@ const CreateProgram = () => {
           value={earnText}
           onChangeText={text => setEarnText(text.replace(/[^\d.]/g, ''))}
           keyboardType="decimal-pad"
+          info="How many points a customer earns for every ₦1 they spend. E.g. 0.1 means 1 point per ₦10, so a ₦5,000 purchase earns 500 points."
         />
         <InlineField
           label="Value of 1 pt:"
+          info="What 1 point is worth in naira when a customer spends it. E.g. ₦0.50 means 500 points = ₦250 off. Your wallet pays this amount for every point used."
           labelWidth={LABEL_WIDTH}
           value={valueText}
           onChangeText={text => setValueText(formatAmountInput(text))}

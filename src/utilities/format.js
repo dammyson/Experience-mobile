@@ -53,7 +53,9 @@ export const toNigerianPhone = input => {
 };
 
 // Valid when 10 digits follow +234
-export const isNigerianPhone = input => /^\+234\d{10}$/.test(toNigerianPhone(input));
+// A number with another country code is rejected, even if it has the right length
+export const isNigerianPhone = input =>
+  !/^\s*\+(?!234)/.test(input || '') && /^\+234\d{10}$/.test(toNigerianPhone(input));
 
 // "Today, 09:14" · "Yesterday" · "16 Oct"
 export const formatActivityDate = value => {

@@ -210,6 +210,7 @@ const CreateGiveaway = () => {
         ) : (
           <InlineField
             label="Points per ₦1:"
+            info="Sets what each point is worth: 1 point = ₦1 ÷ this number. E.g. 10 means each point is worth ₦0.10, so 500 points = ₦50. You fund total points ÷ this number."
             labelWidth={LABEL_WIDTH}
             value={earnText}
             onChangeText={text => setEarnText(text.replace(/[^\d.]/g, ''))}

@@ -2,13 +2,14 @@ import React, {useState, useEffect} from 'react';
 import {View, Text, StyleSheet} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {useDispatch, useSelector} from 'react-redux';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import FormLayout from '../../components/layout/FormLayout';
 import {AppInput, PasswordInput, PrimaryButton} from '../../components/ui';
 import PasswordRules, {isStrongPassword} from '../../components/ui/PasswordRules';
 import PhoneField from '../../components/ui/PhoneField';
+import ExistingAccountLinks from '../../components/auth/ExistingAccountLinks';
 import {toNigerianPhone, isNigerianPhone} from '../../utilities/format';
 import {authAPI} from '../../services/api';
+import {completeRegistration} from '../../actions/authActions';
 import {colors, type} from '../../theme/tokens';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -26,6 +27,8 @@ const SignUp = () => {
     password: '',
   });
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [accountExists, setAccountExists] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -35,6 +38,8 @@ const SignUp = () => {
 
   const set = field => value => {
     setError('');
+    setFieldErrors({});
+    setAccountExists(false);
     setForm(prev => ({...prev, [field]: value}));
   };
 
@@ -52,30 +57,34 @@ const SignUp = () => {
       return;
     }
     setError('');
+    setFieldErrors({});
+    setAccountExists(false);
+
+    const details = {
+      firstName: form.firstName.trim(),
+      lastName: form.lastName.trim(),
+      email: form.email.trim(),
+      phoneNumber: toNigerianPhone(form.phoneNumber),
+      password: form.password,
+    };
 
     try {
-      const response = await authAPI.register({
-        firstName: form.firstName.trim(),
-        lastName: form.lastName.trim(),
-        email: form.email.trim(),
-        phoneNumber: toNigerianPhone(form.phoneNumber),
-        password: form.password,
-      });
+      const response = await authAPI.register(details);
 
-      const {user, token, refresh_token} = response.data;
-
-      // Store auth data
-      await AsyncStorage.setItem('token', token);
-      if (refresh_token) {
-        await AsyncStorage.setItem('refreshToken', refresh_token);
+      // A merchant already registered this customer: there are no tokens yet
+      if (response.data?.verification_required) {
+        navigation.navigate('VerifyRegistration', {details, channel: response.data.channel});
+        return;
       }
-      await AsyncStorage.setItem('user', JSON.stringify(user));
-      await AsyncStorage.setItem('userType', 'customer');
-      await AsyncStorage.setItem('hasSeenOnboarding', 'true');
 
-      // Update Redux state - useEffect will handle navigation
-      dispatch({type: 'AUTH_SUCCESS', payload: {user, token, userType: 'customer'}});
+      // useEffect will handle navigation
+      await dispatch(completeRegistration(response.data));
     } catch (err) {
+      if (err.status === 422 && Object.keys(err.fieldErrors ?? {}).length) {
+        setFieldErrors(err.fieldErrors);
+        return;
+      }
+      setAccountExists(err.status === 409);
       setError(err.message || 'Registration failed. Please try again.');
     }
   };
@@ -92,6 +101,7 @@ const SignUp = () => {
               {error}
             </Text>
           )}
+          {accountExists && <ExistingAccountLinks reason={error} email={form.email.trim()} />}
           {/* TODO: link Terms and Privacy Policy once their URLs exist */}
           <Text style={styles.legal}>
             By continuing you agree to the Terms and Privacy Policy.
@@ -118,6 +128,8 @@ const SignUp = () => {
           autoCapitalize="words"
           autoComplete="given-name"
           textContentType="givenName"
+          maxLength={80}
+          error={fieldErrors.first_name}
           containerStyle={styles.nameField}
         />
         <AppInput
@@ -127,6 +139,8 @@ const SignUp = () => {
           autoCapitalize="words"
           autoComplete="family-name"
           textContentType="familyName"
+          maxLength={80}
+          error={fieldErrors.last_name}
           containerStyle={styles.nameField}
         />
       </View>
@@ -141,16 +155,22 @@ const SignUp = () => {
         autoCorrect={false}
         autoComplete="email"
         textContentType="emailAddress"
-        error={form.email && !emailValid ? 'Enter a valid email address.' : undefined}
+        error={form.email && !emailValid ? 'Enter a valid email address.' : fieldErrors.email}
       />
 
-      <PhoneField value={form.phoneNumber} onChangeText={set('phoneNumber')} />
+      <PhoneField
+        value={form.phoneNumber}
+        onChangeText={set('phoneNumber')}
+        error={fieldErrors.phone_number && 'Enter a Nigerian number starting with +234.'}
+      />
 
       <PasswordInput
         label="Password"
         value={form.password}
         onChangeText={set('password')}
         textContentType="newPassword"
+        maxLength={128}
+        error={fieldErrors.password}
       />
       <PasswordRules password={form.password} />
     </FormLayout>

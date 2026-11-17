@@ -168,6 +168,10 @@ const Business = () => {
           />
         )}
 
+        {companyVerified && hasWallet && !!wallet && (
+          <Button title="Withdraw to bank" size="md" onPress={() => navigation.navigate('MerchantWithdraw')} />
+        )}
+
         {!!bankAccount && (
           <View style={styles.card}>
             <View style={styles.cardHeader}>

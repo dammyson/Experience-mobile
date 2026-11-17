@@ -10,6 +10,9 @@ import {colors, type} from '../../theme/tokens';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+// Also what a customer added by a merchant gets before they've set a password
+const BAD_CREDENTIALS = 'Invalid email/phone or password';
+
 const Login = () => {
   const navigation = useNavigation();
   const route = useRoute();
@@ -72,6 +75,20 @@ const Login = () => {
           {!!error && (
             <Text style={styles.serverError} accessibilityRole="alert">
               {error}
+            </Text>
+          )}
+          {!isMerchant && error === BAD_CREDENTIALS && (
+            <Text style={styles.footerText}>
+              New here?{' '}
+              <Text
+                style={styles.link}
+                accessibilityRole="link"
+                onPress={() => {
+                  clearError();
+                  navigation.navigate('SignUp');
+                }}>
+                Create an account.
+              </Text>
             </Text>
           )}
           <PrimaryButton

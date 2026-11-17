@@ -25,6 +25,7 @@ import MerchantRegister from '../screens/auth/MerchantRegister';
 import MerchantVerification from '../screens/auth/MerchantVerification';
 import ForgotPassword from '../screens/auth/ForgotPassword';
 import VerifyOTP from '../screens/auth/VerifyOTP';
+import VerifyRegistration from '../screens/auth/VerifyRegistration';
 import ResetPassword from '../screens/auth/ResetPassword';
 import ForgotPin from '../screens/auth/ForgotPin';
 import ChangePin from '../screens/auth/ChangePin';
@@ -69,6 +70,7 @@ import SendPoints from '../screens/customer/SendPoints';
 
 // Bank transfer
 import Transfer from '../screens/transfer/Transfer';
+import MerchantWithdraw from '../screens/transfer/MerchantWithdraw';
 import TransferStatus from '../screens/transfer/TransferStatus';
 import VerifyIdentity from '../screens/auth/VerifyIdentity';
 
@@ -125,6 +127,7 @@ const Route = () => {
         {/* Auth */}
         <Stack.Screen name="Login" component={Login} />
         <Stack.Screen name="SignUp" component={SignUp} />
+        <Stack.Screen name="VerifyRegistration" component={VerifyRegistration} />
         <Stack.Screen name="MerchantRegister" component={MerchantRegister} />
         <Stack.Screen
           name="MerchantVerification"
@@ -183,6 +186,7 @@ const Route = () => {
         {/* Bank transfer */}
         <Stack.Screen name="VerifyIdentity" component={VerifyIdentity} />
         <Stack.Screen name="Transfer" component={Transfer} />
+        <Stack.Screen name="MerchantWithdraw" component={MerchantWithdraw} />
         <Stack.Screen
           name="TransferStatus"
           component={TransferStatus}

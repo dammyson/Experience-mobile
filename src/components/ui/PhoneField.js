@@ -12,8 +12,9 @@ import {colors, type, radii} from '../../theme/tokens';
  *   label         string (default "Phone number")
  *   value         string
  *   onChangeText  (value) => void
+ *   error         string — e.g. a server validation message
  */
-const PhoneField = ({label = 'Phone number', value, onChangeText}) => {
+const PhoneField = ({label = 'Phone number', value, onChangeText, error}) => {
   const invalid = !!value && !isNigerianPhone(value);
   return (
     <View style={styles.group}>
@@ -29,14 +30,14 @@ const PhoneField = ({label = 'Phone number', value, onChangeText}) => {
           keyboardType="phone-pad"
           autoComplete="tel"
           textContentType="telephoneNumber"
-          maxLength={14}
+          maxLength={18}
           accessibilityLabel={label}
           containerStyle={styles.field}
         />
       </View>
-      {invalid && (
+      {(invalid || !!error) && (
         <Text style={styles.error} accessibilityRole="alert">
-          Enter the 10 digits after +234.
+          {invalid ? 'Enter the 10 digits after +234.' : error}
         </Text>
       )}
     </View>
