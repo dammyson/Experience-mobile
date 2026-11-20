@@ -3,7 +3,11 @@ import {View, Text, StyleSheet} from 'react-native';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import FormLayout from '../../components/layout/FormLayout';
 import {PasswordInput, PrimaryButton, StatusIcon} from '../../components/ui';
-import PasswordRules, {isStrongPassword} from '../../components/ui/PasswordRules';
+import PasswordRules, {
+  isStrongPassword,
+  hasEdgeSpace,
+  EDGE_SPACE_ERROR,
+} from '../../components/ui/PasswordRules';
 import {authAPI} from '../../services/api';
 import {colors, type} from '../../theme/tokens';
 
@@ -19,7 +23,8 @@ const ResetPassword = () => {
   const [success, setSuccess] = useState(false);
 
   const mismatch = confirmPassword.length > 0 && password !== confirmPassword;
-  const isValid = isStrongPassword(password) && password === confirmPassword;
+  const passwordHasEdgeSpace = hasEdgeSpace(password);
+  const isValid = isStrongPassword(password) && !passwordHasEdgeSpace && password === confirmPassword;
 
   const handleReset = async () => {
     setError('');
@@ -82,6 +87,7 @@ const ResetPassword = () => {
           setError('');
         }}
         textContentType="newPassword"
+        error={passwordHasEdgeSpace ? EDGE_SPACE_ERROR : undefined}
       />
       <PasswordRules password={password} />
 

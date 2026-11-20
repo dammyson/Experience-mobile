@@ -81,6 +81,15 @@ describe('giveaways and profile', () => {
     });
   });
 
+  it('reads a closed giveaway however the API marks it', () => {
+    expect(readGiveaway({status: 'closed'}).active).toBe(false);
+    expect(readGiveaway({status: 'CANCELLED'}).active).toBe(false);
+    expect(readGiveaway({status: 'ACTIVE', is_active: false}).active).toBe(false);
+    expect(readGiveaway({active: false}).active).toBe(false);
+    expect(readGiveaway({closed_at: '2026-11-21T10:00:00Z'}).active).toBe(false);
+    expect(readGiveaway({status: 'ACTIVE', is_active: true}).active).toBe(true);
+  });
+
   it('reads verification from the merchant profile', () => {
     expect(readMerchantProfile({merchant: {name: 'Kopi House', verification_status: 'VERIFIED'}})).toMatchObject({
       name: 'Kopi House',

@@ -12,6 +12,11 @@ const RULES = [
 
 export const isStrongPassword = password => RULES.every(rule => rule.test(password || ''));
 
+// Usually a stray space from autofill or paste. Sign-in rejects these, so
+// sign-up must too or the account could never be signed into.
+export const hasEdgeSpace = password => /^\s|\s$/.test(password || '');
+export const EDGE_SPACE_ERROR = "Password can't start or end with a space.";
+
 /**
  * Two-column checklist of password rules; met rules turn mint.
  *

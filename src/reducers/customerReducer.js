@@ -4,6 +4,9 @@ const initialState = {
   dashboardLoading: false,
   transactionsLoading: false,
   error: null,
+  // Bumped when the customer adds or removes a favourite, so screens that
+  // fetched the favourites list can refetch it
+  favoritesVersion: 0,
 };
 
 const customerReducer = (state = initialState, action) => {
@@ -20,6 +23,8 @@ const customerReducer = (state = initialState, action) => {
       return {...state, transactionsLoading: false, transactions: action.payload};
     case 'TRANSACTIONS_ERROR':
       return {...state, transactionsLoading: false, error: action.payload};
+    case 'FAVORITES_CHANGED':
+      return {...state, favoritesVersion: state.favoritesVersion + 1};
     case 'AUTH_LOGOUT':
       return {...initialState};
     default:

@@ -8,6 +8,8 @@ import {
   PasswordInput,
   PasswordRules,
   isStrongPassword,
+  hasEdgeSpace,
+  EDGE_SPACE_ERROR,
   PhoneField,
   PrimaryButton,
   StatusScreen,
@@ -98,12 +100,14 @@ const MerchantRegister = () => {
     EMAIL_PATTERN.test(business.email.trim()) &&
     isNigerianPhone(business.phone);
 
+  const adminPasswordHasEdgeSpace = hasEdgeSpace(admin.password);
   const adminValid =
     !!admin.firstName.trim() &&
     !!admin.lastName.trim() &&
     EMAIL_PATTERN.test(admin.email.trim()) &&
     isNigerianPhone(admin.phoneNumber) &&
-    isStrongPassword(admin.password);
+    isStrongPassword(admin.password) &&
+    !adminPasswordHasEdgeSpace;
 
   const handleRegister = async () => {
     setError('');
@@ -284,6 +288,7 @@ const MerchantRegister = () => {
         value={admin.password}
         onChangeText={setAdminField('password')}
         textContentType="newPassword"
+        error={adminPasswordHasEdgeSpace ? EDGE_SPACE_ERROR : undefined}
       />
       <PasswordRules password={admin.password} />
     </FormLayout>

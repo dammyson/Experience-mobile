@@ -485,8 +485,20 @@ export const merchantAPI = {
   // giveawayCode is optional; the server generates one when it's null
   createGiveaway: (
     merchantId,
-    {name, description, currency, pointsPerCurrencyUnit, pointsPerCustomer, maxBeneficiaries, giveawayCode, redeemableMerchantIds},
+    {
+      name,
+      description,
+      currency,
+      pointsPerCurrencyUnit,
+      pointsPerCustomer,
+      maxBeneficiaries,
+      giveawayCode,
+      redeemableMerchantIds,
+      expirationDays,
+    },
   ) =>
+    // With an expiry, expiration_type is null and expiration_days holds the
+    // number of days; without one, expiration_type is NEVER
     merchantRequest(merchantId, '/merchant/giveaways', {
       method: 'POST',
       body: JSON.stringify({
@@ -498,7 +510,9 @@ export const merchantAPI = {
         max_beneficiaries: maxBeneficiaries,
         giveaway_code: giveawayCode || null,
         redeemable_merchant_ids: redeemableMerchantIds,
-        expiration_type: 'NEVER',
+        ...(expirationDays
+          ? {expiration_type: null, expiration_days: expirationDays}
+          : {expiration_type: 'NEVER'}),
         redemption_mode: 'PRIVATE',
       }),
     }),

@@ -24,7 +24,8 @@ import {colors, type, radii} from '../../theme/tokens';
  */
 export const FoundCustomerCard = ({customer, children}) => {
   const name = customerName(customer);
-  const memberId = customer.merchant_customer_id ?? customer.member_id;
+  // Member ID is not used for now
+  // const memberId = customer.merchant_customer_id ?? customer.member_id;
   return (
     <View style={styles.found}>
       <View style={styles.foundTop}>
@@ -43,7 +44,7 @@ export const FoundCustomerCard = ({customer, children}) => {
         rows={[
           customer.email && {label: 'Email', value: maskEmail(customer.email)},
           customer.phone_number && {label: 'Phone', value: maskPhone(customer.phone_number)},
-          memberId && {label: 'Your member ID', value: memberId},
+          // memberId && {label: 'Your member ID', value: memberId},
         ]}
       />
       {!!children && <View style={styles.foundActions}>{children}</View>}
@@ -52,8 +53,7 @@ export const FoundCustomerCard = ({customer, children}) => {
 };
 
 /**
- * Find a customer by exactly one identifier (email, phone, customer ID or
- * the merchant's own member ID).
+ * Find a customer by exactly one identifier (email, phone or customer ID).
  *
  * Props:
  *   merchantId     string
@@ -84,6 +84,7 @@ const CustomerFinder = ({merchantId, renderFound, renderMissing, missingHint}) =
     <View style={styles.root}>
       <ChoiceGrid
         prompt="Find customer by"
+        columns={3}
         options={IDENTIFIERS.map(i => ({
           id: i.id,
           label: i.label,

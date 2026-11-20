@@ -99,6 +99,7 @@ const CreateGiveaway = () => {
             currency,
             pointsPerCurrencyUnit: earn,
             redeemableMerchantIds: [String(merchantId), ...otherMerchantIds],
+            expirationDays,
           });
       const giveaway = readGiveaway(response.data);
       navigation.replace('Giveaway', {giveawayId: giveaway.id, name: name.trim(), initial: response.data});
@@ -198,16 +199,7 @@ const CreateGiveaway = () => {
           placeholder="0"
           keyboardType="number-pad"
         />
-        {fromProgram ? (
-          <InlineField
-            label="Expires (days):"
-            labelWidth={LABEL_WIDTH}
-            value={expiryText}
-            onChangeText={text => setExpiryText(text.replace(/\D/g, ''))}
-            placeholder="Never"
-            keyboardType="number-pad"
-          />
-        ) : (
+        {!fromProgram && (
           <InlineField
             label="Points per ₦1:"
             info="Sets what each point is worth: 1 point = ₦1 ÷ this number. E.g. 10 means each point is worth ₦0.10, so 500 points = ₦50. You fund total points ÷ this number."
@@ -217,13 +209,21 @@ const CreateGiveaway = () => {
             keyboardType="decimal-pad"
           />
         )}
+        <InlineField
+          label="Expires (days):"
+          labelWidth={LABEL_WIDTH}
+          value={expiryText}
+          onChangeText={text => setExpiryText(text.replace(/\D/g, ''))}
+          placeholder="Never"
+          keyboardType="number-pad"
+        />
       </View>
 
       {totalPoints > 0 && (
         <Text style={styles.summary}>
           Up to {formatPts(totalPoints)}
           {pointValue ? ` (${formatNaira(totalPoints * pointValue)})` : ''} if every customer claims
-          {fromProgram && expirationDays > 0 ? `, within ${expirationDays} day${expirationDays === 1 ? '' : 's'}` : ''}.
+          {expirationDays > 0 ? `, within ${expirationDays} day${expirationDays === 1 ? '' : 's'}` : ''}.
         </Text>
       )}
 

@@ -4,7 +4,11 @@ import {useNavigation} from '@react-navigation/native';
 import {useDispatch, useSelector} from 'react-redux';
 import FormLayout from '../../components/layout/FormLayout';
 import {AppInput, PasswordInput, PrimaryButton} from '../../components/ui';
-import PasswordRules, {isStrongPassword} from '../../components/ui/PasswordRules';
+import PasswordRules, {
+  isStrongPassword,
+  hasEdgeSpace,
+  EDGE_SPACE_ERROR,
+} from '../../components/ui/PasswordRules';
 import PhoneField from '../../components/ui/PhoneField';
 import ExistingAccountLinks from '../../components/auth/ExistingAccountLinks';
 import {toNigerianPhone, isNigerianPhone} from '../../utilities/format';
@@ -45,12 +49,14 @@ const SignUp = () => {
 
   const emailValid = EMAIL_PATTERN.test(form.email.trim());
   const phoneValid = isNigerianPhone(form.phoneNumber);
+  const passwordHasEdgeSpace = hasEdgeSpace(form.password);
   const isValid =
     !!form.firstName.trim() &&
     !!form.lastName.trim() &&
     emailValid &&
     phoneValid &&
-    isStrongPassword(form.password);
+    isStrongPassword(form.password) &&
+    !passwordHasEdgeSpace;
 
   const handleSignUp = async () => {
     if (!isValid) {
@@ -170,7 +176,7 @@ const SignUp = () => {
         onChangeText={set('password')}
         textContentType="newPassword"
         maxLength={128}
-        error={fieldErrors.password}
+        error={passwordHasEdgeSpace ? EDGE_SPACE_ERROR : fieldErrors.password}
       />
       <PasswordRules password={form.password} />
     </FormLayout>

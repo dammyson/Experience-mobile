@@ -105,7 +105,8 @@ export const IDENTIFIERS = [
   {id: 'email', label: 'Email', short: 'email', icon: 'mail', placeholder: 'name@example.com', keyboardType: 'email-address', lookupKey: 'email', awardKey: 'email'},
   {id: 'phone', label: 'Phone number', short: 'phone number', icon: 'phone', placeholder: '+234…', keyboardType: 'phone-pad', lookupKey: 'phoneNumber', awardKey: 'phone_number'},
   {id: 'customerId', label: 'Customer ID', short: 'customer ID', icon: 'idCard', placeholder: 'Arena customer ID', keyboardType: 'default', lookupKey: 'customerId', awardKey: 'customer_id'},
-  {id: 'memberId', label: 'Your member ID', short: 'member ID', icon: 'ticket', placeholder: 'e.g. loyalty card no.', keyboardType: 'default', lookupKey: 'merchantCustomerId', awardKey: 'merchant_customer_id'},
+  // Member ID (the merchant's own loyalty card no.) is not used for now
+  // {id: 'memberId', label: 'Your member ID', short: 'member ID', icon: 'ticket', placeholder: 'e.g. loyalty card no.', keyboardType: 'default', lookupKey: 'merchantCustomerId', awardKey: 'merchant_customer_id'},
 ];
 
 // ── Activity ───────────────────────────────────────────────────────────────
@@ -154,6 +155,26 @@ export const dayLabel = value => {
 
 // ── Giveaways & promos ─────────────────────────────────────────────────────
 
+const CLOSED_GIVEAWAY_STATUSES = [
+  'CLOSED',
+  'ENDED',
+  'INACTIVE',
+  'EXHAUSTED',
+  'EXPIRED',
+  'CANCELLED',
+  'CANCELED',
+  'COMPLETED',
+];
+
+// The API's giveaway responses are undocumented, so accept any of the usual
+// ways a closed giveaway is marked, not just `status`
+const isGiveawayActive = g => {
+  if (g.is_active === false || g.active === false || g.is_closed === true || g.closed_at) {
+    return false;
+  }
+  return !CLOSED_GIVEAWAY_STATUSES.includes(String(g.status || 'ACTIVE').toUpperCase());
+};
+
 export const readGiveaway = data => {
   const g = data?.giveaway ?? data ?? {};
   const maxClaims = num(g.max_beneficiaries ?? g.max_claims ?? g.maximum_claims ?? g.limit);
@@ -168,7 +189,7 @@ export const readGiveaway = data => {
     claims,
     pointsGiven: num(g.points_given ?? g.total_points_given) ?? (perClaim != null ? perClaim * claims : null),
     spotsLeft: maxClaims != null ? Math.max(0, maxClaims - claims) : null,
-    active: !['CLOSED', 'ENDED', 'INACTIVE', 'EXHAUSTED'].includes(String(g.status || 'ACTIVE').toUpperCase()),
+    active: isGiveawayActive(g),
     expiry: g.expires_at ?? null,
   };
 };

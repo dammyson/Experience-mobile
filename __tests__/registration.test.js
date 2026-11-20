@@ -46,6 +46,8 @@ jest.mock('../src/components/ui/PasswordRules', () => ({
   __esModule: true,
   default: 'PasswordRules',
   isStrongPassword: () => true,
+  hasEdgeSpace: password => /^\s|\s$/.test(password || ''),
+  EDGE_SPACE_ERROR: "Password can't start or end with a space.",
 }));
 jest.mock('../src/components/ui', () => ({
   AppInput: 'AppInput',
@@ -222,6 +224,26 @@ describe('SignUp', () => {
     await submit(root);
 
     expect(root.findByType('PhoneField').props.error).toBe('Enter a Nigerian number starting with +234.');
+  });
+
+  it('blocks a password that starts or ends with a space', async () => {
+    const root = await render(<SignUp />);
+    await fillSignUp(root);
+
+    for (const password of [`${PASSWORD} `, ` ${PASSWORD}`]) {
+      await act(async () => {
+        root.findByProps({label: 'Password'}).props.onChangeText(password);
+      });
+      expect(root.findByType('PrimaryButton').props.disabled).toBe(true);
+      expect(root.findByProps({label: 'Password'}).props.error).toBe(
+        "Password can't start or end with a space.",
+      );
+    }
+
+    await act(async () => {
+      root.findByProps({label: 'Password'}).props.onChangeText(PASSWORD);
+    });
+    expect(root.findByType('PrimaryButton').props.disabled).toBe(false);
   });
 });
 

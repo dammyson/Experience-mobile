@@ -2,6 +2,7 @@ import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {View, Text, FlatList, RefreshControl, TouchableOpacity, StatusBar, StyleSheet} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import {showMessage} from 'react-native-flash-message';
+import {useDispatch} from 'react-redux';
 import ScreenBackground from '../../components/layout/ScreenBackground';
 import ScreenHeader from '../../components/layout/ScreenHeader';
 import RequestState from '../../components/layout/RequestState';
@@ -80,6 +81,7 @@ const MerchantCard = ({merchant, onToggleFavorite}) => (
 );
 
 const Explore = () => {
+  const dispatch = useDispatch();
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [favorites, setFavorites] = useState(new Set());
@@ -158,6 +160,8 @@ const Explore = () => {
       } else {
         await customerAPI.removeFavoriteMerchant(merchant.id);
       }
+      // Home and Profile refetch their favourites list on this
+      dispatch({type: 'FAVORITES_CHANGED'});
     } catch (err) {
       update(!adding);
       showMessage({message: err.message || "Couldn't update favorites", type: 'danger'});

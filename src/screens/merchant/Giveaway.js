@@ -25,9 +25,16 @@ const Giveaway = () => {
   const profile = useSelector(state => state.merchant.profile);
   const statusReq = useRequest(() => merchantAPI.getGiveawayStatus(merchantId, giveawayId), [merchantId, giveawayId]);
   const [closing, setClosing] = useState(false);
+  // Set once the close request succeeds, so the screen can't fall back to an
+  // "Active" status from the list or create response
+  const [closedHere, setClosedHere] = useState(false);
 
   // The status response may omit the code, so fall back to the create response
-  const g = readGiveaway({...(initial?.giveaway ?? initial ?? {}), ...(statusReq.data?.giveaway ?? statusReq.data ?? {})});
+  const read = readGiveaway({
+    ...(initial?.giveaway ?? initial ?? {}),
+    ...(statusReq.data?.giveaway ?? statusReq.data ?? {}),
+  });
+  const g = closedHere ? {...read, active: false} : read;
   const title = g.name !== 'Giveaway' ? g.name : name || 'Giveaway';
   const business = readMerchantProfile(profile).name;
   const pct = g.maxClaims ? Math.min(1, g.claims / g.maxClaims) : 0;
@@ -40,6 +47,7 @@ const Giveaway = () => {
   const handleClose = async () => {
     try {
       await merchantAPI.closeGiveaway(merchantId, giveawayId);
+      setClosedHere(true);
       setClosing(false);
       showMessage({message: 'Giveaway closed', type: 'success'});
       statusReq.reload();

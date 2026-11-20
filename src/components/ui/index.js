@@ -19,5 +19,10 @@ export {default as EmptyState} from './EmptyState';
 export {default as SkeletonList, Skeleton, SkeletonRow, SkeletonCard} from './Skeleton';
 export {PointsText, MoneyText, EstimateText, PointsChip} from './Amount';
 export {default as PhoneField} from './PhoneField';
-export {default as PasswordRules, isStrongPassword} from './PasswordRules';
+export {
+  default as PasswordRules,
+  isStrongPassword,
+  hasEdgeSpace,
+  EDGE_SPACE_ERROR,
+} from './PasswordRules';
 export {default as PickerSheet} from './PickerSheet';

@@ -2,6 +2,8 @@ import React, {useEffect} from 'react';
 import {View, Text, ScrollView, RefreshControl, StatusBar, TouchableOpacity, StyleSheet} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {useNavigation} from '@react-navigation/native';
+import Clipboard from '@react-native-clipboard/clipboard';
+import {showMessage} from 'react-native-flash-message';
 import ScreenBackground from '../../components/layout/ScreenBackground';
 import ScreenHeader from '../../components/layout/ScreenHeader';
 import Icon from '../../components/icons/Icon';
@@ -9,6 +11,7 @@ import {useTabContext} from '../../navigations/TabContext';
 import {getProfile, logout} from '../../actions/authActions';
 import {customerAPI} from '../../services/api';
 import useRequest from '../../utilities/useRequest';
+import useRefetchOnFavoritesChange from '../../utilities/useRefetchOnFavoritesChange';
 import {toList, isIdentityVerified} from '../../utilities/customerData';
 import {initials} from '../../utilities/format';
 import {TAB_SCROLL_INSET} from '../../utilities/platform';
@@ -29,14 +32,15 @@ const SettingsGroup = ({title, rows}) => (
             activeOpacity={0.7}
             accessibilityRole={row.onPress ? 'button' : undefined}
             accessible
-            accessibilityLabel={[row.label, row.value].filter(Boolean).join(', ')}
+            accessibilityLabel={[row.label, row.a11yValue ?? row.value].filter(Boolean).join(', ')}
+            accessibilityHint={row.a11yHint}
             style={[styles.row, i > 0 && styles.rowBorder]}>
             <View style={styles.rowIcon}>
               <Icon name={row.icon} size={16} color={colors.textSecondary} />
             </View>
             <Text style={styles.rowLabel}>{row.label}</Text>
             {!!row.value && <Text style={styles.rowValue}>{row.value}</Text>}
-            {!!row.onPress && <Icon name="chevronRight" size={16} color={colors.textMuted} />}
+            {!!row.onPress && <Icon name={row.actionIcon ?? 'chevronRight'} size={16} color={colors.textMuted} />}
           </Container>
         );
       })}
@@ -50,6 +54,7 @@ const CustomerProfile = () => {
   const {switchTab} = useTabContext();
   const {user, profile, verifications, bankAccounts, profileLoading} = useSelector(state => state.auth);
   const favorites = useRequest(() => customerAPI.getFavoriteMerchants(), []);
+  useRefetchOnFavoritesChange(favorites.refresh);
 
   useEffect(() => {
     dispatch(getProfile()).catch(() => {});
@@ -61,6 +66,13 @@ const CustomerProfile = () => {
   const verified = isIdentityVerified(verifications);
   const bank = bankAccounts?.[0];
   const favoriteCount = favorites.data ? String(toList(favorites.data, 'merchants', 'favorites').length) : undefined;
+  // Merchants can look a customer up by this ID (the same value as the QR code)
+  const customerId = user?.id;
+
+  const copyCustomerId = () => {
+    Clipboard.setString(String(customerId));
+    showMessage({message: 'Customer ID copied', type: 'success'});
+  };
 
   const handleSignOut = async () => {
     await dispatch(logout());
@@ -121,6 +133,20 @@ const CustomerProfile = () => {
           title="Account"
           rows={[
             {label: 'Personal details', value: 'View only', icon: 'profile'},
+            ...(customerId
+              ? [
+                  {
+                    label: 'Customer ID',
+                    // A full UUID won't fit beside the label
+                    value: `${String(customerId).slice(0, 8)}…`,
+                    a11yValue: String(customerId),
+                    a11yHint: 'Copies your customer ID',
+                    icon: 'idCard',
+                    actionIcon: 'copy',
+                    onPress: copyCustomerId,
+                  },
+                ]
+              : []),
             // {
             //   label: 'Bank account',
             //   value: bank?.bank_name || 'Safe Haven',

@@ -1,5 +1,14 @@
 import React, {useCallback, useEffect, useMemo} from 'react';
-import {View, Text, ScrollView, RefreshControl, StatusBar, TouchableOpacity, StyleSheet} from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  RefreshControl,
+  StatusBar,
+  TouchableOpacity,
+  StyleSheet,
+  useWindowDimensions,
+} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {useNavigation} from '@react-navigation/native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
@@ -19,10 +28,14 @@ import {getDashboard} from '../../actions/customerActions';
 import {customerAPI} from '../../services/api';
 import useRequest from '../../utilities/useRequest';
 import useWalletAccount from '../../utilities/useWalletAccount';
+import useRefetchOnFavoritesChange from '../../utilities/useRefetchOnFavoritesChange';
 import {toList, getMerchantId, getMerchantName, pointsByMerchant} from '../../utilities/customerData';
 import {formatNaira, formatNumber, formatPts, formatActivityDate, greeting, initials} from '../../utilities/format';
 import {TAB_SCROLL_INSET} from '../../utilities/platform';
 import {colors, type, radii, layout} from '../../theme/tokens';
+
+const FAVORITES_VISIBLE = 3;
+const FAVORITE_GAP = 10;
 
 const SectionHeader = ({title, onSeeAll}) => (
   <View style={styles.sectionHeader}>
@@ -54,6 +67,7 @@ const CustomerHome = () => {
   const points = useRequest(() => customerAPI.getPointsByMerchant(), []);
   const favorites = useRequest(() => customerAPI.getFavoriteMerchants(), []);
   const wallet = useWalletAccount();
+  useRefetchOnFavoritesChange(favorites.refresh);
 
   useEffect(() => {
     dispatch(getDashboard()).catch(() => {});
@@ -69,10 +83,17 @@ const CustomerHome = () => {
   const balances = useMemo(() => pointsByMerchant(points.data), [points.data]);
   const merchantCount = points.data?.merchant_count ?? Object.keys(balances).length;
   const totalPoints = dashboard?.wallet_summary?.total_points ?? points.data?.total_points ?? 0;
-  const favoriteList = toList(favorites.data, 'merchants', 'favorites').slice(0, 4);
+  const favoriteList = toList(favorites.data, 'merchants', 'favorites');
+
+  // Three favourite cards fill the content width; the rest scroll sideways
+  const {width: screenWidth} = useWindowDimensions();
+  const favoriteWidth = Math.floor(
+    (screenWidth - layout.screenPadding * 2 - FAVORITE_GAP * (FAVORITES_VISIBLE - 1)) / FAVORITES_VISIBLE,
+  );
   const recent = (dashboard?.recent_activity || []).slice(0, 3);
 
   const fullName = [user?.first_name, user?.last_name].filter(Boolean).join(' ') || 'there';
+  const firstName = user?.first_name?.trim() || 'there';
 
   return (
     <ScreenBackground>
@@ -98,7 +119,7 @@ const CustomerHome = () => {
           <View style={styles.greetingText}>
             <Text style={styles.greeting}>{greeting()},</Text>
             <Text style={styles.name} accessibilityRole="header">
-              {fullName}
+              {firstName}
             </Text>
           </View>
         </View>
@@ -185,7 +206,14 @@ const CustomerHome = () => {
             ) : favoriteList.length === 0 ? (
               <EmptyState title="No favourites yet" hint="Tap the heart on a merchant in Explore." />
             ) : (
-              <View style={styles.favorites}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                decelerationRate="fast"
+                snapToInterval={favoriteWidth + FAVORITE_GAP}
+                snapToAlignment="start"
+                style={styles.favoritesStrip}
+                contentContainerStyle={styles.favorites}>
                 {favoriteList.map(merchant => {
                   const id = getMerchantId(merchant);
                   const name = getMerchantName(merchant);
@@ -193,7 +221,7 @@ const CustomerHome = () => {
                   return (
                     <View
                       key={id}
-                      style={styles.favorite}
+                      style={[styles.favorite, {width: favoriteWidth}]}
                       accessible
                       accessibilityLabel={`${name}, ${formatPts(pts)}`}>
                       <View style={styles.favoriteBadge}>
@@ -206,7 +234,7 @@ const CustomerHome = () => {
                     </View>
                   );
                 })}
-              </View>
+              </ScrollView>
             )}
           </View>
         )}
@@ -332,12 +360,15 @@ const styles = StyleSheet.create({
     fontFamily: type.bodyStrong.fontFamily,
     color: colors.link,
   },
+  // Bleed to the screen edges so cards scroll under the side padding
+  favoritesStrip: {
+    marginHorizontal: -layout.screenPadding,
+  },
   favorites: {
-    flexDirection: 'row',
-    gap: 10,
+    paddingHorizontal: layout.screenPadding,
+    gap: FAVORITE_GAP,
   },
   favorite: {
-    flex: 1,
     alignItems: 'center',
     gap: 6,
     paddingVertical: 12,

@@ -4,6 +4,7 @@ import {useNavigation, useRoute} from '@react-navigation/native';
 import {useDispatch, useSelector} from 'react-redux';
 import FormLayout from '../../components/layout/FormLayout';
 import {AppInput, PasswordInput, PrimaryButton, ChoiceGrid} from '../../components/ui';
+import {hasEdgeSpace, EDGE_SPACE_ERROR} from '../../components/ui/PasswordRules';
 import Icon from '../../components/icons/Icon';
 import {login} from '../../actions/authActions';
 import {colors, type} from '../../theme/tokens';
@@ -26,6 +27,16 @@ const Login = () => {
 
   const isMerchant = role === 'merchant';
   const emailValid = EMAIL_PATTERN.test(email.trim());
+  // Usually a stray space from autofill or paste, which would fail as a wrong password
+  const passwordHasEdgeSpace = hasEdgeSpace(password);
+
+  const passwordError = !password
+    ? tried
+      ? 'Enter your password.'
+      : undefined
+    : passwordHasEdgeSpace
+    ? EDGE_SPACE_ERROR
+    : undefined;
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -42,7 +53,7 @@ const Login = () => {
 
   const handleLogin = async () => {
     setTried(true);
-    if (!emailValid || !password) {
+    if (!emailValid || !password || passwordHasEdgeSpace) {
       return;
     }
     try {
@@ -143,7 +154,7 @@ const Login = () => {
           }}
           placeholder="Your password"
           textContentType="password"
-          error={tried && !password ? 'Enter your password.' : undefined}
+          error={passwordError}
         />
       </View>
 
